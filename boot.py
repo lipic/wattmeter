@@ -1,3 +1,4 @@
+#version 1.0
 import ota_updater 
 import wifiManager
 
