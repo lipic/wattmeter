@@ -178,6 +178,7 @@ class OTAUpdater:
         return False
 
     def rmtree(self, directory):
+        print(directory)
         for entry in os.ilistdir(directory):
             is_dir = entry[1] == 0x4000
             if is_dir:
