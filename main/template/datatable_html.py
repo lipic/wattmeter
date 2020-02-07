@@ -2,11 +2,12 @@
 def render(*a, **d):
     yield """<!DOCTYPE html>
 <html lang=\"cs-cz\">
-<table id=\"table\">
+<table id=\"tableData\">
     <thead>
         <tr><th>Name</th><th>Status/Value</th><th>Unit</th></tr>
-    </thead> 
+    </thead>   
     <tbody>
+        <tr><td>Time:</td><td><span id=\"time\">0</span></td><td><span> </span></td></tr>
         <tr><td>U1 value:</td><td><span id=\"U1\">0</span></td><td><span> V</span></td></tr>
         <tr><td>U2 value:</td><td><span id=\"U2\">0</span></td><td><span> V</span></td></tr>
         <tr><td>U3 value:</td><td><span id=\"U3\">0</span></td><td><span> V</span></td></tr>
@@ -22,10 +23,10 @@ def render(*a, **d):
     </tbody>
 </table>
 
-<table id=\"table\">
+<table id=\"tableData\">
     <tbody>
         <h2>Power chart</h2>
-        <canvas id=\"canvas\" height=\"70px\"></canvas>
+        <canvas id=\"chart\"></canvas>
     </tbody>
 </table>
 </html>
