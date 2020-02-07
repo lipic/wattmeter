@@ -1,16 +1,21 @@
-#version 1.0
-import ota_updater 
-import wifiManager
+#version 1.1
+from main import ota_updater 
+from main import wifiManager
 
-global wlan
+wifiClient = wifiManager.wifiManager("OlifeEnergy")
 
  
 def download_and_install_update_if_available():
-    o = ota_updater.OTAUpdater('https://github.com/lipic/wattmeter.git')
+    o = ota_updater.OTAUpdater('https://github.com/lipic/wattmeter', "/main")
     o.download_and_install_update_if_available('wifi-ssid', 'wifi-password')
-
+ 
+def run():
+    mainApp()
+    
 def boot():
-    wlan = wifiManager.get_connection()
+    wlan = wifiClient.get_connection()
+    print("tisknu config")
+    
     if wlan.isconnected():
         print("Try check for updates")
         download_and_install_update_if_available()
