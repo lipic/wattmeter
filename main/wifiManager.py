@@ -2,15 +2,15 @@ import network
 import socket 
 import ure
 import time
-#from main.lib import MicroDNSSrv
+import MicroDNSSrv
 
-class wifiManager:
+class WifiManager:
     
-    def __init__(self,ap_ssid):   
+    def __init__(self,ap_ssid, ap_passwd):   
         self.ap_ssid = ap_ssid
-        self.ap_password = "123456789F"
+        self.ap_password = ap_passwd
         self.ap_authmode = 3  # WPA2
-        self.NETWORK_PROFILES = 'main/wifi.dat'
+        self.NETWORK_PROFILES = 'wifi.dat'
         self.wlan_ap = network.WLAN(network.AP_IF)
         self.wlan_sta = network.WLAN(network.STA_IF)
     
@@ -138,20 +138,20 @@ class wifiManager:
 
         print('and access the ESP via your favorite web browser at 192.168.4.1.')
         print('Listening on: www.wattmeter.com:8000')
-        """
+       
         if MicroDNSSrv.Create( {
           "*olife.com"  : "192.168.4.1",} ) :
           print("MicroDNSSrv started.") 
         else :
           print("Error to starts MicroDNSSrv...")
-        """
+        
 
     def getSSID(self):
         ssidUsers = {}
         try:
         # Search WiFis in range
             self.wlan_sta.active(True)
-            networks = wlan_sta.scan()
+            networks = self.wlan_sta.scan()
             AUTHMODE = {0: "open", 1: "WEP", 2: "WPA-PSK", 3: "WPA2-PSK", 4: "WPA/WPA2-PSK"}
             for ssid, bssid, channel, rssi, authmode, hidden in sorted(networks, key=lambda x: x[3], reverse=True):
                 ssid = ssid.decode('utf-8')
@@ -167,11 +167,11 @@ class wifiManager:
     def getIp(self):
         ip= []
         try:
-            ip = wlan_sta.ifconfig()
+            ip = self.wlan_sta.ifconfig()
             return ip[0]
         except OSError as e:
             print("exception", str(e))
-            return None
+            return "192.168.4.1"
         
     
         

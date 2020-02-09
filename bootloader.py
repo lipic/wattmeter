@@ -27,8 +27,8 @@ class OTAUpdater:
                 versionfile.close()
 
 
-    def _download_and_install_update(self, latest_version, current_version):
-
+    def download_and_install_update(self, latest_version, current_version):
+        os.mkdir("next")
         self.download_all_files(self.github_repo + '/contents/' + self.main_dir, latest_version)
         self.rmtree(self.modulepath(self.main_dir))
         os.rename(("rev_"+current_version), ('rev_'+latest_version))

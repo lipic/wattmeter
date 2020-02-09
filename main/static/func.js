@@ -46,25 +46,23 @@ function update_ints_count() {
 }
 
 $(document).ready(function() 
- {
-    $('div.mainContainer').load('datatable');
-    window.addEventListener('load', function () {
+ { 
+  $('div.mainContainer').load('datatable',function(){
         window.setTimeout(function(){
         setChart(); 
         update_ints_count();
-        },1000); 
+        }); 
     })
     
     $('.menu a').click(function(e)
     {
         if($(this).attr('id') == 'main'){
             stop(timer);
-            $('div.mainContainer').load('datatable');
-             window.setTimeout(function(){
-                 counter = 0;
-                 setChart(); 
-                 update_ints_count();
-              },1000)
+            $('div.mainContainer').load('datatable', function(){
+                counter = 0;
+                setChart(); 
+                update_ints_count();
+            });          
             
          }else if($(this).attr('id') == 'settings'){
              stop(timer);

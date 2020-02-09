@@ -90,7 +90,7 @@ class WebApp:
         else:
             self.pkg = None
         if serve_static:
-            self.url_map.append((re.compile("^/(static/.+)"), self.handle_static))
+            self.url_map.append((re.compile("^/(main/static/.+)"), self.handle_static))
         self.mounts = []
         self.inited = False
         # Instantiated lazily
@@ -120,7 +120,7 @@ class WebApp:
                     self.log.error("%s: EOF on request start" % reader)
                 yield from writer.aclose()
                 return
-            req = HTTPRequest()
+            req = HTTPRequest() 
             # TODO: bytes vs str
             request_line = request_line.decode()
             method, path, proto = request_line.split()
@@ -239,11 +239,11 @@ class WebApp:
         # Note: this method skips Flask's "endpoint" argument,
         # because it's alleged bloat.
         self.url_map.append((url, func, kwargs))
-
+ 
     def _load_template(self, tmpl_name):
         if self.template_loader is None:
             import utemplate.source
-            self.template_loader = utemplate.source.Loader(self.pkg, "template")
+            self.template_loader = utemplate.source.Loader(self.pkg, "main/template")
         return self.template_loader.load(tmpl_name)
 
     def render_template(self, writer, tmpl_name, args=()):

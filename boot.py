@@ -1,25 +1,24 @@
 #version 1.0
-import ota_updater 
-import wifiManager
+import bootloader 
+from main import wifiManager
+from main import main
 
-wifiClient = wifiManager.wifiManager("OlifeEnergy")
+wifiClient = wifiManager.WifiManager("Wattmeter","123456789")
 
  
 def download_and_install_update_if_available():
-    bootloader = ota_updater.OTAUpdater('https://github.com/lipic/wattmeter',"")
-    boardVersion = bootloader.get_version("")
-    githubVersion = bootloader.get_latest_version()
-    print("Board version is {}".format(boardVersion))
-    print("Current version is {}".format(githubVersion))
+    boot = bootloader.OTAUpdater('https://github.com/lipic/wattmeter',"")
+    currentVersion = boot.get_version("")
+    githubVersion = boot.get_latest_version()
+    print("Current version is {}".format(currentVersion))
+    print("GitHub version is {}".format(githubVersion))
     
-    if(boardVersion == githubVersion):
+    if(currentVersion == githubVersion):
         print("Software is up to date")
     else:
         print("I will install updates")
-        bootloader.download_and_install_update(githubVersion)
+        boot.download_and_install_update(githubVersion,currentVersion)
  
-def run():
-    mainApp()
     
 def boot():
     wlan = wifiClient.get_connection()
@@ -29,8 +28,10 @@ def boot():
         download_and_install_update_if_available()
     else:
         print("Can not check updates, because you are not connected to the Internet")
-    
-    run()
+    print("Setting main application")
+    app = main.mainRoutine(wifiClient)
+    print("Starting main application")
+    app.run()
 
 boot()
  

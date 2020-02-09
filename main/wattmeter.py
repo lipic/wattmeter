@@ -1,7 +1,7 @@
-import modbus
+from main import modbus
 from machine import UART
 import time
-class App:
+class Wattmeter:
      
     def __init__(self):
         try:
