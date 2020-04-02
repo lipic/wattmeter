@@ -1,8 +1,8 @@
 body {
-    margin: 0;
+      margin: 0;
 }
-
-#refresh {
+ 
+#refresh { 
     
     width: 11%;
     height: 60px;
@@ -11,13 +11,17 @@ body {
 }
 
 #tableData{
-    background-color: :#e0b0ff
+    background-color: #e0b0ff
     border-collapse: collapse;
     padding-left: 25%;
     width: 75%;
     text-align: center;
 }
 
+.graphTable{
+    width: 75%;
+    height: 50%;
+    }
 
 ul.menu {
     
@@ -63,18 +67,23 @@ div.maincontainer {
     padding-left = "25%";
 }
 
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 2000px) {
   ul.menu {
     width: 100%;
     height: auto;
     position: relative;
   } 
-  
+  body{
+      height: 100%;
+      }
   ul.menu li a {
     float: left;
     padding: 15px;
   }
  
+ .graphTable{
+    height: 150px;
+    }
   div.maincontainer {margin-left: 0;}
 }
 
@@ -83,10 +92,18 @@ div.maincontainer {
     text-align: center;
     float: none;
   }
+  .graphTable{
+        250px;
+    }
 }
 
 
-
+footer {
+  background-color: #223E4A;
+  padding: 10px;
+  text-align: center;
+  color: white;
+}
 
 
 .button{
@@ -115,4 +132,34 @@ div.maincontainer {
   100% { transform: rotate(360deg); }
 }
 
+@keyframes load {
+    0%{
+        opacity: 0.08;
+/*         font-size: 10px; */
+/*              font-weight: 400; */
+                filter: blur(5px);
+                letter-spacing: 3px;
+        }
+    100%{
+/*         opacity: 1; */
+/*         font-size: 12px; */
+/*              font-weight:600; */
+/*              filter: blur(0); */
+        }
+}
 
+.loading {
+    display:flex;
+    justify-content: center;
+    margin-top: 50px;
+    align-items: center;
+    margin-top: 50px;
+    height:100%;
+    margin: auto;
+/*  width: 350px; */
+/*  font-size:26px; */
+    font-family: Helvetica, sans-serif, Arial;
+    animation: load 1.2s infinite 0s ease-in-out;
+    animation-direction: alternate;
+    text-shadow: 0 0 1px black;
+}

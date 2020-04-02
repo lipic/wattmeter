@@ -1,89 +1,91 @@
 var timer;
-var chart;
-var canvas;
-var ctx;
-var counter = 0;
 
+chartData = 0
 const wifiManager = new WifiManager()
+
+
 
 function update_ints_count() {
     
-    $.ajax({
+    $.ajax({ 
             url: '/updateData' 
         })
         .done(function(data) {
             var ms = 1000
             $('#updateData').html(data.datalayer);
-            document.getElementById("U1").textContent = data['U1']
+            document.getElementById("U1").textContent = data['U1'] 
             document.getElementById("U2").textContent = data['U2']
             document.getElementById("U3").textContent = data['U3']
-            document.getElementById("I1").textContent = data['I1']
+            document.getElementById("I1").textContent = data['I1'] 
             document.getElementById("I2").textContent = data['I2']
             document.getElementById("I3").textContent = data['I3']
-            document.getElementById("P1").textContent = data['P1']
-            document.getElementById("P2").textContent = data['P2'] 
-            document.getElementById("P3").textContent = data['P3']
-            document.getElementById("E1").textContent = Math.round(data['E1']/10000)/100
-            document.getElementById("E2").textContent = Math.round(data['E2']/10000)/100
-            document.getElementById("E3").textContent = Math.round(data['E3']/10000)/100
+    
+            chartData =( data['I1'] + data['I2'] + data['I3'])
+             
+            refreshEnergyChart()
             
             document.getElementById("time").textContent = getTime();
-
-            if(counter>59){
-                for(var i=0; i<60;i++){ 
-                    chart.data.datasets[0].data[i]=undefined;
-                    chart.data.datasets[1].data[i]=undefined;
-                }
-                counter = 0;
-            }
-            chart.data.datasets[0].data[counter] = (data['P1']+data['P2']+data['P3']);
-            chart.data.datasets[1].data[counter] = Math.round((data['I1']+data['I2']+data['I3'])/10)/100;
-            chart.update();
-            counter = counter +1;
-            
-            timer = setTimeout(update_ints_count, ms);
-        });
-}
-
+    
+            timer = setTimeout(update_ints_count, ms); 
+        });  
+}     
 $(document).ready(function() 
- { 
+ {
   $('div.mainContainer').load('datatable',function(){
-        window.setTimeout(function(){
-        setChart(); 
+        $('.loading').hide();
+        
+        let energyBarChart  = new energyChart()
+        let powerLineChart  = new powerChart(refreshPowerChart)
+        
+        
+        let powerChartCtx = document.getElementById('powerGraph').getContext('2d');
+        let powerChartConfig = powerLineChart.getConfig()
+        powerGraph = new Chart(powerChartCtx, powerChartConfig);
+        
+        let energyChartCtx = document.getElementById('energyGraph').getContext('2d');
+        let energyChartConfig = energyBarChart.getConfig()
+        energyGraph = new Chart(energyChartCtx,energyChartConfig)
+        
         update_ints_count();
-        }); 
-    })
+          
+               
+    })   
     
     $('.menu a').click(function(e)
     {
         if($(this).attr('id') == 'main'){
             stop(timer);
             $('div.mainContainer').load('datatable', function(){
-                counter = 0;
-                setChart(); 
-                update_ints_count();
+                let powerLineChart  = new powerChart(refreshPowerChart)
+                let powerChartCtx = document.getElementById('powerGraph').getContext('2d');
+                let powerChartConfig = powerLineChart.getConfig()
+                powerGraph = new Chart(powerChartCtx, powerChartConfig);
+                
+                let energyBarChart  = new energyChart()        
+                let energyChartCtx = document.getElementById('energyGraph').getContext('2d');
+                let energyChartConfig = energyBarChart.getConfig()
+                energyGraph = new Chart(energyChartCtx,energyChartConfig)
+                
+                update_ints_count();  
             });          
             
          }else if($(this).attr('id') == 'settings'){
              stop(timer);
-             $('div.mainContainer').load('settings');
-             $(canvas).remove();
-             wifiManager.refreshWifiClient();
+             $('div.mainContainer').load('settings',function(){
+                wifiManager.refreshWifiClient(); 
+                powerGraph.destroy()
+                energyGraph.destroy() 
+                
+             }); 
             } 
         $('.menu a').removeClass('active');
         $(this).addClass('active');
-            
-    }); 
-     
+         
+    });  
+      
     $(document).on('click','#setSSID',function(){
-        $('.loader').show();
-        $.when(showSomeProcess()).then(function(){
-            //$('.loader').hide();
-        })
-    }); 
-            
-   var showSomeProcess = function(){
-       var password = document.getElementById("passwordField").value;
+        $('.loader').show(); 
+        password = document.getElementById("passwordField").value;
         var ssid = $("input[name='ssid']:checked").val();
         if(ssid){
             alert("I will try to connect wifi with ssid: " + ssid);
@@ -101,66 +103,65 @@ $(document).ready(function()
                         alert("Process was unsuccess")   
                     }
                 } 
-                 
+                
             }).success(function() {
                 $('.loader').hide();
-            }); 
+            });
         }else{ 
             alert("Please choose ssid client first!");
         }
-       return 0
-    }
- 
+       return 0 
+     });
+  
     $(document).on('click','#refreshSSID',function(){
         $('div.mainContainer').load('settings');
         wifiManager.refreshWifiClient();    
     });
- });
+ }); 
  
 
 
- function stop() {
+ function stop() { 
         if (timer) {
             console.log("stopTimer")
             clearTimeout(timer);
             timer = 0;
         }
-    }
+    } 
  
-function setChart(){
-    canvas = document.getElementById('chart');
-    ctx = canvas.getContext('2d');
-    chart = new Chart(ctx, {
-                type: 'line',
-                 data: {
-                    labels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59],
-                    datasets: [{
-                        label: "Power [W]",
-                        borderColor: 'rgb(255, 99, 132)',
-                        data: [],
-                    },{
-                        label: "Current [A]",
-                        borderColor: 'rgb(3, 57, 252)',
-                        data: [],
-                    },]
-                },
- 
-                // Configuration options go here
-                options: {
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero: true
-                            }
-                        }]
-                    }
-                }
-            });
-
-}
-
 function getTime(){
     var dt = new Date();
     var time = dt.getHours() + ":" + dt.getMinutes();
     return time;
     }
+
+
+function refreshPowerChart() {
+    powerGraph.config.data.datasets.forEach(function(dataset) {
+        dataset.data.push({
+            x: Date.now(),
+            y: chartData
+        });
+    });
+}
+function refreshEnergyChart() {
+    
+    let dates = [];
+    const NUM_OF_DAYS = 31; // get last 31 dates.
+
+    for (let i = 0; i < NUM_OF_DAYS; i++) {
+          let date = moment();
+          date.subtract(i, 'day').format('DD-MM-YYYY');
+          dates.push(date.format('YYYY-MM-DD'));
+    }
+     let data = [11,20,20,20,20,33,30,33,58,52,11,20,20,20,20,33,30,33,58,52,11,20,20,20,20,33,30,33,58,52,chartData]
+    
+
+    for(var i = 0; i<31;i++){
+        energyGraph.data.labels[i] = dates[30-i];
+        energyGraph.data.datasets[0].data[i] =  data[i];
+        energyGraph.update()
+    }
+    
+}
+

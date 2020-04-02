@@ -2,7 +2,7 @@ import network
 import socket 
 import ure
 import time
-import MicroDNSSrv
+import machine
 
 class WifiManager:
     
@@ -32,7 +32,7 @@ class WifiManager:
             # Read known network profiles from file
             profiles = self.read_profiles()
 
-            # Search WiFis in range
+            # Search WiFis in range 
             self.wlan_sta.active(True)
             networks = self.wlan_sta.scan()
 
@@ -52,12 +52,13 @@ class WifiManager:
                 if connected:
                     break
 
-        except OSError as e:
-            print("exception", str(e))
+        except Exception as e:
+            print("Exception: {0}".format(e))
 
         # start web server for connection manager:
+        print("tisknu {0}".format(connected))
         if not connected:
-            connected = self.start()
+            self.setToAP()
 
         return self.wlan_sta if connected else None
 
@@ -129,22 +130,14 @@ class WifiManager:
             return False 
 
 
-    def start(self):
+    def setToAP(self):
 
         self.wlan_sta.active(False)
         self.wlan_ap.active(True)
         self.wlan_ap.config(essid=self.ap_ssid, password=self.ap_password, authmode=self.ap_authmode)
         print(self.wlan_ap.ifconfig())
-
         print('and access the ESP via your favorite web browser at 192.168.4.1.')
-        print('Listening on: www.wattmeter.com:8000')
-       
-        if MicroDNSSrv.Create( {
-          "*olife.com"  : "192.168.4.1",} ) :
-          print("MicroDNSSrv started.") 
-        else :
-          print("Error to starts MicroDNSSrv...")
-        
+
 
     def getSSID(self):
         ssidUsers = {}
@@ -167,8 +160,12 @@ class WifiManager:
     def getIp(self):
         ip= []
         try:
-            ip = self.wlan_sta.ifconfig()
-            return ip[0]
+            if(self.wlan_sta.isconnected()):
+                ip = self.wlan_sta.ifconfig()
+                print("IP addres {0}".format(ip[0]))
+                return ip[0]
+            else:
+                return "192.168.4.1"
         except OSError as e:
             print("exception", str(e))
             return "192.168.4.1"

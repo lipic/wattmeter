@@ -28,7 +28,13 @@ class OTAUpdater:
 
 
     def download_and_install_update(self, latest_version, current_version):
-        os.mkdir("next")
+        try:
+            for i in os.listdir(""):
+                if i[:4] == "next":
+                    os.rmdir("next")
+            os.mkdir("next")
+        except e:
+            print(e)
         self.download_all_files(self.github_repo + '/contents/' + self.main_dir, latest_version)
         self.rmtree(self.modulepath(self.main_dir))
         os.rename(("rev_"+current_version), ('rev_'+latest_version))
@@ -100,13 +106,8 @@ class OTAUpdater:
         return version
 
     def download_all_files(self, root_url, version):
-        print(root_url)
+
         file_list = self.http_client.get(root_url)
-        
-        for file in file_list.json():
-            print(file)
-            
-            
         for file in file_list.json():
             if file['type'] == 'file':
                 download_url = file['download_url']
