@@ -3,6 +3,7 @@ import bootloader
 from main import wifiManager
 from main import taskHandler
 from machine import Pin
+import uasyncio as asyncio 
 import esp
 
  # create instance of wificlient and set up AP mode login config
@@ -22,17 +23,27 @@ def download_and_install_update_if_available():
         print("I will install updates")
         boot.download_and_install_update(githubVersion,currentVersion)
   
-     
+
+async def getWifiStatus(self,delay_secs):
+    while True:
+        if(Pin(21, Pin.OUT).value()):
+            Pin(21, Pin.OUT).off()
+        else:
+            Pin(21, Pin.OUT).on()
+        await asyncio.sleep(delay_secs)
+        
 def boot():
     
-    esp.osdebug(None) # do not function, find rease how turn off debug prompt message
     Pin(23, Pin.OUT).off() # set pin high on creation
     Pin(22, Pin.OUT).off() # set pin high on creation
     Pin(21, Pin.OUT).on()  # set pin high on creation
     
+    loop = asyncio.get_event_loop()
+    loop.create_task(getWifiStatus(0.5))
+    loop.run_forever();
+    
     # get status of current connection 
     wlan = wifiClient.get_connection()
-    Pin(21, Pin.OUT).off()  # set pin high on creation
     try:
         if wlan.isconnected():
             print("Try check for updates")
@@ -42,11 +53,11 @@ def boot():
     
     except Exception as e:
         print("Error {0}".format(e))
-    Pin(21, Pin.OUT).on()  # set pin high on creation
     print("Setting main application")
     handler = taskHandler.TaskHandler(wifiClient,wlan)
     print("Starting main application")
     
+    asyncio.cancel(loop)
     Pin(21, Pin.OUT).off() # set pin high on creation
     handler.mainTaskHandlerRun()
 
