@@ -33,7 +33,7 @@ class OTAUpdater:
                 if i[:4] == "next":
                     os.rmdir("next")
             os.mkdir("next")
-        except e:
+        except Exception as e:
             print(e)
         self.download_all_files(self.github_repo + '/contents/' + self.main_dir, latest_version)
         self.rmtree(self.modulepath(self.main_dir))
