@@ -30,11 +30,15 @@ class OTAUpdater:
     def download_and_install_update(self, latest_version, current_version):
         try:
             for i in os.listdir(""):
-                if i[:4] == "next":
-                    os.rmdir("next")
+                print(i)
+                if i == "next":
+                    os.rmdir("next") 
+                    print("Directory '%s' has been removed successfully") 
+                    os.mkdir("next")
             os.mkdir("next")
         except Exception as e:
-            print(e)
+            print(e) 
+            print("Directory '%s' can not be removed") 
         self.download_all_files(self.github_repo + '/contents/' + self.main_dir, latest_version)
         self.rmtree(self.modulepath(self.main_dir))
         os.rename(("rev_"+current_version), ('rev_'+latest_version))

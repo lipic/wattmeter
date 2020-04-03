@@ -43,18 +43,21 @@ def boot():
     
     # get status of current connection 
     wlan = wifiClient.get_connection()
-    Pin(21, Pin.OUT).off()
     try:
         if wlan.isconnected():
             print("Try check for updates")
+            Pin(23, Pin.OUT).on() # set pin high on creation
+            Pin(22, Pin.OUT).on() # set pin high on creation
             download_and_install_update_if_available()
+            Pin(23, Pin.OUT).off() # set pin high on creation
+            Pin(22, Pin.OUT).off() # set pin high on creation
         else:
             print("Can not check updates, because you are not connected to the Internet")
     
     except Exception as e:
         print("Error {0}".format(e))
     print("Setting main application")
-    Pin(21, Pin.OUT).on() 
+
     handler = taskHandler.TaskHandler(wifiClient,wlan)
     print("Starting main application")
     
