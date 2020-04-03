@@ -56,7 +56,6 @@ class WifiManager:
             print("Exception: {0}".format(e))
 
         # start web server for connection manager:
-        print("tisknu {0}".format(connected))
         if not connected:
             self.setToAP()
 

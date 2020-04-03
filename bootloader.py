@@ -12,7 +12,7 @@ class OTAUpdater:
         self.main_dir = main_dir
         self.module = module.rstrip('/')
 
-    def check_for_update_to_install_during_next_reboot(self):
+    def check_for_update_to_install_during_newFW_reboot(self):
         current_version = self.get_version(self.modulepath(self.main_dir))
         latest_version = self.get_latest_version()
 
@@ -20,9 +20,9 @@ class OTAUpdater:
         print('\tCurrent version: ', current_version)
         print('\tLatest version: ', latest_version)
         if latest_version > current_version:
-            print('New version available, will download and install on next reboot')
-            os.mkdir(self.modulepath('next'))
-            with open(self.modulepath('next/.version_on_reboot'), 'w') as versionfile:
+            print('New version available, will download and install on newFW reboot')
+            os.mkdir(self.modulepath('newFW'))
+            with open(self.modulepath('newFW/.version_on_reboot'), 'w') as versionfile:
                 versionfile.write(latest_version)
                 versionfile.close()
 
@@ -31,32 +31,31 @@ class OTAUpdater:
         try:
             for i in os.listdir(""):
                 print(i)
-                if i == "next":
-                    os.rmdir("next") 
+                if i == "newFW":
+                    self.rmtree(i)
                     print("Directory '%s' has been removed successfully") 
-                    os.mkdir("next")
-            os.mkdir("next")
-        except Exception as e:
+            os.mkdir("newFW")
+        except Exception as e: 
             print(e) 
             print("Directory '%s' can not be removed") 
         self.download_all_files(self.github_repo + '/contents/' + self.main_dir, latest_version)
         self.rmtree(self.modulepath(self.main_dir))
         os.rename(("rev_"+current_version), ('rev_'+latest_version))
-        os.rename(self.modulepath('next'), self.modulepath(self.main_dir))
+        os.rename(self.modulepath('newFW'), self.modulepath(self.main_dir))
         print('Update installed (', latest_version, '), will reboot now')
         machine.reset()
 
     def apply_pending_updates_if_available(self):
-        if 'next' in os.listdir(self.module):
-            if '.version' in os.listdir(self.modulepath('next')):
-                pending_update_version = self.get_version(self.modulepath('next'))
+        if 'newFW' in os.listdir(self.module):
+            if '.version' in os.listdir(self.modulepath('newFW')):
+                pending_update_version = self.get_version(self.modulepath('newFW'))
                 print('Pending update found: ', pending_update_version)
                 self.rmtree(self.modulepath(self.main_dir))
-                os.rename(self.modulepath('next'), self.modulepath(self.main_dir))
+                os.rename(self.modulepath('newFW'), self.modulepath(self.main_dir))
                 print('Update applied (', pending_update_version, '), ready to rock and roll')
             else:
                 print('Corrupt pending update found, discarding...')
-                self.rmtree(self.modulepath('next'))
+                self.rmtree(self.modulepath('newFW'))
         else:
             print('No pending update found')
 
@@ -69,9 +68,9 @@ class OTAUpdater:
         print('\tLatest version: ', latest_version)
         if latest_version > current_version:
             print('Updating...')
-            os.mkdir(self.modulepath('next'))
+            os.mkdir(self.modulepath('newFW'))
             self.download_all_files(self.github_repo + '/contents/' + self.main_dir, latest_version)
-            with open(self.modulepath('next/.version'), 'w') as versionfile:
+            with open(self.modulepath('newFW/.version'), 'w') as versionfile:
                 versionfile.write(latest_version)
                 versionfile.close()
  
@@ -81,7 +80,6 @@ class OTAUpdater:
     def rmtree(self, directory):
         if(directory=="main/main"):
             directory="main"
-            print("je to tu")
             for entry in os.ilistdir(directory):
                 print(entry)
     
@@ -115,10 +113,10 @@ class OTAUpdater:
         for file in file_list.json():
             if file['type'] == 'file':
                 download_url = file['download_url']
-                download_path = self.modulepath('next/' + file['path'].replace(self.main_dir + '/', ''))
+                download_path = self.modulepath('newFW/' + file['path'].replace(self.main_dir + '/', ''))
                 self.download_file(download_url.replace('refs/tags/', ''), download_path)
             elif file['type'] == 'dir':
-                path = self.modulepath('next/' + file['path'].replace(self.main_dir + '/', ''))
+                path = self.modulepath('newFW/' + file['path'].replace(self.main_dir + '/', ''))
                 os.mkdir(path)
                 self.download_all_files(root_url + '/' + file['name'], version)
 

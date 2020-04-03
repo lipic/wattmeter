@@ -1,10 +1,7 @@
 #version 1.0
 import bootloader 
 from main import wifiManager
-from main import taskHandler
 from machine import Pin
-import uasyncio as asyncio 
-import esp
 
  # create instance of wificlient and set up AP mode login config
 wifiClient = wifiManager.WifiManager("Wattmeter","123456789")
@@ -23,16 +20,6 @@ def download_and_install_update_if_available():
         print("I will install updates")
         boot.download_and_install_update(githubVersion,currentVersion)
   
-
-async def ledIndicator(delay_secs):
-    while True:
-        if(Pin(21, Pin.OUT).value()):
-            Pin(21, Pin.OUT).off()
-        else:
-            Pin(21, Pin.OUT).on()
-        await asyncio.sleep(delay_secs)
-        
-
         
 def boot():
     
@@ -57,7 +44,7 @@ def boot():
     except Exception as e:
         print("Error {0}".format(e))
     print("Setting main application")
-
+    from main import taskHandler
     handler = taskHandler.TaskHandler(wifiClient,wlan)
     print("Starting main application")
     
