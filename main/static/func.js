@@ -13,13 +13,13 @@ function update_ints_count() {
         .done(function(data) {
             var ms = 1000
             $('#updateData').html(data.datalayer);
+            console.log(data['log'])
             document.getElementById("U1").textContent = data['U1'] 
             document.getElementById("U2").textContent = data['U2']
             document.getElementById("U3").textContent = data['U3']
             document.getElementById("I1").textContent = data['I1'] 
             document.getElementById("I2").textContent = data['I2']
             document.getElementById("I3").textContent = data['I3']
-    
             chartData =( data['I1'] + data['I2'] + data['I3'])
              
             refreshEnergyChart()

@@ -8,7 +8,7 @@ wifiClient = wifiManager.WifiManager("Wattmeter","123456789")
 
  
 def download_and_install_update_if_available():
-    boot = bootloader.OTAUpdater('https://github.com/lipic/wattmeter',"")
+    bootloader = bootloader.Bootloader('https://github.com/lipic/wattmeter',"")
     currentVersion = boot.get_version("")
     githubVersion = boot.get_latest_version()
     print("Current version is {}".format(currentVersion))
@@ -18,7 +18,7 @@ def download_and_install_update_if_available():
         print("Software is up to date")
     else:
         print("I will install updates")
-        boot.download_and_install_update(githubVersion,currentVersion)
+        bootloader.download_and_install_update(githubVersion,currentVersion)
   
         
 def boot():
@@ -45,7 +45,7 @@ def boot():
         print("Error {0}".format(e))
     print("Setting main application")
     from main import taskHandler
-    handler = taskHandler.TaskHandler(wifiClient,wlan)
+    handler = taskHandler.TaskHandler(wifiClient,wlan,True)
     print("Starting main application")
     
     Pin(21, Pin.OUT).off() # set pin high on creation

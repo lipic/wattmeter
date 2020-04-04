@@ -5,9 +5,14 @@ import uasyncio as asyncio
 from main import wattmeter
 
 class TaskHandler:
-    def __init__(self,wlan,wlanStatus):
+    def __init__(self,wlan,wlanStatus,logging):
+        if (logging == True):
+            import  uos
+            from main import loggingHandler
+            self.logging= loggingHandler.LoggingHandler()
+            uos.dupterm(self.logging)
         self.wattmeter = wattmeter.Wattmeter()
-        self.webServerApp = webServerApp.WebServerApp(wlan,wlanStatus,self.wattmeter)
+        self.webServerApp = webServerApp.WebServerApp(wlan,wlanStatus,self.wattmeter,self.logging)
         self.wlanStatus = wlanStatus
         self.wifiManager = wlan
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
@@ -40,6 +45,7 @@ class TaskHandler:
     async def wattmeterHandler(self,delay_secs):
         while True:
             self.wattmeter.updateData
+            print("Data {}".format(self.wattmeter.datalayer.data))
             await asyncio.sleep(delay_secs)
             
 

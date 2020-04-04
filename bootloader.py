@@ -4,7 +4,7 @@ import gc
 import machine
    
      
-class OTAUpdater:
+class Bootloader:
 
     def __init__(self, github_repo, module='', main_dir='main'):
         self.http_client = HttpClient()
@@ -30,14 +30,12 @@ class OTAUpdater:
     def download_and_install_update(self, latest_version, current_version):
         try:
             for i in os.listdir(""):
-                print(i)
                 if i == "newFW":
                     self.rmtree(i)
-                    print("Directory '%s' has been removed successfully") 
+                    print("Directory {} has been removed successfully".format(i)) 
             os.mkdir("newFW")
         except Exception as e: 
-            print(e) 
-            print("Directory '%s' can not be removed") 
+            print("Directory  can not be removed: {}".format(e)) 
         self.download_all_files(self.github_repo + '/contents/' + self.main_dir, latest_version)
         self.rmtree(self.modulepath(self.main_dir))
         os.rename(("rev_"+current_version), ('rev_'+latest_version))
@@ -126,8 +124,8 @@ class OTAUpdater:
         print('\tDownloading: ', path)
         with open(path, 'w') as outfile:
             try:
-                response = self.http_client.get(url)
-                outfile.write(response.text)
+                #response = self.http_client.get(url)
+                outfile.write(self.http_client.get(url).text)
             finally:
                 response.close()
                 outfile.close()
