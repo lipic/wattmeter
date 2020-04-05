@@ -6,12 +6,20 @@ import uos
 
 class LoggingHandler(uio.IOBase):
     def __init__(self):
-        self.data = ''
-        self.pos = 0
+        self.data =""
+        self.enableLogging = False
+        self.buffRowLen = 0
 
     def write(self, data):
-        self.data += (data.decode("ascii"))
-
-
-    def readinto(self):
-        return None
+        if (self.enableLogging == True):
+            if type(data) == bytearray: 
+                data = str(data, "ascii")
+                self.data += data
+            else:
+                self.data += data
+            self.data +="\n"
+            self.buffRowLen = self.buffRowLen + 1
+            if(self.buffRowLen>10):
+                self.buffRowLen = 0
+                self.data = ""
+    

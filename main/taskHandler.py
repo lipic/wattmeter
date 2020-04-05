@@ -5,16 +5,15 @@ import uasyncio as asyncio
 from main import wattmeter
 
 class TaskHandler:
-    def __init__(self,wlan,wlanStatus,logging):
+    def __init__(self,wifiManager,wlanStatus,logging):
+        from main import loggingHandler
+        self.log= loggingHandler.LoggingHandler()
         if (logging == True):
-            import  uos
-            from main import loggingHandler
-            self.logging= loggingHandler.LoggingHandler()
-            uos.dupterm(self.logging)
-        self.wattmeter = wattmeter.Wattmeter()
-        self.webServerApp = webServerApp.WebServerApp(wlan,wlanStatus,self.wattmeter,self.logging)
-        self.wlanStatus = wlanStatus
-        self.wifiManager = wlan
+            self.log.enableLogging = True
+        self.wattmeter = wattmeter.Wattmeter() #Create instance of Wattmeter
+        self.webServerApp = webServerApp.WebServerApp(wifiManager,wlanStatus,self.wattmeter,self.log) #Create instance of Webserver App
+        self.wlanStatus = wlanStatus #Get WIFi status from boot process
+        self.wifiManager = wifiManager #Get insatnce of wifimanager from boots
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
         self.ledWifi = Pin(22, Pin.OUT) # set pin high on creation
         self.ledErr  = Pin(21, Pin.OUT) # set pin high on creation
@@ -30,7 +29,7 @@ class TaskHandler:
                     if len(self.wifiManager.read_profiles()) != 0:
                         self.wifiManager.get_connection()
             except Exception as e:
-                print("Error {0}".format(e))
+                self.log.write("Exception: {0}".format(e))
             await asyncio.sleep(10)   
 
     async def ledHandler(self,delay_secs):
@@ -43,9 +42,10 @@ class TaskHandler:
             await asyncio.sleep(delay_secs)
             
     async def wattmeterHandler(self,delay_secs):
-        while True:
-            self.wattmeter.updateData
-            print("Data {}".format(self.wattmeter.datalayer.data))
+       while True:
+            status = self.wattmeter.updateData()
+            if status != None:
+                self.log.write(status)
             await asyncio.sleep(delay_secs)
             
 
