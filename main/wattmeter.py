@@ -11,20 +11,20 @@ class Wattmeter:
         self.uart = machine.UART(ID, baudrate=baudrate, rx=rxPin, tx=txPin)
         self.modbusClient = modbus.Modbus()
         self.rmsLayer = RMSlayer()
-        self.swriter = asyncio.StreamWriter(self.uart, {})
         self.sreader = asyncio.StreamReader(self.uart)
         self.receiveData = []
-
+        
     async def readRegs(self,reg,length):
         self.receiveData = []
+        #swriter = asyncio.StreamWriter(self.uart, {})
         readRegs = self.modbusClient.read_regs(reg, length)
-        self.swriter.awrite(readRegs)
+        self.uart.write(readRegs)
         await asyncio.sleep(0.1)
         self._recv() 
         
 
     def _recv(self):
-        res = self.sreader.readline()
+        res = self.uart.read()
         self.receiveData.append(res)
             #await asyncio.sleep(0.1)
     
