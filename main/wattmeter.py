@@ -19,8 +19,9 @@ class Wattmeter:
         #swriter = asyncio.StreamWriter(self.uart, {})
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
-        await asyncio.sleep(0.1)
-        self._recv() 
+        #await asyncio.sleep(0.1)
+        time.sleep(0.05)
+        self.receiveData = self.uart.read()
         
 
     def _recv(self):
