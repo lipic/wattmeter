@@ -45,7 +45,7 @@ class TaskHandler:
        while True:
             import time
 
-            status = self.wattmeter.updateData()
+            status = self.wattmeter.readRegs(1000,6)
           #  if status != None:
                # self.log.write(status)
             await asyncio.sleep(delay_secs)

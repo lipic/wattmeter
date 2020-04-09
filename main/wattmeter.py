@@ -17,22 +17,22 @@ class Wattmeter:
         loop = asyncio.get_event_loop()
         loop.create_task(self._recv())
 
-    async def readRegs(self,reg,length):
+    def readRegs(self,reg,length):
         self.receiveData = []
         readRegs = self.modbusClient.read_regs(reg, length)
-        await self.swriter.awrite(readRegs)
-        await asyncio.sleep(0.1)
-        return self.receiveData
+        self.swriter.awrite(readRegs)
+        print(readRegs)
+
 
     async def _recv(self):
         while True:
             res = await self.sreader.readline()
             self.receiveData.append(res)
+            self.updateData()
     
     def updateData(self):
 
         try:
-            self.receiveData = self.readRegs(1000,6)
             print(self.receiveData)
             if self.receiveData:
                 #self.datalayer.data["E1"] =     (int)((((receiveData[5])) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
