@@ -14,15 +14,19 @@ class Wattmeter:
         self.receiveData = []
         
         
-    def readRegs(self,reg,length):
+    def __readRegs(self,reg,length):
         self.receiveData = []
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
-        await asyncio.sleep(0.1)
-        self.receiveData = self.uart.read()  
 
+    def __recvData(self):
+        self.receiveData = self.uart.read()  
+    
     async def updateRMS_Data(self):
-        await self.readRegs(1000,6)
+        self.__readRegs(1000,6)
+        await asyncio.sleep(0.1)
+        self. __recvData() 
+        
         try:
             if self.receiveData:
                 #self.datalayer.data["E1"] =     (int)((((receiveData[5])) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
