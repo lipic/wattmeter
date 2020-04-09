@@ -11,26 +11,18 @@ class Wattmeter:
         self.uart = machine.UART(ID, baudrate=baudrate, rx=rxPin, tx=txPin)
         self.modbusClient = modbus.Modbus()
         self.rmsLayer = RMSlayer()
-        self.sreader = asyncio.StreamReader(self.uart)
         self.receiveData = []
         
-    async def readRegs(self,reg,length):
+        
+    def readRegs(self,reg,length):
         self.receiveData = []
-        #swriter = asyncio.StreamWriter(self.uart, {})
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
         await asyncio.sleep(0.1)
-        #time.sleep(0.05)
-        self.receiveData = self.uart.read()
-        
+        self.receiveData = self.uart.read()  
 
-    def _recv(self):
-        res = self.uart.read()
-        self.receiveData.append(res)
-            #await asyncio.sleep(0.1)
-    
-    def updateData(self):
-
+    async def updateRMS_Data(self):
+        await self.readRegs(1000,6)
         try:
             if self.receiveData:
                 #self.datalayer.data["E1"] =     (int)((((receiveData[5])) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
@@ -41,7 +33,7 @@ class Wattmeter:
                 self.rmsLayer.data["U2"] =     (int)((((self.receiveData[11])) << 8) | ((self.receiveData[12])))
                 self.rmsLayer.data["U3"] =     (int)((((self.receiveData[13])) << 8) | ((self.receiveData[14])))
             
-                return "Transmition complete."
+                return "Data from wattmeter were received."
 
             else: 
                 return "Timed out waiting for result."

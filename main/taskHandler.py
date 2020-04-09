@@ -43,9 +43,7 @@ class TaskHandler:
             
     async def wattmeterHandler(self,delay_secs):
        while True:
-
-            await self.wattmeter.readRegs(1000,6)
-            status = self.wattmeter.updateData()
+            status = await self.wattmeter.updateRMS_Data()
             #print(status)
             if status != None:
                 self.log.write(status)
