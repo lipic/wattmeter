@@ -1,33 +1,56 @@
 from main import modbus
 import machine
 import time
+import uasyncio as asyncio
+
+
 class Wattmeter:
      
-    def __init__(self):
+    def __init__(self,ID, timeout, baudrate , rxPin, txPin):
         
-        self.uart = machine.UART(1, baudrate=115200, rx=26, tx=27)
+        self.uart = machine.UART(ID, baudrate=baudrate, rx=rxPin, tx=txPin)
         self.modbusClient = modbus.Modbus()
         self.rmsLayer = RMSlayer()
+        self.swriter = asyncio.StreamWriter(self.uart, {})
+        self.sreader = asyncio.StreamReader(self.uart)
+        self.receiveData = []
+        loop = asyncio.get_event_loop()
+        loop.create_task(self._recv())
 
-              
-    def updateData(self):
-        try:
-            readRegs = self.modbusClient.read_regs(1000, 6)
-            self.uart.write(readRegs)
-            time.sleep(0.01)
-            receiveData = self.uart.read()
-            time.sleep(0.05)
-            #self.datalayer.data["E1"] =     (int)((((receiveData[5])) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
+    async def readRegs(self,reg,length):
+        self.receiveData = []
+        readRegs = self.modbusClient.read_regs(reg, length)
+        await self.swriter.awrite(readRegs)
+        await asyncio.sleep(0.1)
+        return self.receiveData
+
+    async def _recv(self):
+        while True:
+            res = await self.sreader.readline()
+            self.receiveData.append(res)
     
-            self.rmsLayer.data["I1"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
-            self.rmsLayer.data["I2"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
-            self.rmsLayer.data["I3"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
-            self.rmsLayer.data["U1"] =     (int)((((receiveData[9])) << 8)  | ((receiveData[10])))
-            self.rmsLayer.data["U2"] =     (int)((((receiveData[11])) << 8) | ((receiveData[12])))
-            self.rmsLayer.data["U3"] =     (int)((((receiveData[13])) << 8) | ((receiveData[14])))
-            return None
+    def updateData(self):
 
+        try:
+            self.receiveData = self.readRegs(1000,6)
+            print(self.receiveData)
+            if self.receiveData:
+                #self.datalayer.data["E1"] =     (int)((((receiveData[5])) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
+                self.rmsLayer.data["I1"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
+                self.rmsLayer.data["I2"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
+                self.rmsLayer.data["I3"] =     (int)((((self.receiveData[7])) << 8)  | ((self.receiveData[8])))
+                self.rmsLayer.data["U1"] =     (int)((((self.receiveData[9])) << 8)  | ((self.receiveData[10])))
+                self.rmsLayer.data["U2"] =     (int)((((self.receiveData[11])) << 8) | ((self.receiveData[12])))
+                self.rmsLayer.data["U3"] =     (int)((((self.receiveData[13])) << 8) | ((self.receiveData[14])))
+            
+                return "Transmition complete."
+
+            else: 
+                print("Timed out waiting for result.")
+                return "Timed out waiting for result."
+            
         except Exception as e:
+            print("Exception: {}. UART is probably not connected.".format(e))
             return "Exception: {}. UART is probably not connected.".format(e)
         
 class RMSlayer:

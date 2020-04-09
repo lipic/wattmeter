@@ -3,14 +3,14 @@ from machine import Pin
 from main import wifiManager
 import uasyncio as asyncio 
 from main import wattmeter
+from main import loggingHandler
 
 class TaskHandler:
     def __init__(self,wifiManager,wlanStatus,logging):
-        from main import loggingHandler
         self.log= loggingHandler.LoggingHandler()
         if (logging == True):
             self.log.enableLogging = True
-        self.wattmeter = wattmeter.Wattmeter() #Create instance of Wattmeter
+        self.wattmeter = wattmeter.Wattmeter(ID=1,timeout=50,baudrate =115200,rxPin=26,txPin=27) #Create instance of Wattmeter
         self.webServerApp = webServerApp.WebServerApp(wifiManager,wlanStatus,self.wattmeter,self.log) #Create instance of Webserver App
         self.wlanStatus = wlanStatus #Get WIFi status from boot process
         self.wifiManager = wifiManager #Get insatnce of wifimanager from boots
@@ -43,9 +43,11 @@ class TaskHandler:
             
     async def wattmeterHandler(self,delay_secs):
        while True:
+            import time
+
             status = self.wattmeter.updateData()
-            if status != None:
-                self.log.write(status)
+          #  if status != None:
+               # self.log.write(status)
             await asyncio.sleep(delay_secs)
             
 
