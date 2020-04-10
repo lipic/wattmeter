@@ -8,8 +8,6 @@ from main import loggingHandler
 class TaskHandler:
     def __init__(self,wifiManager,wlanStatus,logging):
         self.log= loggingHandler.LoggingHandler()
-        if (logging == True):
-            self.log.enableLogging = True
         self.wattmeter = wattmeter.Wattmeter(ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
         self.webServerApp = webServerApp.WebServerApp(wifiManager,wlanStatus,self.wattmeter,self.log) #Create instance of Webserver App
         self.wlanStatus = wlanStatus #Get WIFi status from boot process
@@ -17,9 +15,10 @@ class TaskHandler:
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
         self.ledWifi = Pin(22, Pin.OUT) # set pin high on creation
         self.ledErr  = Pin(21, Pin.OUT) # set pin high on creation
-        
+        if (logging == True):
+            self.log.Logging = True
      
-        
+    #Handler for wifi.    
     async def getWifiStatus(self,delay_secs):
         while True:
             try:
@@ -32,8 +31,8 @@ class TaskHandler:
                 self.log.write("Exception: {0}".format(e))
             await asyncio.sleep(10)   
 
+     #Handler for led run.        
     async def ledHandler(self,delay_secs):
-
         while True:
             if(self.ledRun.value()):
                 self.ledRun.off()
@@ -41,11 +40,18 @@ class TaskHandler:
                 self.ledRun.on()
             await asyncio.sleep(delay_secs)
             
+     #Handler for wattmeter.        
     async def wattmeterHandler(self,delay_secs):
        while True:
-            status = await self.wattmeter.updateRMS_Data()
-            if status != None:
-                self.log.write(status)
+            status = await self.wattmeter.update_Data(1000,6)
+            self.log.write("{} -> {}".format(type(self.wattmeter),status))
+            
+            status = await self.wattmeter.update_Data(2000,6)
+            self.log.write("{} -> {}".format(type(self.wattmeter),status))
+            
+            status = await self.wattmeter.update_Data(3000,3)
+            self.log.write("{} -> {}".format(type(self.wattmeter),status))
+            
             await asyncio.sleep(delay_secs)
             
 

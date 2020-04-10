@@ -4,22 +4,39 @@ import uos
 
 
 
-class LoggingHandler(uio.IOBase):
+class LoggingHandler():
     def __init__(self):
-        self.data =""
-        self.enableLogging = False
-        self.buffRowLen = 0
+        self.__message =[]
+        self.Logging = False
+        self.__buffRowLen = 0
+        self.count = -1
+        self.__loging = False
+        #self.enableLogging = 1
+
+    def __iter__(self):
+        yield (self.__message) 
+
+    def __next__(self):
+        self.count += 1
+        if self.count < len(self.__message):
+            return self.__message
+        else:
+            self.count = -1
+            raise StopIteration
 
     def write(self, data):
-        if (self.enableLogging == True):
+        if ((self.Logging == True) and data != None):
             if type(data) == bytearray: 
                 data = str(data, "ascii")
-                self.data += data
-            else:
-                self.data += data
-            self.data +="\n"
-            self.buffRowLen = self.buffRowLen + 1
-            if(self.buffRowLen>10):
-                self.buffRowLen = 0
-                self.data = ""
+            
+            self.__message.append(data)
+            self.__buffRowLen = self.__buffRowLen + 1
+            
+            if(self.__buffRowLen>10):
+                self.__buffRowLen = 0
+                self.__message = []
     
+    @property
+    def eraseMessage(self):
+        self.__message = []
+         
