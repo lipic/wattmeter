@@ -26,7 +26,7 @@ function update_ints_count() {
             document.getElementById("P1").textContent = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] )
             document.getElementById("P2").textContent = (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] )
             document.getElementById("P3").textContent = (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
-            chartData =( data['P1'] + data['P2'] + data['P3'])
+            chartData =( (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] )+ (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) + (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] ))
              
             refreshEnergyChart()
             
@@ -160,7 +160,7 @@ function refreshEnergyChart() {
           date.subtract(i, 'day').format('DD-MM-YYYY');
           dates.push(date.format('YYYY-MM-DD'));
     }
-     let data = [11,20,20,20,20,33,30,33,58,52,11,20,20,20,20,33,30,33,58,52,11,20,20,20,20,33,30,33,58,52,chartData]
+     let data = [11,20,20,20,20,33,30,33,58,52,11,20,20,20,20,33,30,33,58,52,11,20,20,20,20,33,30,33,58,52,23]
     
 
     for(var i = 0; i<31;i++){
