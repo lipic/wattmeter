@@ -23,10 +23,13 @@ function update_ints_count() {
             document.getElementById("E1").textContent = data['E1']
             document.getElementById("E2").textContent = data['E2']
             document.getElementById("E3").textContent = data['E3']
-            document.getElementById("P1").textContent = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] )
-            document.getElementById("P2").textContent = (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] )
-            document.getElementById("P3").textContent = (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
-            chartData =( (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] )+ (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) + (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] ))
+            var P1 = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] )
+            document.getElementById("P1").textContent = P1
+            var P2 = (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] )
+            document.getElementById("P2").textContent = P2
+            var P3 = (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
+            document.getElementById("P3").textContent = P3
+            chartData =(P1+P2+P3)
              
             refreshEnergyChart()
             
