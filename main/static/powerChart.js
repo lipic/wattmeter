@@ -18,7 +18,7 @@ class powerChart{
         type: 'line',
         data: {
             datasets: [{
-                label: 'Power [kw]',
+                label: 'Power [W]',
                 backgroundColor: color(chartColors.red).alpha(0.5).rgbString(),
                 borderColor: chartColors.red,
                 fill: true,
@@ -44,7 +44,7 @@ class powerChart{
                 yAxes: [{
                     scaleLabel: {
                         display: true,
-                        labelString: 'kW'
+                        labelString: 'W'
                     }
                     
                 }]
