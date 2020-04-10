@@ -17,15 +17,15 @@ function update_ints_count() {
             document.getElementById("U1").textContent = data['U1'] 
             document.getElementById("U2").textContent = data['U2']
             document.getElementById("U3").textContent = data['U3']
-            document.getElementById("I1").textContent = data['I1'] 
-            document.getElementById("I2").textContent = data['I2']
-            document.getElementById("I3").textContent = data['I3']
+            document.getElementById("I1").textContent = (data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] )
+            document.getElementById("I2").textContent = (data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )
+            document.getElementById("I3").textContent = (data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )
             document.getElementById("E1").textContent = data['E1']
             document.getElementById("E2").textContent = data['E2']
             document.getElementById("E3").textContent = data['E3']
-            document.getElementById("P1").textContent = data['P1']
-            document.getElementById("P2").textContent = data['P2']
-            document.getElementById("P3").textContent = data['P3']
+            document.getElementById("P1").textContent = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] )
+            document.getElementById("P2").textContent = (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] )
+            document.getElementById("P3").textContent = (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             chartData =( data['P1'] + data['P2'] + data['P3'])
              
             refreshEnergyChart()
