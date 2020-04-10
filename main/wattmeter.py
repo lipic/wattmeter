@@ -24,12 +24,12 @@ class Wattmeter:
     
     async def update_Data(self,reg,length):
         self.__readRegs(reg,length)
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.2)
         self. __recvData() 
         
         try:
             if (self.receiveData and (reg == 1000)):
-                #self.datalayer.data["E1"] =     (int)((((receiveData[5])) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
+
                 self.dataLayer.data["I1"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
                 self.dataLayer.data["I2"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
                 self.dataLayer.data["I3"] =     (int)((((self.receiveData[7])) << 8)  | ((self.receiveData[8])))
@@ -39,12 +39,14 @@ class Wattmeter:
                 return "Data from wattmeter address: {} were received.".format(reg)
             
             elif (self.receiveData and (reg == 2000)):
-                self.datalayer.data["E1"] =     (int)((((receiveData[5])) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
-                self.datalayer.data["E2"] =     (int)((((receiveData[9])) << 24) | ((receiveData[10])<< 16) | (((receiveData[7])) << 8) | ((receiveData[8])))
-                self.datalayer.data["E3"] =     (int)((((receiveData[13])) << 24) | ((receiveData[14])<< 16) | (((receiveData[11])) << 8) | ((receiveData[12])))
+                
+                self.datalayer.data["E1"] =     (int)(((receiveData[5]) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
+                self.datalayer.data["E2"] =     (int)(((receiveData[9]) << 24) | ((receiveData[10])<< 16) | (((receiveData[7])) << 8) | ((receiveData[8])))
+                self.datalayer.data["E3"] =     (int)(((receiveData[13]) << 24) | ((receiveData[14])<< 16) | (((receiveData[11])) << 8) | ((receiveData[12])))
                 return "Data from wattmeter address: {} were received.".format(reg)
             
             elif (self.receiveData and (reg == 3000)):
+                
                 self.dataLayer.data["P1"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
                 self.dataLayer.data["P2"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
                 self.dataLayer.data["P3"] =     (int)((((self.receiveData[7])) << 8)  | ((self.receiveData[8])))
