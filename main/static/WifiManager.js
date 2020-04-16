@@ -7,8 +7,6 @@ class WifiManager{
         })
         .done(function(data) {
             $('#updateWificlient').html(data.datalayer);
-            console.log(data)
-            $('.loader').hide();
             for(var key in data) {
                if (data.hasOwnProperty(key)) {
                    var quality = 0
@@ -23,6 +21,7 @@ class WifiManager{
                     radioBtn.appendTo('#ssid'); 
                 }
             }
+            $('#refreshSSID').find("span").remove();
         });
     }
        

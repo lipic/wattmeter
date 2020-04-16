@@ -56,7 +56,6 @@ $(document).ready(function()
         energyGraph = new Chart(energyChartCtx,energyChartConfig)
         
         update_ints_count();
-          
                
     })   
     
@@ -74,16 +73,18 @@ $(document).ready(function()
                 let energyChartCtx = document.getElementById('energyGraph').getContext('2d');
                 let energyChartConfig = energyBarChart.getConfig()
                 energyGraph = new Chart(energyChartCtx,energyChartConfig)
-                
-                update_ints_count();  
+
+                 update_ints_count();  
             });          
             
          }else if($(this).attr('id') == 'settings'){
              stop(timer);
              $('div.mainContainer').load('settings',function(){
+                $('#refreshSSID').append('<span class="spinner-border spinner-border-sm"></span>');
                 wifiManager.refreshWifiClient(); 
                 powerGraph.destroy()
-                energyGraph.destroy() 
+                energyGraph.destroy()
+                toggleApiOnSilent() 
                 
              }); 
             } 
@@ -93,7 +94,7 @@ $(document).ready(function()
     });  
       
     $(document).on('click','#setSSID',function(){
-        $('.loader').show(); 
+        $('#setSSID').append('<span class="spinner-border spinner-border-sm"></span>');
         password = document.getElementById("passwordField").value;
         var ssid = $("input[name='ssid']:checked").val();
         if(ssid){
@@ -114,7 +115,7 @@ $(document).ready(function()
                 } 
                 
             }).success(function() {
-                $('.loader').hide();
+                $(this).parent('span').remove();
             });
         }else{ 
             alert("Please choose ssid client first!");
@@ -123,11 +124,13 @@ $(document).ready(function()
      });
   
     $(document).on('click','#refreshSSID',function(){
-        $('div.mainContainer').load('settings');
-        wifiManager.refreshWifiClient();    
+        $('div.mainContainer').load('settings',function(){
+            $('#refreshSSID').append('<span class="spinner-border spinner-border-sm"></span>');
+            toggleApiOnSilent() 
+            wifiManager.refreshWifiClient();
+        });
     });
  }); 
- 
 
 
  function stop() { 
@@ -174,3 +177,7 @@ function refreshEnergyChart() {
     
 }
 
+  function toggleApiOnSilent() {
+    document.getElementById('prioritySun').switchButton('on', true);
+    document.getElementById('disableWattmeter').switchButton('on', true);
+  }

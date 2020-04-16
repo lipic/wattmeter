@@ -1,40 +1,20 @@
-body {
-      margin: 0;
-}
- 
-#refresh { 
+@black: #000000;
+@white: #FFFFFF;
+@blue: #007bff;
     
-    width: 11%;
-    height: 60px;
-    float: left;
-    margin: 7px 0px 0px 20px;
-}
-
-#tableData{
-    background-color: #e0b0ff
-    border-collapse: collapse;
-    padding-left: 25%;
-    width: 75%;
-    text-align: center;
-}
-
-.graphTable{
-    width: 75%;
-    height: 50%;
-    }
 
 ul.menu {
-    
     list-style-type: none;
     margin: 0;
     padding: 0;
     width: 25%;
     position: fixed;
-    background-color: #223E4A;
+    background-color: black;
     height: 100%;
     overflow: auto;
 }
  
+
 
 ul.menu li a {
 
@@ -43,29 +23,20 @@ ul.menu li a {
     text-align: center;
     text-decoration: none;
     padding: 8px 16px;
+    border: 0.005em solid #ffffff;
 }
  
 ul.menu li a.active {
-    background-color: #ffbb00;
-    color: #223E4A;
+    background-color: #007bff;
+    color: white;
 }
 
 ul.menu li a:hover:not(.active) {
-  background-color: #96948a;
+  background-color: #007bff;
   color: white;
 }
 
-div.maincontainer {
-  float: left;
-  padding: 1px 16px;
- 
-}
 
-#chart{ 
-    border:1px solid;
-    width : "75%";
-    padding-left = "25%";
-}
 
 @media screen and (max-width: 2000px) {
   ul.menu {
@@ -73,18 +44,10 @@ div.maincontainer {
     height: auto;
     position: relative;
   } 
-  body{
-      height: 100%;
-      }
   ul.menu li a {
     float: left;
     padding: 15px;
   }
- 
- .graphTable{
-    height: 150px;
-    }
-  div.maincontainer {margin-left: 0;}
 }
 
 @media screen and (max-width: 400px) {
@@ -92,9 +55,6 @@ div.maincontainer {
     text-align: center;
     float: none;
   }
-  .graphTable{
-        250px;
-    }
 }
 
 
@@ -106,20 +66,9 @@ footer {
 }
 
 
-.button{
-    display: inline-block;
-}
-
-.loader {
-  margin-left: 40%;
-  border: 16px solid #f3f3f3;
-  border-radius: 50%;
-  border-top: 16px solid #3498db;
-  width: 60px;
-  height: 60px;
-  -webkit-animation: spin 2s linear infinite; /* Safari */
-  animation: spin 2s linear infinite;
-}
+.graphTable{
+    height: 50%;
+ }
 
 /* Safari */
 @-webkit-keyframes spin {
@@ -163,3 +112,5 @@ footer {
     animation-direction: alternate;
     text-shadow: 0 0 1px black;
 }
+
+
