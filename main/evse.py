@@ -23,11 +23,12 @@ class Evse:
         self.receiveData = self.uart.read()  
     
     async def update_Data(self,reg,length):
-        self.DE.on()
+        
         self.__readRegs(reg,length)
         self.DE.off()
         await asyncio.sleep(0.2)
         self. __recvData() 
+        self.DE.on()
         
         try:
             if (self.receiveData and (reg == 1000)):
