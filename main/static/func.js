@@ -20,6 +20,10 @@ function update_ints_count() {
             document.getElementById("E1").textContent = data['E1']
             document.getElementById("E2").textContent = data['E2']
             document.getElementById("E3").textContent = data['E3']
+            document.getElementById("EVSE1").textContent = data['EVSE1']
+            document.getElementById("EVSE2").textContent = data['EVSE2']
+            document.getElementById("EVSE3").textContent = data['EVSE3']
+            
             var P1 = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] )
             document.getElementById("P1").textContent = P1
             var P2 =(data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] )

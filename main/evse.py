@@ -30,8 +30,10 @@ class Evse:
         try:
             if (self.receiveData and (reg == 1000)):
 
-                self.dataLayer.data["evseCurrent"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
-                return "Data from wattmeter address: {} were received.".format(self.dataLayer.data["evseCurrent"])
+                self.dataLayer.data["EVSE1"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
+                self.dataLayer.data["EVSE2"] =     (int)((((self.receiveData[6])) << 8)  | ((self.receiveData[5])))
+                self.dataLayer.data["EVSE3"] =     (int)((((self.receiveData[7])) << 8)  | ((self.receiveData[8])))
+                return "Data: {} from wattmeter address: {} were received.".format(self.dataLayer.data["evseCurrent"],reg)
                         
             else: 
                 return "Timed out waiting for result."
