@@ -1,9 +1,6 @@
 var timer;
 
 chartData = 0
-const wifiManager = new WifiManager()
-
-
 
 function update_ints_count() {
     
@@ -25,7 +22,7 @@ function update_ints_count() {
             document.getElementById("E3").textContent = data['E3']
             var P1 = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] )
             document.getElementById("P1").textContent = P1
-            var P2 = (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] )
+            var P2 =(data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] )
             document.getElementById("P2").textContent = P2
             var P3 = (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             document.getElementById("P3").textContent = P3
@@ -81,11 +78,13 @@ $(document).ready(function()
              stop(timer);
              $('div.mainContainer').load('settings',function(){
                 $('#refreshSSID').append('<span class="spinner-border spinner-border-sm"></span>');
-                wifiManager.refreshWifiClient(); 
+                setting = new Setting()
+                setting.refreshWifiClient()
+                setting.refreshSetting()
                 powerGraph.destroy()
-                energyGraph.destroy()
-                toggleApiOnSilent() 
-                
+                energyGraph.destroy() 
+                      
+             
              }); 
             } 
         $('.menu a').removeClass('active');
@@ -126,10 +125,12 @@ $(document).ready(function()
     $(document).on('click','#refreshSSID',function(){
         $('div.mainContainer').load('settings',function(){
             $('#refreshSSID').append('<span class="spinner-border spinner-border-sm"></span>');
-            toggleApiOnSilent() 
-            wifiManager.refreshWifiClient();
+            setting.refreshWifiClient();
+            setting.refreshSetting()
         });
     });
+  
+
  }); 
 
 
@@ -177,7 +178,4 @@ function refreshEnergyChart() {
     
 }
 
-  function toggleApiOnSilent() {
-    document.getElementById('prioritySun').switchButton('on', true);
-    document.getElementById('disableWattmeter').switchButton('on', true);
-  }
+

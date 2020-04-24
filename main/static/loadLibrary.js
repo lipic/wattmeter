@@ -16,8 +16,7 @@ function loadLibrary(){
     var lib = [  "main/static/energyChart.js",
                  "main/static/powerChart.js",
                  "main/static/WifiManager.js",
-                 "main/static/func.js",
-                  "main/static/highlight.js"
+                 "main/static/func.js"
         ]
     for(var i in lib){
         var head = document.getElementsByTagName('head')[0];

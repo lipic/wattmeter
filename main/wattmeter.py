@@ -11,7 +11,8 @@ class Wattmeter:
         self.uart = machine.UART(ID, baudrate=baudrate, rx=rxPin, tx=txPin)
         self.modbusClient = modbus.Modbus()
         self.dataLayer = DataLayer()
-        self.receiveData = []
+        self.receiveData = [] 
+       # self.setting = setting
         
         
     def __readRegs(self,reg,length):
