@@ -27,7 +27,8 @@ class Evse:
         self.__readRegs(reg,length)
         self.DE.off()
         await asyncio.sleep(0.2)
-        self. __recvData() 
+        self. __recvData()
+        await asyncio.sleep(0.2)
         self.DE.on()
         
         try:
