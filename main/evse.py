@@ -3,10 +3,9 @@ import machine
 import uasyncio as asyncio
 from machine import Pin
 import time
-import io 
-import rs485
 
-class Evse(io.IOBase):
+
+class Evse():
 
     
     def __init__(self,baudrate ):
