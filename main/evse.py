@@ -36,7 +36,7 @@ class Evse():
         #await asyncio.sleep(0.2) 
         self. __recvData()
        # await asyncio.sleep(0.2)
-        time.sleep(0.2)
+        time.sleep(0.1)
         try:
             if (self.receiveData and (reg == 1000)):
 
@@ -44,7 +44,7 @@ class Evse():
                 self.dataLayer.data["EVSE2"] =     (int)((((self.receiveData[6])) << 8)  | ((self.receiveData[7])))
                 self.dataLayer.data["EVSE3"] =     (int)((((self.receiveData[8])) << 8)  | ((self.receiveData[9])))
 
-                return "Data {}from wattmeter address: {} were received.".format(self.receiveData,reg)
+                return "Data: {}.".format(self.receiveData)
                         
             else: 
                 return "Timed out waiting for result."
