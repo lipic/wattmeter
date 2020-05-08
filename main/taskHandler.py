@@ -73,7 +73,7 @@ class TaskHandler:
         loop = asyncio.get_event_loop()
         loop.create_task(self.ledHandler(1))
         loop.create_task(self.getWifiStatus(10))
-        loop.create_task(self.wattmeterHandler(1))
+        #loop.create_task(self.wattmeterHandler(1))
         loop.create_task(self.evseHandler(1))
         loop.create_task(self.webServerApp.webServerRun(0))
         loop.run_forever();
