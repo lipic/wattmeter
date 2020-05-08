@@ -16,17 +16,18 @@ class Wattmeter:
         
         
     def __readRegs(self,reg,length):
-        self.receiveData = []
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
 
     def __recvData(self):
+        self.receiveData = []
         self.receiveData = self.uart.read()  
     
     async def update_Data(self,reg,length):
         self.__readRegs(reg,length)
         await asyncio.sleep(0.2)
-        self. __recvData() 
+        self. __recvData()
+        await asyncio.sleep(0.2) 
         
         try:
             if (self.receiveData and (reg == 1000)):
