@@ -21,9 +21,7 @@ class Evse():
 
     def __readRegs(self,reg,length):
         readRegs = self.modbusClient.read_regs(reg, length)
-        print(len(readRegs))
-        a = self.uart.write(readRegs)
-        print(a)
+        self.uart.write(readRegs)
             
 
     def __recvData(self):
@@ -38,8 +36,7 @@ class Evse():
         #await asyncio.sleep(0.2) 
         self. __recvData()
        # await asyncio.sleep(0.2)
-        time.sleep(0.1)
-        print(self.receiveData)
+        time.sleep(0.2)
         try:
             if (self.receiveData and (reg == 1000)):
 
