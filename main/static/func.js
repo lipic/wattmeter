@@ -17,6 +17,7 @@ function update_ints_count() {
             document.getElementById("I1").textContent = (data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] )
             document.getElementById("I2").textContent = (data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )
             document.getElementById("I3").textContent = (data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )
+            console.log(data['E1'].toString(16))
             document.getElementById("E1").textContent = (data['E1'] > 0 ?  parseFloat(data['E1'].toString(16),(data['E1'].toString(16)).length) : 0 )  
             document.getElementById("E2").textContent = //(data['E2'] > 0 ?   parseFloat(data['E2'].toString(16)) : 0 )  
             document.getElementById("E3").textContent = //(data['E3'] > 0 ?  parseFloat(data['E3'].toString(16)) : 0 )  
