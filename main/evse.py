@@ -27,18 +27,19 @@ class Evse():
         self.receiveData = []
         self.receiveData = self.uart.read() 
     
-    def update_Data(self,reg,length):
+    async def update_Data(self,reg,length):
         self.DE.off()
         self.__readRegs(reg,length)
         #await asyncio.sleep(0.01)
         self.DE.on()
         #await asyncio.sleep(0.2) 
         self. __recvData()
-       # await asyncio.sleep(0.2)
-        time.sleep(0.1)
+        await asyncio.sleep(0.1)
+        
         try:
-            print(self.receiveData)
             if(self.receiveData):
+                self.receiveData = self.receiveData[1:]
+                print("after:",self.receiveData)
                 result = self.modbusClient.mbrtu_data_processing(self.receiveData)
                 print(result)
                 
@@ -52,6 +53,7 @@ class Evse():
                     return "Timed out waiting for result."
             
         except Exception as e:
+            print(e)
             return "Exception: {}. UART is probably not connected.".format(e)
         
 class DataLayer:
