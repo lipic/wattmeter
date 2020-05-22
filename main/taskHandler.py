@@ -53,7 +53,7 @@ class TaskHandler:
             #self.log.write("{} -> {}".format(type(self.wattmeter),status))
             
             status = await self.wattmeter.update_Data(2000,6)
-            #self.log.write("{} -> {}".format(type(self.wattmeter),status))
+            self.log.write("{} -> {}".format(type(self.wattmeter),status))
             
             status = await self.wattmeter.update_Data(3000,3)
            # self.log.write("{} -> {}".format(type(self.wattmeter),status))

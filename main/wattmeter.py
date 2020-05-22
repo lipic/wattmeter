@@ -37,12 +37,14 @@ class Wattmeter:
                 self.dataLayer.data["U1"] =     (int)((((self.receiveData[9])) << 8)  | ((self.receiveData[10])))
                 self.dataLayer.data["U2"] =     (int)((((self.receiveData[11])) << 8) | ((self.receiveData[12])))
                 self.dataLayer.data["U3"] =     (int)((((self.receiveData[13])) << 8) | ((self.receiveData[14])))    
+                
             
             elif (self.receiveData and (reg == 2000)):
                 
-                self.dataLayer.data["E1"] =     (int)(((self.receiveData[3]) << 24) | ((self.receiveData[4])<< 16) | (((self.receiveData[5])) << 8) | ((self.receiveData[6])))
-                self.dataLayer.data["E2"] =     (int)(((self.receiveData[10]) << 24) | ((self.receiveData[9])<< 16) | (((self.receiveData[8])) << 8) | ((self.receiveData[7])))
-                self.dataLayer.data["E3"] =     (int)(((self.receiveData[13]) << 24) | ((self.receiveData[14])<< 16) | (((self.receiveData[11])) << 8) | ((self.receiveData[12])))
+                self.dataLayer.data["E1"] =     (float)(((self.receiveData[5]) << 24) | ((self.receiveData[6])<< 16) | (((self.receiveData[3])) << 8) | ((self.receiveData[4])))
+                self.dataLayer.data["E2"] =     (float)(((self.receiveData[9]) << 24) | ((self.receiveData[10])<< 16) | (((self.receiveData[7])) << 8) | ((self.receiveData[8])))
+                self.dataLayer.data["E3"] =     (float)(((self.receiveData[13]) << 24) | ((self.receiveData[14])<< 16) | (((self.receiveData[11])) << 8) | ((self.receiveData[12])))
+                return "{}".format(self.receiveData[3],self.receiveData[4],self.receiveData[5],self.receiveData[6])
             
             elif (self.receiveData and (reg == 3000)):
                 
