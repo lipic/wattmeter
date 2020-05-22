@@ -18,7 +18,7 @@ function update_ints_count() {
             document.getElementById("I2").textContent = (data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )
             document.getElementById("I3").textContent = (data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )
             console.log(data['E1'].toString(16))
-            document.getElementById("E1").textContent = (data['E1'] > 0 ?  parseFloat(data['E1'].toString(16),(data['E1'].toString(16)).length) : 0 )  
+            document.getElementById("E1").textContent = (data['E1'] > 0 ?  hexToFloat(data['E1'].toString(16)).toFixed(2): 0 )  
             document.getElementById("E2").textContent = //(data['E2'] > 0 ?   parseFloat(data['E2'].toString(16)) : 0 )  
             document.getElementById("E3").textContent = //(data['E3'] > 0 ?  parseFloat(data['E3'].toString(16)) : 0 )  
             document.getElementById("EVSE1").textContent = data['EVSE1']
@@ -212,3 +212,18 @@ function parseFloat(stri, len) {
   return floatr*sign;
 }
 
+
+function flipHexString(hexValue, hexDigits) {
+  var h = hexValue.substr(0, 2);
+  for (var i = 0; i < hexDigits; ++i) {
+    h += hexValue.substr(2 + (hexDigits - 1 - i) * 2, 2);
+  }
+  return h;
+}
+
+
+function hexToFloat(hex) {
+  var s = hex >> 31 ? -1 : 1;
+  var e = (hex >> 23) & 0xFF;
+  return s * (hex & 0x7fffff | 0x800000) * 1.0 / Math.pow(2, 23) * Math.pow(2, (e - 127))
+}
