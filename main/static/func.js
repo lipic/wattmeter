@@ -1,7 +1,7 @@
 var timer;
 
 chartData = 0
-
+var cnt = 100
 function update_ints_count() {
     
     $.ajax({ 
@@ -31,9 +31,12 @@ function update_ints_count() {
             var P3 = (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             document.getElementById("P3").textContent = P3
             chartData =(P1+P2+P3)
-             
-            refreshEnergyChart()
-            
+             if(cnt == 100){
+                refreshEnergyChart()
+                cnt = 0
+            }else{
+                cnt = cnt + 1    
+            }
             document.getElementById("time").textContent = getTime();
     
             timer = setTimeout(update_ints_count, ms); 

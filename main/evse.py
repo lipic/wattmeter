@@ -22,7 +22,6 @@ class Evse():
     def __readRegs(self,reg,length):
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
-            
 
     def __recvData(self):
         self.receiveData = []
@@ -43,8 +42,7 @@ class Evse():
                 self.dataLayer.data["EVSE1"] =     (int)((((self.receiveData[4])) << 8)  | ((self.receiveData[5])))
                 self.dataLayer.data["EVSE2"] =     (int)((((self.receiveData[6])) << 8)  | ((self.receiveData[7])))
                 self.dataLayer.data["EVSE3"] =     (int)((((self.receiveData[8])) << 8)  | ((self.receiveData[9])))
-
-                return "Data: {}.".format(self.receiveData)
+                return "Data from wattmeter address: {} were received.".format(reg)
                         
             else: 
                 return "Timed out waiting for result."

@@ -2,11 +2,11 @@
 function loadLibrary(){
     
     
-    requireScript('jquery', '3.4.1', "main/static/jquery-3.4.1.min.js")
-    requireScript('bootstrap-switch','4.0.0',"main/static/bootstrap-switch.min.js")
-    requireScript('moment', '1.0.1', "https://momentjs.com/downloads/moment.js")
-    requireScript('chart', '2.7.3', "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js")
-    requireScript('chartjs-plugin-streaming', '1.8.1', "https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@latest/dist/chartjs-plugin-streaming.min.js")
+   // requireScript('jquery', '3.4.1', "main/static/jquery-3.4.1.min.js")
+   // requireScript('bootstrap-switch','4.0.0',"main/static/bootstrap-switch.min.js")
+   // requireScript('moment', '1.0.1', "https://momentjs.com/downloads/moment.js")
+  //  requireScript('chart', '2.7.3', "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js")
+    //requireScript('chartjs-plugin-streaming', '1.8.1', "https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@latest/dist/chartjs-plugin-streaming.min.js")
 
 //  requireScript('energyChart', '1.0.0', "main/static/energyChart.js")
    // requireScript('powerChart', '1.0.0', "main/static/powerChart.js")

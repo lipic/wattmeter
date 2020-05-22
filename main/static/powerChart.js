@@ -6,7 +6,7 @@ class powerChart{
     getConfig(){
         var color = Chart.helpers.color;
         var chartColors = { 
-            red: 'rgb(255, 99, 132)',
+            red: 'rgb(255, 0, 0)',
             orange: 'rgb(255, 159, 64)',
             yellow: 'rgb(255, 205, 86)',
             green: 'rgb(75, 192, 192)',
@@ -19,7 +19,8 @@ class powerChart{
         data: {
             datasets: [{
                 label: 'Power [W]',
-                backgroundColor: color(chartColors.red).alpha(0.5).rgbString(),
+                color: '#FFFFFF',
+                backgroundColor: color(chartColors.red).alpha(0.6).rgbString(),
                 borderColor: chartColors.red,
                 fill: true,
                 lineTension: 0,
@@ -28,24 +29,44 @@ class powerChart{
             }]
         },
         options: {
+            legend: {
+                labels: {
+                    fontColor: "white",
+                    fontSize: 14
+                }
+            },
             title: {
                 display: true
             }, 
             scales: {
                 xAxes: [{ 
                     type: 'realtime',
+                    fontColor: '#FFFFFF',
                     realtime: {
                         duration: 180000,
                         refresh: 2500,
                         delay: 2000,
                         onRefresh: this.refresher
-                    } 
+                    },
+                    ticks: {
+                            fontColor: '#FFFFFF',
+                            fontSize: 14
+                    }
                 }],
                 yAxes: [{
+
                     scaleLabel: {
                         display: true,
-                        labelString: 'W'
-                    }
+                        labelString: 'W',
+                        fontColor: '#FFFFFF'
+                    },
+                  gridLines: {
+                      color: "#FFFFFF"
+                     },
+                        ticks: {
+                                  fontColor: '#FFFFFF',
+                                  fontSize: 14
+                            }
                     
                 }]
             },
