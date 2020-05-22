@@ -17,7 +17,7 @@ function update_ints_count() {
             document.getElementById("I1").textContent = (data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] )
             document.getElementById("I2").textContent = (data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )
             document.getElementById("I3").textContent = (data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )
-            document.getElementById("E1").textContent = data['E1']
+            document.getElementById("E1").textContent = parseFloat(data['E1'], 10)
             document.getElementById("E2").textContent = data['E2']
             document.getElementById("E3").textContent = data['E3']
             document.getElementById("EVSE1").textContent = data['EVSE1']
@@ -30,7 +30,7 @@ function update_ints_count() {
             document.getElementById("P2").textContent = P2
             var P3 = (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             document.getElementById("P3").textContent = P3
-            chartData =(P1+P2+P3)
+            chartData =10 //(P1+P2+P3)
              if(cnt == 100){
                 refreshEnergyChart()
                 cnt = 0

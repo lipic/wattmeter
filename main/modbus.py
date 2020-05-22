@@ -178,7 +178,7 @@ class Modbus:
                 if (self.MODBUS_buffer_rx[1] == 3):
                     
                     if ((self.MODBUS_buffer_rx[2] & 1) == 0):
-                        regsCnt = self.MODBUS_buffer_rx[2] // 2
+                        regsCnt = self.MODBUS_buffer_rx[2]
                 
                     else:
                         raise Exception("mbrtu_data_processing: bad data")
