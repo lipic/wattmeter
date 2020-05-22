@@ -51,8 +51,7 @@ class Evse():
                     return "Timed out waiting for result."
             
         except Exception as e:
-            print(e)
-            return "Exception: {}. UART is probably not connected.".format(e)
+            return "Exception: {} Data:{}. UART is probably not connected.".format(e, self.receiveData)
         
 class DataLayer:
     def __init__(self):
