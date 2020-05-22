@@ -41,9 +41,9 @@ class Wattmeter:
             
             elif (self.receiveData and (reg == 2000)):
                 
-                self.datalayer.data["E1"] =     (int)(((self.receiveData[5]) << 24) | ((self.receiveData[6])<< 16) | (((self.receiveData[3])) << 8) | ((self.receiveData[4])))
-                self.datalayer.data["E2"] =     (int)(((self.receiveData[9]) << 24) | ((self.receiveData[10])<< 16) | (((self.receiveData[7])) << 8) | ((self.receiveData[8])))
-                self.datalayer.data["E3"] =     (int)(((self.receiveData[13]) << 24) | ((self.receiveData[14])<< 16) | (((self.receiveData[11])) << 8) | ((self.receiveData[12])))
+                self.dataLayer.data["E1"] =     (int)(((self.receiveData[5]) << 24) | ((self.receiveData[6])<< 16) | (((self.receiveData[3])) << 8) | ((self.receiveData[4])))
+                self.dataLayer.data["E2"] =     (int)(((self.receiveData[9]) << 24) | ((self.receiveData[10])<< 16) | (((self.receiveData[7])) << 8) | ((self.receiveData[8])))
+                self.dataLayer.data["E3"] =     (int)(((self.receiveData[13]) << 24) | ((self.receiveData[14])<< 16) | (((self.receiveData[11])) << 8) | ((self.receiveData[12])))
                 return "Data from wattmeter address: {} were received.".format(reg)
             
             elif (self.receiveData and (reg == 3000)):
