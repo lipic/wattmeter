@@ -17,11 +17,9 @@ function update_ints_count() {
             document.getElementById("I1").textContent = (data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] )
             document.getElementById("I2").textContent = (data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )
             document.getElementById("I3").textContent = (data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )
-            //console.log(data['E1'].toString(16))
-            console.log(data['E1'] != undefined ?  hexToFloat("0x"+data['E1'].toString(16)).toFixed(3): 0 )
-           document.getElementById("E1").textContent = (data['E1'] != undefined ?  hexToFloat("0x"+data['E1'].toString(16)).toFixed(3): 0 )   
-            document.getElementById("E2").textContent =(data['E2'] != undefined ?  hexToFloat("0x"+data['E2'].toString(16)).toFixed(3): 0 ) 
-            document.getElementById("E3").textContent = (data['E3']!= undefined ?  hexToFloat("0x"+data['E3'].toString(16)).toFixed(3): 0 ) 
+           document.getElementById("E1").textContent = (data['E1'] != undefined ?  hexToFloat("0x"+data['E1'].toString(16)).toFixed(3)/1000: 0 )   
+            document.getElementById("E2").textContent =(data['E2'] != undefined ?  hexToFloat("0x"+data['E2'].toString(16)).toFixed(3)/1000: 0 ) 
+            document.getElementById("E3").textContent = (data['E3']!= undefined ?  hexToFloat("0x"+data['E3'].toString(16)).toFixed(3)/1000: 0 ) 
             document.getElementById("EVSE1").textContent = data['EVSE1']
             document.getElementById("EVSE2").textContent = data['EVSE2']
             document.getElementById("EVSE3").textContent = data['EVSE3']
@@ -153,7 +151,7 @@ $(document).ready(function()
  
 function getTime(){
     var dt = new Date();
-    var time = dt.getHours() + ":" + dt.getMinutes();
+    var time = dt.getHours() + " : " + dt.getMinutes() + " : "+ dt.getSeconds();
     return time;
     }
 
@@ -185,41 +183,6 @@ function refreshEnergyChart() {
         energyGraph.update()
     }
     
-}
-
-function parseFloat(stri, len) {
-
-  var floatr = 0, sign, order, mantiss,exp,
-      intr = 0, multi = 1; 
-  if (/^0x/.exec(stri)) {
-    intr = parseInt(stri,16);
-  }else{
-    for (var i = len -1; i >=0; i -= 1) {
-      if (stri.charCodeAt(i)>255) {
-        console.log('Wrong string parametr'); 
-        return false;
-      }
-      intr += stri.charCodeAt(i) * multi;
-      multi *= 256;
-    }
-  }
-  sign = (intr>>>31)?-1:1;
-  exp = (intr >>> 23 & 0xff) - 127;
-  mantissa = ((intr & 0x7fffff) + 0x800000).toString(2);
-  for (i=0; i<mantissa.length; i+=1){
-    floatr += parseInt(mantissa[i])? Math.pow(2,exp):0;
-    exp--;
-  }
-  return floatr*sign;
-}
-
-
-function flipHexString(hexValue, hexDigits) {
-  var h = hexValue.substr(0, 2);
-  for (var i = 0; i < hexDigits; ++i) {
-    h += hexValue.substr(2 + (hexDigits - 1 - i) * 2, 2);
-  }
-  return h;
 }
 
 

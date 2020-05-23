@@ -19,19 +19,19 @@ class powerChart{
         data: {
             datasets: [{
                 label: 'Power [W]',
-                color: '#FFFFFF',
+                color: '#DCDCDC',
                 backgroundColor: color(chartColors.red).alpha(0.6).rgbString(),
                 borderColor: chartColors.red,
                 fill: true,
                 lineTension: 0,
-                borderDash: [8, 4],
+                borderDash: [4 ,2],
                 data: []
             }]
         },
         options: {
             legend: {
                 labels: {
-                    fontColor: "white",
+                    fontColor: "#DCDCDC",
                     fontSize: 14
                 }
             },
@@ -41,7 +41,6 @@ class powerChart{
             scales: {
                 xAxes: [{ 
                     type: 'realtime',
-                    fontColor: '#FFFFFF',
                     realtime: {
                         duration: 180000,
                         refresh: 2500,
@@ -49,7 +48,7 @@ class powerChart{
                         onRefresh: this.refresher
                     },
                     ticks: {
-                            fontColor: '#FFFFFF',
+                            fontColor: '#DCDCDC',
                             fontSize: 14
                     }
                 }],
@@ -58,13 +57,13 @@ class powerChart{
                     scaleLabel: {
                         display: true,
                         labelString: 'W',
-                        fontColor: '#FFFFFF'
+                        fontColor: '#DCDCDC'
                     },
                   gridLines: {
-                      color: "#FFFFFF"
+                      color: "#DCDCDC"
                      },
                         ticks: {
-                                  fontColor: '#FFFFFF',
+                                  fontColor: '#DCDCDC',
                                   fontSize: 14
                             }
                     
