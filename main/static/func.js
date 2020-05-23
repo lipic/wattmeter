@@ -17,20 +17,16 @@ function update_ints_count() {
             document.getElementById("I1").textContent = (data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] )
             document.getElementById("I2").textContent = (data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )
             document.getElementById("I3").textContent = (data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )
-           document.getElementById("E1").textContent = (data['E1'] != undefined ?  ((hexToFloat("0x"+data['E1'].toString(16)))/1000).toFixed(2): 0 )   
-            document.getElementById("E2").textContent =(data['E2'] != undefined ?  ((hexToFloat("0x"+data['E2'].toString(16)))/1000).toFixed(2): 0 ) 
-            document.getElementById("E3").textContent = (data['E3']!= undefined ?  ((hexToFloat("0x"+data['E3'].toString(16)))/1000).toFixed(2): 0 ) 
+            val energy = (data['E1'] != undefined ?  ((hexToFloat("0x"+data['E1'].toString(16)))/1000).toFixed(2): 0 )  + (data['E2'] != undefined ?  ((hexToFloat("0x"+data['E2'].toString(16)))/1000).toFixed(2): 0 ) + (data['E3']!= undefined ?  ((hexToFloat("0x"+data['E3'].toString(16)))/1000).toFixed(2): 0 )  
+            document.getElementById("Energy").textContent = energy
             document.getElementById("EVSE1").textContent = data['EVSE1']
             document.getElementById("EVSE2").textContent = data['EVSE2']
             document.getElementById("EVSE3").textContent = data['EVSE3']
             
-            var P1 = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] )
-            document.getElementById("P1").textContent = P1
-            var P2 =(data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] )
-            document.getElementById("P2").textContent = P2
-            var P3 = (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
-            document.getElementById("P3").textContent = P3
-            chartData =10 //(P1+P2+P3)
+            var Power = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
+            document.getElementById("Power").textContent = Power
+
+            chartData = (P1+P2+P3)
              if(cnt == 100){
                 refreshEnergyChart()
                 cnt = 0
