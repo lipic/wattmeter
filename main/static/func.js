@@ -17,10 +17,9 @@ function update_ints_count() {
             document.getElementById("I1").textContent = (data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] )
             document.getElementById("I2").textContent = (data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )
             document.getElementById("I3").textContent = (data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )
-            var e1 = (data['E1'] != undefined ?  ((hexToFloat("0x"+data['E1'].toString(16)))/1000).toFixed(2): 0.0 )   
-            var e2 = (data['E2'] != undefined ?  ((hexToFloat("0x"+data['E2'].toString(16)))/1000).toFixed(2): 0.0 )
-            var e3 = (data['E3'] != undefined ?  ((hexToFloat("0x"+data['E3'].toString(16)))/1000).toFixed(2): 0.0 )
-            document.getElementById("Energy").textContent = (e1 + e2 + e3)
+            var e =  data['E1'] + data['E2'] + data['E3']
+            var energy = (e != undefined ?  ((hexToFloat("0x"+e.toString(16)))/1000).toFixed(2): 0.0 )
+            document.getElementById("Energy").textContent = energy
             document.getElementById("EVSE1").textContent = data['EVSE1']
             document.getElementById("EVSE2").textContent = data['EVSE2']
             document.getElementById("EVSE3").textContent = data['EVSE3']
