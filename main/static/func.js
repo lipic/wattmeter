@@ -18,7 +18,8 @@ function update_ints_count() {
             document.getElementById("I2").textContent = (data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )
             document.getElementById("I3").textContent = (data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )
             var e =  data['E1'] + data['E2'] + data['E3']
-            var energy = (e != undefined ?  ((hexToFloat("0x"+e.toString(16)))/1000).toFixed(2): 0.0 )
+            console.log("0x"+e.toString(16))
+            var energy = (e != undefined ?  ((hexToFloat("0x"+e.toString(16)))/1000).toFixed(3): 0.0 )
             document.getElementById("Energy").textContent = energy
             document.getElementById("EVSE1").textContent = data['EVSE1']
             document.getElementById("EVSE2").textContent = data['EVSE2']
