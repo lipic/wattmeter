@@ -176,9 +176,9 @@ class Modbus:
             if (self.MODBUS_buffer_rx[0] == self.SLAVE_ADDRESS):
                 #response 03
                 if (self.MODBUS_buffer_rx[1] == 3):
-                    regsCnt = self.MODBUS_buffer_rx[2]/2
+                    regsCnt = self.MODBUS_buffer_rx[2]
                     
-                    for i in (range( 3 + regsCnt * 2)):
+                    for i in (range( 3 + regsCnt )):
                         Modbus_for_crc += (chr)(self.MODBUS_buffer_rx[i])
     
                     crc16 = self.calcString(Modbus_for_crc, self.INITIAL_MODBUS)
@@ -187,9 +187,9 @@ class Modbus:
                 
                 
                     # check CRC bytes
-                    if (low_crc != self.MODBUS_buffer_rx[3 + (regsCnt * 2)]):
+                    if (low_crc != self.MODBUS_buffer_rx[3 + (regsCnt )]):
                         raise Exception("mbrtu_data_processing: bad low CRC code")
-                    if (high_crc != self.MODBUS_buffer_rx[4 + (regsCnt * 2)]):
+                    if (high_crc != self.MODBUS_buffer_rx[4 + (regsCnt )]):
                         raise Exception("mbrtu_data_processing: bad high CRC code")
                     
                 return 0
