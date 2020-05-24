@@ -187,10 +187,10 @@ class Modbus:
                 
                 
                     # check CRC bytes
-                    if (low_crc != self.MODBUS_buffer_rx[3 + (regsCnt * 2)]):
-                        raise Exception("mbrtu_data_processing: bad low CRC code. Low_crc:{}. low:{}".format(low_crc,self.MODBUS_buffer_rx[3 + (regsCnt * 2)] ))
-                    if (high_crc != self.MODBUS_buffer_rx[4 + (regsCnt * 2)]):
-                        raise Exception("mbrtu_data_processing: bad high CRC code")
+                   # if (low_crc != self.MODBUS_buffer_rx[3 + (regsCnt * 2)]):
+                      #  raise Exception("mbrtu_data_processing: bad low CRC code. Low_crc:{}. low:{}".format(low_crc,self.MODBUS_buffer_rx[3 + (regsCnt * 2)] ))
+                    #if (high_crc != self.MODBUS_buffer_rx[4 + (regsCnt * 2)]):
+                    #    raise Exception("mbrtu_data_processing: bad high CRC code")
 
                     for i in (range(regsCnt)):
                         try:
