@@ -39,13 +39,13 @@ class Evse():
         try:
             if(self.receiveData):
                 self.receiveData = self.receiveData[1:]
-                #result = self.modbusClient.mbrtu_data_processing(self.receiveData)
+                result = self.modbusClient.mbrtu_data_processing(self.receiveData)
                 
                 if (reg == 1000):
                     self.dataLayer.data["EVSE1"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
                     self.dataLayer.data["EVSE2"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
                     self.dataLayer.data["EVSE3"] =     (int)((((self.receiveData[7])) << 8)  | ((self.receiveData[8])))
-                    return "Data from wattmeter address: {} were received. Result: ".format(reg)
+                    return "Data from wattmeter address: {} were received. Result: {}".format(reg,result)
                         
                 else: 
                     return "Timed out waiting for result."
