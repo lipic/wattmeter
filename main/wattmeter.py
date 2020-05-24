@@ -29,7 +29,7 @@ class Wattmeter:
         self. __recvData() 
         
         try:
-            if (self.receiveData and (reg == 1000)):
+            if (self.receiveData and (reg == 1000) and  (0 == self.modbusClient.mbrtu_data_processing(self.receiveData))):
 
                 self.dataLayer.data["I1"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
                 self.dataLayer.data["I2"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
@@ -39,14 +39,14 @@ class Wattmeter:
                 self.dataLayer.data["U3"] =     (int)((((self.receiveData[13])) << 8) | ((self.receiveData[14])))    
                 
             
-            elif (self.receiveData and (reg == 2000)):
+            elif (self.receiveData and (reg == 2000) and (0 == self.modbusClient.mbrtu_data_processing(self.receiveData))):
                 
                 self.dataLayer.data["E1"] =     (float)(((self.receiveData[5]) << 24) | ((self.receiveData[6])<< 16) | (((self.receiveData[3])) << 8) | ((self.receiveData[4])))
                 self.dataLayer.data["E2"] =     (float)(((self.receiveData[9]) << 24) | ((self.receiveData[10])<< 16) | (((self.receiveData[7])) << 8) | ((self.receiveData[8])))
                 self.dataLayer.data["E3"] =     (float)(((self.receiveData[13]) << 24) | ((self.receiveData[14])<< 16) | (((self.receiveData[11])) << 8) | ((self.receiveData[12])))
                 return "{};{};{};{}".format(self.receiveData[3],self.receiveData[4],self.receiveData[5],self.receiveData[6])
             
-            elif (self.receiveData and (reg == 3000)):
+            elif (self.receiveData and (reg == 3000) and (0 == self.modbusClient.mbrtu_data_processing(self.receiveData))):
                 
                 self.dataLayer.data["P1"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
                 self.dataLayer.data["P2"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
