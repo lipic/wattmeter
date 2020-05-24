@@ -191,13 +191,8 @@ class Modbus:
                         raise Exception("mbrtu_data_processing: bad low CRC code. Low_crc:{}. low:{}".format(low_crc,self.MODBUS_buffer_rx[3 + (regsCnt * 2)] ))
                     if (high_crc != self.MODBUS_buffer_rx[4 + (regsCnt * 2)]):
                         raise Exception("mbrtu_data_processing: bad high CRC code")
-
-                    for i in (range(regsCnt)):
-                        try:
-                            values.append(int((0xff00 & ((self.MODBUS_buffer_rx[2 * i + 3]) << 8)) + (0xff & (self.MODBUS_buffer_rx[2 * i + 4]))))
-                        except Exception as e:
-                            raise Exception("mbrtu_data_processing: error conversion int "+str(e))
-                    return values
+                    
+                    return 0
                  
                 
             #response 16

@@ -39,9 +39,8 @@ class Evse():
         try:
             if(self.receiveData):
                 self.receiveData = self.receiveData[1:]
-                result = self.modbusClient.mbrtu_data_processing(self.receiveData)
-                
-                if (reg == 1000):
+                    
+                if ((reg == 1000)and (0 == self.modbusClient.mbrtu_data_processing(self.receiveData))):
                     self.dataLayer.data["EVSE1"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
                     self.dataLayer.data["EVSE2"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
                     self.dataLayer.data["EVSE3"] =     (int)((((self.receiveData[7])) << 8)  | ((self.receiveData[8])))
@@ -51,7 +50,7 @@ class Evse():
                     return "Timed out waiting for result."
             
         except Exception as e:
-            return "Exception: {} Data:{}. UART is probably not connected.".format(e, self.receiveData)
+            return "Exception: {} Data:{}".format(e, self.receiveData)
         
 class DataLayer:
     def __init__(self):
