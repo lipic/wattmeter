@@ -35,12 +35,12 @@ class Evse():
                 else:
                     current = self.setting.config["sl,Breaker"]
                     status = await self.__writeEvse_data(1000,current)
-            else:
+            else: 
                 current = 0
                 
             print("main Breaker: ",self.setting.config["sl,Breaker"])
             print("Evse current: ",current)
-        
+        returm status
      
     async def __writeEvse_data(self,reg,data):
         self.DE.off()
