@@ -51,6 +51,7 @@ class Evse():
         self.receiveData = []
         self.receiveData = self.uart.read() 
         await asyncio.sleep(0.1)
+        return self.receiveData
 
  
         
