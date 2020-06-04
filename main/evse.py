@@ -44,7 +44,7 @@ class Evse():
             print("main Breaker: ",self.setting.config["sl,Breaker"])
             print("Evse current: ",current)
         
-        return "Hoooooooj Read: {}; Write: {}".format(status,state)
+        return "rev 1 Read: {}; Write: {}".format(status,state)
      
     async def __writeEvse_data(self,reg,data):
         self.DE.off()
@@ -53,7 +53,7 @@ class Evse():
         self.DE.on()
         self.sendData= []
         self.sendData = self.uart.read() 
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(1)
         return "Receive_Data: {}, Send_data {}".format(self.sendData,writeRegs)
 
  
@@ -65,7 +65,7 @@ class Evse():
         self.DE.on()
         self.receiveData = []
         self.receiveData = self.uart.read() 
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(1)
 
         try:
             if(self.receiveData):
