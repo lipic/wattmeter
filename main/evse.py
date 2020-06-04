@@ -22,15 +22,15 @@ class Evse():
        # self.setting = setting
 
     
-    async def evseHandler(self):
+    async def __await__(self):
         #first read data from evse
         current = 0
-        state = "1"
         status = await self.__readEvse_data(1000,3)
-        state = state + "2"
+
         if(status == None):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
+                
                 if (self.setting.config["sw,Enable balancing"] == 'True'):
                     current = self.balancEvseCurrent()
                     state = await self.__writeEvse_data(1000,current)
@@ -47,7 +47,7 @@ class Evse():
         
         return "Read: {}; Write: {}".format(status,state)
      
-    async def __writeEvse_data(self,reg,data):
+    def __writeEvse_data(self,reg,data):
         self.DE.off()
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
         self.uart.write(writeRegs)
@@ -59,7 +59,7 @@ class Evse():
 
  
         
-    async def __readEvse_data(self,reg,length):
+    def __readEvse_data(self,reg,length):
         self.DE.off()
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
