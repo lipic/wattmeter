@@ -45,7 +45,7 @@ class Evse():
         
         return "Read: {}; Write: {}".format(status,state)
      
-    def __writeEvse_data(self,reg,data):
+    async def __writeEvse_data(self,reg,data):
         self.DE.off()
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
         self.uart.write(writeRegs)
@@ -57,7 +57,7 @@ class Evse():
 
  
         
-    def __readEvse_data(self,reg,length):
+    async def __readEvse_data(self,reg,length):
         self.DE.off()
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
