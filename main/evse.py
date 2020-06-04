@@ -27,7 +27,7 @@ class Evse():
         current = 0
         status = await self.__readEvse_data(1000,3)
 
-        if(status == None):
+        if(status == 999):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
                 
@@ -35,10 +35,8 @@ class Evse():
                     current = self.balancEvseCurrent()
                     state = await self.__writeEvse_data(1000,current)
                 else:
-                    state = state + "3"
                     current = self.setting.config["sl,Breaker"]
                     state = await self.__writeEvse_data(1000,current)
-                    state = state + "4"
             else: 
                 current = 0
                 
