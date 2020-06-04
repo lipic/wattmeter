@@ -25,26 +25,26 @@ class Evse():
     async def __await__(self):
         #first read data from evse
         current = 0
-        status = await self.__readEvse_data(1000,3)
+        #status = await self.__readEvse_data(1000,3)
 
-        if(status == 999):
+        #if(status == 999):
             #If get max current accordig to wattmeter
-            if(self.setting.config["sw,Enable charging"] == 'True'):
+          #  if(self.setting.config["sw,Enable charging"] == 'True'):
                 
-                if (self.setting.config["sw,Enable balancing"] == 'True'):
-                    current = self.balancEvseCurrent()
-                    state = await self.__writeEvse_data(1000,current)
-                else:
-                    current = self.setting.config["sl,Breaker"]
-                    state = await self.__writeEvse_data(1000,current)
-            else: 
-                current = 0
+            #    if (self.setting.config["sw,Enable balancing"] == 'True'):
+              #      current = self.balancEvseCurrent()
+                #    state = await self.__writeEvse_data(1000,current)
+                #else:
+                  #  current = self.setting.config["sl,Breaker"]
+                    #state = await self.__writeEvse_data(1000,current)
+            #else: 
+              #  current = 0
                 
-            print("main Breaker: ",self.setting.config["sl,Breaker"])
-            print("Evse current: ",current)
+            #print("main Breaker: ",self.setting.config["sl,Breaker"])
+            #print("Evse current: ",current)
         
-        return "Read: {}; Write: {}".format(status,state)
-     
+        #return "Read: {}; Write: {}".format(status,state)
+        return "Pavel"
     async def __writeEvse_data(self,reg,data):
         self.DE.off()
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
