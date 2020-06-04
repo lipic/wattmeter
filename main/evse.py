@@ -25,7 +25,7 @@ class Evse():
     async def evseHandler(self):
         #first read data from evse
         current = 0
-        state = "1"
+        state = ""
         status = await self.__readEvse_data(1000,3)
        # await asyncio.sleep(1)
         if(status == None):
@@ -35,17 +35,15 @@ class Evse():
                     current = self.balancEvseCurrent()
                     state = await self.__writeEvse_data(1000,current)
                 else:
-                    state = state + "3"
                     current = self.setting.config["sl,Breaker"]
                     state = await self.__writeEvse_data(1000,current)
-                    state = state + "4"
             else: 
                 current = 0
                 
             print("main Breaker: ",self.setting.config["sl,Breaker"])
             print("Evse current: ",current)
         
-        return "Read: {}; Write: {}".format(status,state)
+        return "Hoj Read: {}; Write: {}".format(status,state)
      
     async def __writeEvse_data(self,reg,data):
         self.DE.off()
@@ -54,7 +52,7 @@ class Evse():
         self.DE.on()
         self.receiveData = []
         self.receiveData = self.uart.read() 
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.5)
         return "Receive_Data: {}, Send_data {}".format(self.receiveData,writeRegs)
 
  
@@ -66,7 +64,7 @@ class Evse():
         self.DE.on()
         self.receiveData = []
         self.receiveData = self.uart.read() 
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.5)
 
         try:
             if(self.receiveData):
