@@ -68,8 +68,8 @@ class Modbus:
        
         if(self.func in [16]):
             MODBUS_buffer_tx = [(chr)(self.SLAVE_ADDRESS),(chr)(self.func&0xff),(chr)(add1&0xff),(chr)(add2&0xff),(chr)(0),(chr)(len(self.value)),(chr)(2*len(self.value))]
+            
             for i in range(len(self.value)):
-                print(self.value[i])
                 MODBUS_buffer_tx.append((chr) ((self.value[i] >> 8)&0xff))
                 MODBUS_buffer_tx.append((chr) (self.value[i]&0xff))
         
@@ -90,7 +90,8 @@ class Modbus:
             request1.append(low_crc)
             request1.append(high_crc)
             result = self.int_to_byte(request1)
-   
+
+
         return result
       
         
