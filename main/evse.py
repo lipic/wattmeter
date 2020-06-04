@@ -13,6 +13,7 @@ class Evse():
         self.modbusClient = modbus.Modbus()
         self.dataLayer = DataLayer()
         self.receiveData = []
+        self.sendData = []
         self.setting = setting
         self.wattmeter = wattmeter
         self.__Delay_for_breaker = 0
@@ -50,10 +51,10 @@ class Evse():
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
         self.uart.write(writeRegs)
         self.DE.on()
-        self.receiveData = []
-        self.receiveData = self.uart.read() 
-        await asyncio.sleep(0.5)
-        return "Receive_Data: {}, Send_data {}".format(self.receiveData,writeRegs)
+        self.sendData= []
+        self.sendData = self.uart.read() 
+        await asyncio.sleep(0.05)
+        return "Receive_Data: {}, Send_data {}".format(self.sendData,writeRegs)
 
  
         
@@ -64,7 +65,7 @@ class Evse():
         self.DE.on()
         self.receiveData = []
         self.receiveData = self.uart.read() 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.05)
 
         try:
             if(self.receiveData):
