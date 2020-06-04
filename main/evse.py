@@ -50,7 +50,7 @@ class Evse():
         self.DE.on()
         self.receiveData = []
         self.receiveData = self.uart.read() 
-        #await asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)
         return "Receive_Data: {}, Send_data {}".format(self.receiveData,writeRegs)
 
  
