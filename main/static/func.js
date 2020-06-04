@@ -23,7 +23,7 @@ function update_ints_count() {
             var energy = parseFloat(e1) + parseFloat(e2)+ parseFloat(e3)
             console.log(energy)
             document.getElementById("Energy").textContent = energy.toFixed(3)
-            document.getElementById("ACTUAL_CONFING_CURRENT").textContent = data['ACTUAL_CONFING_CURRENT']
+            document.getElementById("ACTUAL_CONFIG_CURRENT").textContent = data['ACTUAL_CONFIG_CURRENT']
             document.getElementById("ACTUAL_OUTPUT_CURRENT").textContent = data['ACTUAL_OUTPUT_CURRENT']
             document.getElementById("EV_STATE").textContent = data['EV_STATE']
             
