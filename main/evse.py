@@ -40,7 +40,8 @@ class Evse():
                 
             print("main Breaker: ",self.setting.config["sl,Breaker"])
             print("Evse current: ",current)
-        returm status
+        
+        return status
      
     async def __writeEvse_data(self,reg,data):
         self.DE.off()
