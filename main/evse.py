@@ -24,24 +24,25 @@ class Evse():
     
     async def evseHandler(self):
         #first read data from evse
-        status = ""
         current = 0
-        if(await self.__readEvse_data(1000,3) == None):
+        state = ""
+        status = await self.__readEvse_data(1000,3)
+        if(status == None):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
                 if (self.setting.config["sw,Enable balancing"] == 'True'):
                     current = self.balancEvseCurrent()
-                    status = await self.__writeEvse_data(1000,current)
+                    state = await self.__writeEvse_data(1000,current)
                 else:
                     current = self.setting.config["sl,Breaker"]
-                    status = await self.__writeEvse_data(1000,current)
+                    state = await self.__writeEvse_data(1000,current)
             else: 
                 current = 0
                 
             print("main Breaker: ",self.setting.config["sl,Breaker"])
             print("Evse current: ",current)
         
-        return status
+        return "{}{}".format(status,state)
      
     async def __writeEvse_data(self,reg,data):
         self.DE.off()
@@ -51,7 +52,7 @@ class Evse():
         self.receiveData = []
         self.receiveData = self.uart.read() 
         await asyncio.sleep(0.1)
-        return self.receiveData
+        return "Receive_Data: {}, Send_data {}".format(self.receiveData,writeRegs)
 
  
         
