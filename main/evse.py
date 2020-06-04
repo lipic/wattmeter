@@ -27,7 +27,9 @@ class Evse():
         current = 0
         state = ""
         status = await self.__readEvse_data(1000,3)
-        if(status == None):
+        state = await self.__writeEvse_data(1000,10)
+        
+        if(status == 999):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
                 if (self.setting.config["sw,Enable balancing"] == 'True'):
@@ -47,12 +49,15 @@ class Evse():
     async def __writeEvse_data(self,reg,data):
         self.DE.off()
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
+        reg = []
+        for i in writeRegs:
+            reg.append(int(i))
         self.uart.write(writeRegs)
         self.DE.on()
         self.receiveData = []
         self.receiveData = self.uart.read() 
         await asyncio.sleep(0.1)
-        return "Receive_Data: {}, Send_data {}".format(self.receiveData,writeRegs)
+        return "Receive_Data: {}, Send_data {}".format(self.receiveData,reg)
 
  
         
@@ -86,7 +91,6 @@ class Evse():
     def balancEvseCurrent(self):
         #Zjisti deltu
         import random
-        self.dataLayer.data["EV_STATE"] = 3
         maxCurrent = self.__requestCurrent + random.randint(1,16)#self.dataLayer.data["I1"]  + self.dataLayer.data["I2"]  + self.dataLayer.data["I3"]
 
         delta = int(self.setting.config["sl,Breaker"]) - maxCurrent
