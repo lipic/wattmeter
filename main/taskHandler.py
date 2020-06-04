@@ -64,7 +64,7 @@ class TaskHandler:
     async def evseHandler(self,delay_secs):
        while True:
           
-            status = "fuck"#await self.evse.evseHandler()
+            status = await self.evse.evseHandler()
             self.log.write("{} -> {}".format(type(self.evse),status))
             await asyncio.sleep(delay_secs)
 
