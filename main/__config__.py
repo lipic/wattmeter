@@ -2,11 +2,8 @@ import time
 class Config:
     
     def __init__(self):
-        
-        self.config = {'Enable balancing':False,"Enable charging":False,"Priority charging from sun":False,"Priority charging night current":False}
-        self.evseCurrent = 0
-        self.mainBreaker = 0
-        self.enableBalancing = 0
+        #all variables
+        self.config = {'sw,Enable balancing':False,"sw,Enable charging":False,"sl,Breaker":6}
         self.SETTING_PROFILES = 'setting.dat'
     
     def update_Config(self):
@@ -22,7 +19,9 @@ class Config:
             else:
                 setting[i] = self.config[i]
                 self.write_setting(setting)
-
+        
+        
+        
             
     def handle_configure(self,variable, value):
         if len(variable)>0:

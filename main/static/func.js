@@ -23,14 +23,14 @@ function update_ints_count() {
             var energy = parseFloat(e1) + parseFloat(e2)+ parseFloat(e3)
             console.log(energy)
             document.getElementById("Energy").textContent = energy.toFixed(3)
-            document.getElementById("EVSE1").textContent = data['EVSE1']
-            document.getElementById("EVSE2").textContent = data['EVSE2']
-            document.getElementById("EVSE3").textContent = data['EVSE3']
+            document.getElementById("ACTUAL_CONFING_CURRENT").textContent = data['ACTUAL_CONFING_CURRENT']
+            document.getElementById("ACTUAL_OUTPUT_CURRENT").textContent = data['ACTUAL_OUTPUT_CURRENT']
+            document.getElementById("EV_STATE").textContent = data['EV_STATE']
             
-            var Power = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
+            var Power = Math.floor(Math.random() * Math.floor(50));; //(data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             document.getElementById("Power").textContent = Power
 
-            chartData = Power
+            chartData = Power+10
              if(cnt == 100){
                 refreshEnergyChart()
                 cnt = 0
@@ -160,7 +160,7 @@ function refreshPowerChart() {
     powerGraph.config.data.datasets.forEach(function(dataset) {
         dataset.data.push({
             x: Date.now(),
-            y: chartData
+            y: (chartData+10)
         });
     });
 }
@@ -191,3 +191,5 @@ function hexToFloat(hex) {
   var e = (hex >> 23) & 0xFF;
   return s * (hex & 0x7fffff | 0x800000) * 1.0 / Math.pow(2, 23) * Math.pow(2, (e - 127))
 }
+
+

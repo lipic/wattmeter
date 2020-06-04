@@ -13,7 +13,7 @@ class TaskHandler:
         self.setting.update_Config()
         self.log= loggingHandler.LoggingHandler()
         self.wattmeter = wattmeter.Wattmeter(ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
-        self.evse = evse.Evse(baudrate = 9600)
+        self.evse = evse.Evse(baudrate = 9600,setting = self.setting, wattmeter = self.wattmeter )
         self.webServerApp = webServerApp.WebServerApp(wifiManager,wlanStatus,self.wattmeter,self.log,setting = self.setting, evse = self.evse) #Create instance of Webserver App
         self.wlanStatus = wlanStatus #Get WIFi status from boot process
         self.wifiManager = wifiManager #Get insatnce of wifimanager from boots
@@ -64,9 +64,8 @@ class TaskHandler:
     async def evseHandler(self,delay_secs):
        while True:
           
-            status = await self.evse.update_Data(1000,3)
+            status = await self.evse.evseHandler()
             self.log.write("{} -> {}".format(type(self.evse),status))
-            
             await asyncio.sleep(delay_secs)
 
     def mainTaskHandlerRun(self):

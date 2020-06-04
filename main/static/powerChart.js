@@ -24,7 +24,7 @@ class powerChart{
                 borderColor: chartColors.red,
                 fill: true,
                 lineTension: 0,
-                borderDash: [4 ,2],
+                borderDash: [8 ,4],
                 data: []
             }]
         },
@@ -42,8 +42,8 @@ class powerChart{
                 xAxes: [{ 
                     type: 'realtime',
                     realtime: {
-                        duration: 180000,
-                        refresh: 2500,
+                        duration: 86400000,
+                        refresh: 60000,
                         delay: 2000,
                         onRefresh: this.refresher
                     },
