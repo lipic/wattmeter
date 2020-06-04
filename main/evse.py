@@ -27,7 +27,7 @@ class Evse():
         current = 0
         state = ""
         status = await self.__readEvse_data(1000,3)
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.5)
         if(status == None):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
