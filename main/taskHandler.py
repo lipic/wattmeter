@@ -1,11 +1,13 @@
 from main import webServerApp
 from machine import Pin
 from main import wifiManager
-import uasyncio as asyncio 
+import uasyncio as asyncio  
 from main import wattmeter
 from main import evse
 from main import loggingHandler
 from main import __config__
+from ntptime import settime
+                    
 
 class TaskHandler:
     def __init__(self,wifiManager,wlanStatus,logging):
@@ -29,12 +31,13 @@ class TaskHandler:
             try:
                 if(self.wlanStatus.isconnected()):
                     self.ledWifi.on()
+                    settime()
                 else:
                     if len(self.wifiManager.read_profiles()) != 0:
                         self.wifiManager.get_connection()
             except Exception as e:
                 self.log.write("Exception: {0}".format(e))
-            await asyncio.sleep(10)   
+            await asyncio.sleep(delay_secs)   
 
      #Handler for led run.        
     async def ledHandler(self,delay_secs):
@@ -49,21 +52,13 @@ class TaskHandler:
     async def wattmeterHandler(self,delay_secs):
        while True:
           
-            status = await self.wattmeter.update_Data(1000,6)
-            #self.log.write("{} -> {}".format(type(self.wattmeter),status))
-            
-            status = await self.wattmeter.update_Data(2000,6)
-            self.log.write("{} -> {}".format(type(self.wattmeter),status))
-            
-            status = await self.wattmeter.update_Data(3000,3)
-           # self.log.write("{} -> {}".format(type(self.wattmeter),status))
-            
+            status = await self.wattmeter.wattmeterHandler()
+            #self.log.write("{} -> {}".format(type(self.wattmeter),status))            
             await asyncio.sleep(delay_secs)
             
      #Handler for evse.        
     async def evseHandler(self,delay_secs):
        while True:
-          
             status = await self.evse.evseHandler()
             self.log.write("{} -> {}".format(type(self.evse),status))
             await asyncio.sleep(delay_secs)

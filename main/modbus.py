@@ -212,11 +212,11 @@ class Modbus:
                         raise Exception("mbrtu_data_processing: bad low CRC code")
                     if (high_crc != self.MODBUS_buffer_rx[7]):
                         raise Exception("mbrtu_data_processing: bad high CRC code")
-                    addres = (0xff00 & (self.MODBUS_buffer_rx[2] << 8)) + (0xff & self.MODBUS_buffer_rx[3])
-                    numWritten = self.MODBUS_buffer_rx[5]
+                    #addres = (0xff00 & (self.MODBUS_buffer_rx[2] << 8)) + (0xff & self.MODBUS_buffer_rx[3])
+                    #numWritten = self.MODBUS_buffer_rx[5]
                     #print(numWritten," registers were written to start address: ",addres)
                     
-                    return 1  
+                    return 0  
             else:
                 raise Exception("mbrtu_data_processing: wrong slave address")
         else:

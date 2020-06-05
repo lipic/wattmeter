@@ -4,7 +4,9 @@ class Config:
     def __init__(self):
         #all variables
         self.config = {'sw,Enable balancing':False,"sw,Enable charging":False,"sl,Breaker":6}
+        self.apiConfig = {'sw,Enable balancing':False,"sw,Enable charging":False,"sl,Breaker":6}
         self.SETTING_PROFILES = 'setting.dat'
+
     
     def update_Config(self):
         try:
@@ -33,7 +35,7 @@ class Config:
             setting[variable] = value
             print(variable,value)
             self.write_setting(setting)
-            time.sleep(5)
+            time.sleep(1)
             self.update_Config()
             return True
         

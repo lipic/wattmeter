@@ -12,14 +12,14 @@ class Evse():
         self.uart =  UART(2,baudrate, bits=8, parity=None)
         self.modbusClient = modbus.Modbus()
         self.dataLayer = DataLayer()
-        self.receiveData = []
-        self.sendData = []
         self.setting = setting
         self.wattmeter = wattmeter
         self.__Delay_for_breaker = 0
         self.__cntCurrent = 0
         self.__requestCurrent = 0
-        
+                
+        #self.startTime = 0
+        #self.stopTime = 0
        # self.setting = setting
 
     
@@ -28,80 +28,77 @@ class Evse():
         current = 0
         state = ""
         status = await self.__readEvse_data(1000,3)
-        state = await self.__writeEvse_data(1000,10)
-        #await asyncio.sleep(0.1)
-        stat = "S"
-        if(stat == 'SUCCESS'):
+
+        if(status == 'SUCCESS_READ'):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
                 if (self.setting.config["sw,Enable balancing"] == 'True'):
                     current = self.balancEvseCurrent()
                     state = await self.__writeEvse_data(1000,current)
-    
                 else:
                     current = self.setting.config["sl,Breaker"]
                     state = await self.__writeEvse_data(1000,current)
-
+                    
             else: 
-                current = 0
+                state = await self.__writeEvse_data(1000,0)
                 
-            print("main Breaker: ",self.setting.config["sl,Breaker"])
-            print("Evse current: ",current)
-            proces = proces + "4"
         return "Read: {}; Write: {}".format(status,state)
      
     async def __writeEvse_data(self,reg,data):
-        
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
         self.uart.write(writeRegs)
-        #await ascyncio.sleep(0.01)
         self.DE.on()
-        self.sendData = []
-        self.sendData = self.uart.read()
         await asyncio.sleep(0.1)
+        receiveData = self.uart.read()
         self.DE.off()
-        return '---->{}'.format(self.sendData)
- 
+        try:
+            receiveData = receiveData[1:]
+            if (0 == self.modbusClient.mbrtu_data_processing(receiveData)):
+                return  'SUCCESS_WRITE'
+            else:
+                return 'ERROR'
+        except Exception as e:
+            return "Exception: {}".format(e)
         
     async def __readEvse_data(self,reg,length):
         
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
         self.DE.on()
-        self.receiveData = []
-        self.receiveData = self.uart.read() 
         await asyncio.sleep(0.1)
-        self.DE.off()
-
+        receiveData = self.uart.read()
+        self.DE.off() 
+    
         try:
-            if(self.receiveData):
-                self.receiveData = self.receiveData[1:]
+            if(receiveData):
+                receiveData = receiveData[1:]
                     
-                if ((reg == 1000)and (0 == self.modbusClient.mbrtu_data_processing(self.receiveData))):
-                    self.dataLayer.data["ACTUAL_CONFIG_CURRENT"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
-                    self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
-                    self.dataLayer.data["EV_STATE"] =     (int)((((self.receiveData[7])) << 8)  | ((self.receiveData[8])))
-                    return '---->{}'.format(self.receiveData)
+                if ((reg == 1000)and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+                    self.dataLayer.data["ACTUAL_CONFIG_CURRENT"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
+                    self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
+                    self.dataLayer.data["EV_STATE"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
+                    return 'SUCCESS_READ'
                         
                 else: 
                     return "Timed out waiting for result."
                  
-  
         except Exception as e:
-            return "Exception: {} Data:{}".format(e, self.receiveData)
-        
+            return "Exception: {} ".format(e)
 
     def balancEvseCurrent(self):
         #Zjisti deltu
         import random
-        maxCurrent = self.__requestCurrent + random.randint(1,16)#self.dataLayer.data["I1"]  + self.dataLayer.data["I2"]  + self.dataLayer.data["I3"]
 
+        maxCurrent = self.__requestCurrent + random.randint(1,16)#self.dataLayer.data["I1"]  + self.dataLayer.data["I2"]  + self.dataLayer.data["I3"]
+        self.dataLayer.data["EV_STATE"]  = 3
         delta = int(self.setting.config["sl,Breaker"]) - maxCurrent
         # Kdyz je proud vetsi nez dvojnasobek proudu jsitice okamzite vypni a pak pockej 10s
         if ((maxCurrent < int(self.setting.config["sl,Breaker"])  * 2) and (0 == self.__Delay_for_breaker)) :
             self.__cntCurrent = self.__cntCurrent+1
             #Dle normy je zmena proudu EV nasledujici po zmene pracovni cyklu PWM maximalne 5s
-            if (self.__cntCurrent >= 5) :
+            if (self.__cntCurrent >= 3) :
+                #self.stopTime = int(round(time.time() * 1000)) - self.startTime
+                #print("Stop time: ",self.stopTime)
                 #jestli je deltaBreaker zaporna a vetsi nez request current nastav request Current na 0
                 if ((self.__requestCurrent + delta) < 0):
                     self.__requestCurrent = 0
@@ -127,13 +124,13 @@ class Evse():
                                 else:
                                     self.__requestCurrent  = self.__requestCurrent + 1            
                 
+                #self.startTime = int(round(time.time() * 1000))
                 self.__cntCurrent = 0
         else:
             self.__requestCurrent = 0
             self.__Delay_for_breaker = self.__Delay_for_breaker+1
         if (self.__Delay_for_breaker > 60):
             self.__Delay_for_breaker = 0
-            
         return  self.__requestCurrent
     
 class DataLayer:
