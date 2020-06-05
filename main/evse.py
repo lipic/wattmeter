@@ -34,12 +34,11 @@ class Evse():
             if(self.setting.config["sw,Enable charging"] == 'True'):
                 if (self.setting.config["sw,Enable balancing"] == 'True'):
                     current = self.balancEvseCurrent()
-                    self.__writeEvse_data(1000,current)
-                    await asyncio.sleep(0.1)
+                    await self.__writeEvse_data(1000,current)
+    
                 else:
                     current = self.setting.config["sl,Breaker"]
-                    self.__writeEvse_data(1000,current)
-                    await asyncio.sleep(0.1)
+                    await self.__writeEvse_data(1000,current)
 
             else: 
                 current = 0
@@ -49,24 +48,27 @@ class Evse():
         
         return "Read: {}; Write: {}".format(status,state)
      
-    def __writeEvse_data(self,reg,data):
-        self.DE.off()
+    async def __writeEvse_data(self,reg,data):
+        
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
         self.uart.write(writeRegs)
+        await ascyncio.sleep(0.01)
         self.DE.on()
         self.sendData = []
         self.sendData = self.uart.read()
-
+        await ascyncio.sleep(0.1)
+        self.DE.off()
  
         
     async def __readEvse_data(self,reg,length):
-        self.DE.off()
+        
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
         self.DE.on()
         self.receiveData = []
         self.receiveData = self.uart.read() 
         await asyncio.sleep(0.1)
+        self.DE.off()
 
         try:
             if(self.receiveData):
