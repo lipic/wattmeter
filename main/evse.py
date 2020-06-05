@@ -60,7 +60,7 @@ class Evse():
         self.DE.on()
         self.sendData = []
         self.sendData = self.uart.read()
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(0.05)
         self.DE.off()
         return '---->{}'.format(self.sendData)
  
@@ -72,7 +72,7 @@ class Evse():
         self.DE.on()
         self.receiveData = []
         self.receiveData = self.uart.read() 
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(0.05)
         self.DE.off()
 
         try:
