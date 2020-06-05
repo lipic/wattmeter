@@ -27,11 +27,10 @@ class Evse():
         #first read data from evse
         current = 0
         state = ""
-        proces = "1"
         status = await self.__readEvse_data(1000,3)
-        proces = proces + "2"
+        state = await self.__writeEvse_data(1000,10)
         #await asyncio.sleep(0.1)
-        stat = "SUCCESS"
+        stat = "S"
         if(stat == 'SUCCESS'):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
@@ -41,7 +40,6 @@ class Evse():
     
                 else:
                     current = self.setting.config["sl,Breaker"]
-                    proces = proces + "3"
                     state = await self.__writeEvse_data(1000,current)
 
             else: 
@@ -50,7 +48,7 @@ class Evse():
             print("main Breaker: ",self.setting.config["sl,Breaker"])
             print("Evse current: ",current)
             proces = proces + "4"
-        return "Posloupnost: {} ; Read: {}; Write: {}".format(proces,status,state)
+        return "Read: {}; Write: {}".format(status,state)
      
     async def __writeEvse_data(self,reg,data):
         
@@ -60,7 +58,7 @@ class Evse():
         self.DE.on()
         self.sendData = []
         self.sendData = self.uart.read()
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.1)
         self.DE.off()
         return '---->{}'.format(self.sendData)
  
@@ -72,7 +70,7 @@ class Evse():
         self.DE.on()
         self.receiveData = []
         self.receiveData = self.uart.read() 
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.1)
         self.DE.off()
 
         try:
@@ -83,7 +81,7 @@ class Evse():
                     self.dataLayer.data["ACTUAL_CONFIG_CURRENT"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
                     self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
                     self.dataLayer.data["EV_STATE"] =     (int)((((self.receiveData[7])) << 8)  | ((self.receiveData[8])))
-                    return '---->{}'.format(self.dataLayer.data)
+                    return '---->{}'.format(self.receiveData)
                         
                 else: 
                     return "Timed out waiting for result."
