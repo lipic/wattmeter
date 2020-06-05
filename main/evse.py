@@ -29,17 +29,17 @@ class Evse():
         state = ""
         status = await self.__readEvse_data(1000,3)
         await asyncio.sleep(0.1)
-        status = "SUCCESS"
-        if(status == 'SUCCESS'):
+        stat = "SUCCESS"
+        if(stat == 'SUCCESS'):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
                 if (self.setting.config["sw,Enable balancing"] == 'True'):
                     current = self.balancEvseCurrent()
-                    await self.__writeEvse_data(1000,current)
+                    state = await self.__writeEvse_data(1000,current)
     
                 else:
                     current = self.setting.config["sl,Breaker"]
-                    await self.__writeEvse_data(1000,current)
+                    state = await self.__writeEvse_data(1000,current)
 
             else: 
                 current = 0
@@ -59,6 +59,7 @@ class Evse():
         self.sendData = self.uart.read()
         await asyncio.sleep(0.1)
         self.DE.off()
+        return '---->{}'.format(self.sendData)
  
         
     async def __readEvse_data(self,reg,length):
@@ -79,7 +80,7 @@ class Evse():
                     self.dataLayer.data["ACTUAL_CONFIG_CURRENT"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
                     self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
                     self.dataLayer.data["EV_STATE"] =     (int)((((self.receiveData[7])) << 8)  | ((self.receiveData[8])))
-                    return 'SUCCESS'
+                    return '---->{}'.format(self.dataLayer.data)
                         
                 else: 
                     return "Timed out waiting for result."
