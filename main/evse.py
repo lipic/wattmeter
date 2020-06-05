@@ -74,7 +74,7 @@ class Evse():
                     self.dataLayer.data["ACTUAL_CONFIG_CURRENT"] =     (int)((((self.receiveData[3])) << 8)  | ((self.receiveData[4])))
                     self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"] =     (int)((((self.receiveData[5])) << 8)  | ((self.receiveData[6])))
                     self.dataLayer.data["EV_STATE"] =     (int)((((self.receiveData[7])) << 8)  | ((self.receiveData[8])))
-                    return "Read data: {}".format(self.dataLayer.data)
+                    return 'SUCCESS'
                         
                 else: 
                     return "Timed out waiting for result."
