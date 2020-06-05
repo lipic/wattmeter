@@ -13,6 +13,7 @@ class Evse():
         self.modbusClient = modbus.Modbus()
         self.dataLayer = DataLayer()
         self.receiveData = []
+        self.sendData = []
         self.setting = setting
         self.wattmeter = wattmeter
         self.__Delay_for_breaker = 0
@@ -25,8 +26,9 @@ class Evse():
     async def evseHandler(self):
         #first read data from evse
         current = 0
-        state = "1"
+        state = ""
         status = await self.__readEvse_data(1000,3)
+        await asyncio.sleep(0.1)
         if(status == 'SUCCESS'):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
@@ -50,10 +52,10 @@ class Evse():
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
         self.uart.write(writeRegs)
         self.DE.on()
-        self.receiveData = []
-        self.receiveData = self.uart.read() 
+        self.sendData = []
+        self.sendData = self.uart.read() 
         await asyncio.sleep(0.1)
-        return "Receive_Data: {}, Send_data {}".format(self.receiveData,writeRegs)
+        return "Receive_Data: {}, Send_data {}".format(self.sendData,writeRegs)
 
  
         
