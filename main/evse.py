@@ -27,7 +27,7 @@ class Evse():
         current = 0
         state = "1"
         status = await self.__readEvse_data(1000,3)
-        if(status == None):
+        if(status == 'SUCCESS'):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
                 if (self.setting.config["sw,Enable balancing"] == 'True'):
@@ -53,7 +53,7 @@ class Evse():
         self.receiveData = []
         self.receiveData = self.uart.read() 
         await asyncio.sleep(0.1)
-        return "Receive_Data: {}, Send_data {}".format(self.receiveData,writeRegs)
+        return "SUCCESS"
 
  
         
