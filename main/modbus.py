@@ -216,7 +216,7 @@ class Modbus:
                     numWritten = self.MODBUS_buffer_rx[5]
                     #print(numWritten," registers were written to start address: ",addres)
                     
-                    return numWritten  
+                    return 1  
             else:
                 raise Exception("mbrtu_data_processing: wrong slave address")
         else:
