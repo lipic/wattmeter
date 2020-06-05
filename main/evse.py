@@ -27,8 +27,10 @@ class Evse():
         #first read data from evse
         current = 0
         state = ""
+        proces = "1"
         status = await self.__readEvse_data(1000,3)
-        await asyncio.sleep(0.1)
+        proces = proces + "2"
+        #await asyncio.sleep(0.1)
         stat = "SUCCESS"
         if(stat == 'SUCCESS'):
             #If get max current accordig to wattmeter
@@ -39,6 +41,7 @@ class Evse():
     
                 else:
                     current = self.setting.config["sl,Breaker"]
+                    proces = proces + "3"
                     state = await self.__writeEvse_data(1000,current)
 
             else: 
@@ -46,8 +49,8 @@ class Evse():
                 
             print("main Breaker: ",self.setting.config["sl,Breaker"])
             print("Evse current: ",current)
-        
-        return "Read: {}; Write: {}".format(status,state)
+            proces = proces + "4"
+        return "Posloupnost: {} ; Read: {}; Write: {}".format(proces,status,state)
      
     async def __writeEvse_data(self,reg,data):
         
@@ -57,7 +60,7 @@ class Evse():
         self.DE.on()
         self.sendData = []
         self.sendData = self.uart.read()
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.01)
         self.DE.off()
         return '---->{}'.format(self.sendData)
  
@@ -69,7 +72,7 @@ class Evse():
         self.DE.on()
         self.receiveData = []
         self.receiveData = self.uart.read() 
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.01)
         self.DE.off()
 
         try:
