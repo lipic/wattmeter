@@ -29,6 +29,7 @@ class Evse():
         state = ""
         status = await self.__readEvse_data(1000,3)
         await asyncio.sleep(0.1)
+        status = "SUCCESS"
         if(status == 'SUCCESS'):
             #If get max current accordig to wattmeter
             if(self.setting.config["sw,Enable charging"] == 'True'):
@@ -52,11 +53,11 @@ class Evse():
         
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
         self.uart.write(writeRegs)
-        await ascyncio.sleep(0.01)
+        #await ascyncio.sleep(0.01)
         self.DE.on()
         self.sendData = []
         self.sendData = self.uart.read()
-        await ascyncio.sleep(0.1)
+        await asyncio.sleep(0.1)
         self.DE.off()
  
         
