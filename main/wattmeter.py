@@ -21,9 +21,9 @@ class Wattmeter:
     async def wattmeterHandler(self):
         #print("Minute: {}, Hour: ".format(self.lastMinute,self.lastHour))
         #Read data from wattmeter
-        status = await self.__readWattmeter_data(1000,6)
+        status = await self.__readWattmeter_data(1000,9)
         status = await self.__readWattmeter_data(2000,6)
-        status = await self.__readWattmeter_data(3000,3)
+        #status = await self.__readWattmeter_data(3000,3)
         status = await self.__readWattmeter_data(3102,1)
     
         #Check if time-sync puls must be send
@@ -69,6 +69,9 @@ class Wattmeter:
                 self.dataLayer.data["U1"] =     (int)((((receiveData[9])) << 8)  | ((receiveData[10])))
                 self.dataLayer.data["U2"] =     (int)((((receiveData[11])) << 8) | ((receiveData[12])))
                 self.dataLayer.data["U3"] =     (int)((((receiveData[13])) << 8) | ((receiveData[14])))
+                self.dataLayer.data["P1"] =     (int)((((receiveData[15])) << 8)  | ((receiveData[16])))
+                self.dataLayer.data["P2"] =     (int)((((receiveData[17])) << 8)  | ((receiveData[18])))
+                self.dataLayer.data["P3"] =     (int)((((receiveData[19])) << 8)  | ((receiveData[20])))
                 return "SUCCESS_READ"
                 
             
