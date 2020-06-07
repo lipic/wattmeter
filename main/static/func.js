@@ -29,10 +29,10 @@ function update_ints_count() {
             
             document.getElementById("E1_P").textContent  = data["E1_P"]*10
             
-            var Power = Math.floor(Math.random() * Math.floor(50));; //(data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
+            var Power = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             document.getElementById("Power").textContent = Power
 
-            chartData = Power+10
+            chartData = Power
              if(cnt == 100){
                 refreshEnergyChart()
                 cnt = 0
@@ -162,7 +162,7 @@ function refreshPowerChart() {
     powerGraph.config.data.datasets.forEach(function(dataset) {
         dataset.data.push({
             x: Date.now(),
-            y: (chartData+10)
+            y: (chartData)
         });
     });
 }

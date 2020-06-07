@@ -42,8 +42,8 @@ class powerChart{
                 xAxes: [{ 
                     type: 'realtime',
                     realtime: {
-                        duration: 86400000,
-                        refresh: 60000,
+                        duration: 900000,
+                        refresh: 1000,
                         delay: 2000,
                         onRefresh: this.refresher
                     },
