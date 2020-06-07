@@ -11,38 +11,34 @@ class Wattmeter:
         self.uart = machine.UART(ID, baudrate=baudrate, rx=rxPin, tx=txPin)
         self.modbusClient = modbus.Modbus()
         self.dataLayer = DataLayer()
-        self.lastMinute = 0
-        self.lastHour = 0
+        self.fileHandler = fileHandler()
+        self.MONTHLY_CONSUMPTION = 'monthly_consumption.dat'
+        self.DAILY_CONSUMPTION = 'daily_consumption.dat'
         self.ntcShift = 2
+        self.lastMinute =  int(time.localtime()[4])
+        self.lastHour = int(time.localtime()[3])+2
 
     async def wattmeterHandler(self):
+        #print("Minute: {}, Hour: ".format(self.lastMinute,self.lastHour))
+        #Read data from wattmeter
         status = await self.__readWattmeter_data(1000,6)
         status = await self.__readWattmeter_data(2000,6)
         status = await self.__readWattmeter_data(3000,3)
+        status = await self.__readWattmeter_data(3102,1)
     
-
-        if(self.lastMinute is not int(time.localtime()[4])):
+        #Check if time-sync puls must be send
+        if(self.lastMinute is not int(time.localtime()[2])):
             status = await self.__writeWattmeter_data(100,1)
             self.lastMinute = int(time.localtime()[4])
-            print("Minute: ",self.lastMinute)
+            data = {("{}.{}.{}".format(time.localtime()[5],time.localtime()[1],time.localtime()[0])) : 10}
+          #  self.fileHandler.handleData(self.DAILY_CONSUMPTION)
+          #  self.fileHandler.writeData(self.DAILY_CONSUMPTION, data)
+            
+            
         if(self.lastHour is not int(time.localtime()[3]+self.ntcShift)):
             status = await self.__writeWattmeter_data(101,1)
             self.lastHour = int(time.localtime()[3]+self.ntcShift)
             print("Hour: ",self.lastHour)
-
-    def checkCurrentTime(self,val):
-        print(int(time.localtime()[val]))
-        if(self.lastMinute is not int(time.localtime()[3])):
-           # status = await self.__writeWattmeter_data(100,1)
-            self.lastMinute = int(time.localtime()[val])
-            print("jsem tu")
-            #print("New minuten {}".format(self.lastMinute))
-            
-        if(self.lastMinute != int(time.localtime()[3])):
-            status = await self.__writeWattmeter_data(101,1)
-            self.lastMinute = time.localtime()[3]
-            print("New minuten {}".format(self.lastHour))
-       
         
     async def __writeWattmeter_data(self,reg,data):
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
@@ -89,7 +85,14 @@ class Wattmeter:
                 self.dataLayer.data["P2"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
                 self.dataLayer.data["P3"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
                 return "SUCCESS_READ"
+
+            elif (receiveData and (reg == 3102) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
                 
+                self.dataLayer.data["E1_P"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
+             #   self.dataLayer.data["P2"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
+              #  self.dataLayer.data["P3"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
+                return "SUCCESS_READ"
+
             else: 
                 return "Timed out waiting for result."
             
@@ -99,4 +102,64 @@ class Wattmeter:
 class DataLayer:
     def __init__(self):
         self.data = {}
+        self.data["I1"] = 0
+        self.data["I2"] = 0
+        self.data["I3"] = 0
+        self.data["U1"] = 0
+        self.data["U2"] = 0
+        self.data["U3"] = 0
+        self.data["E1"] = 0
+        self.data["E2"] = 0
+        self.data["E3"] = 0
+        self.data["P1"] = 0
+        self.data["P2"] = 0
+        self.data["P3"] = 0
+        self.data["P24"] = []
         
+class fileHandler:
+            
+    def handleData(self,file):
+        try:
+            data = self.readData(file)
+        except OSError:
+            return
+        
+        print(data)
+
+        if(len(data)>3):
+
+            print("Before: ",data)
+            print("After: ",data[1:])
+            
+            lines = []
+            for i in data:
+                a,b = i.split(":")
+                lines.append("{}:{}\n".format(a,b))
+            with open(file, "w+") as f:
+                lines = lines[1:]
+                f.write(''.join(lines))
+                f.close()
+
+        
+    def readData(self,file):
+       # line = []
+        data = [] 
+        with open(file) as f:
+            for line in f:
+                line = line.replace("\n","")
+                data.append(line)
+             #   key, values = items[0], items[1]
+             #   data[key] = values
+            
+            f.close()
+        return data
+
+
+    def writeData(self,file,data):
+        lines = []
+        for variable, value in data.items():
+            lines.append("%s:%s\n" % (variable, value))
+            
+        with open(file, "a+") as f:
+            f.write(''.join(lines))
+            f.close()

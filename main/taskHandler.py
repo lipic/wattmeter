@@ -11,6 +11,7 @@ from ntptime import settime
 
 class TaskHandler:
     def __init__(self,wifiManager,wlanStatus,logging):
+        #settime() # set time
         self.setting = __config__.Config()
         self.setting.update_Config()
         self.log= loggingHandler.LoggingHandler()

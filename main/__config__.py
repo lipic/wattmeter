@@ -46,10 +46,12 @@ class Config:
     def read_setting(self):
         with open(self.SETTING_PROFILES) as f:
             lines = f.readlines()
+            f.close()
         setting = {}
         for line in lines:
             variable, value = line.strip("\n").split(";")
             setting[variable] = value
+        
         return setting
 
 
@@ -59,3 +61,4 @@ class Config:
             lines.append("%s;%s\n" % (variable, value))
         with open(self.SETTING_PROFILES, "w") as f:
             f.write(''.join(lines))
+            f.close()

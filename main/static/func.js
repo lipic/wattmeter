@@ -27,6 +27,8 @@ function update_ints_count() {
             document.getElementById("ACTUAL_OUTPUT_CURRENT").textContent = data['ACTUAL_OUTPUT_CURRENT']
             document.getElementById("EV_STATE").textContent = data['EV_STATE']
             
+            document.getElementById("E1_P").textContent  = data["E1_P"]*10
+            
             var Power = Math.floor(Math.random() * Math.floor(50));; //(data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             document.getElementById("Power").textContent = Power
 
