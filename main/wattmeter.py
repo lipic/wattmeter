@@ -28,18 +28,18 @@ class Wattmeter:
         status = await self.__readWattmeter_data(3102,1)
     
         #Check if time-sync puls must be send
-        if(self.lastMinute is not int(time.localtime()[4])):
+        if(self.lastMinute is not int(time.localtime()[3])):
             status = await self.__writeWattmeter_data(100,1)
             self.lastMinute = int(time.localtime()[4])
+            print("Hour: {} Minuten: {}".format((int(time.localtime()[3])+self.ntcShift),self.lastMinute))
             if(len(self.dataLayer.data["P_minuten"])<120):
-                self.dataLayer.data["P_minuten"].append(10)
-                self.dataLayer.data["P_minuten"].append("{}:{}".format(self.lastHour,self.lastMinute))
+                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["P1"])
+                self.dataLayer.data["P_minuten"].append("{}:{}".format((int(time.localtime()[3])+self.ntcShift),self.lastMinute))
             else:
-                self.dataLayer.data["P_minuten"] = self.dataLayer.data["P_minuten"][1:]
-                self.dataLayer.data["P_minuten"].append(12)
-                self.dataLayer.data["P_minuten"].append("{}:{}".format(self.lastHour,self.lastMinute))
-                
-            print("Data: ",self.dataLayer.data["P_minuten"])
+                self.dataLayer.data["P_minuten"] = self.dataLayer.data["P_minuten"][2:]
+                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["P1"])
+                self.dataLayer.data["P_minuten"].append("{}:{}".format((int(time.localtime()[3])+self.ntcShift),self.lastMinute))
+
             
         if(self.lastHour is not int(time.localtime()[3]+self.ntcShift)):
             status = await self.__writeWattmeter_data(101,1)

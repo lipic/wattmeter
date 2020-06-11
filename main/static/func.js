@@ -28,11 +28,14 @@ function update_ints_count() {
             document.getElementById("EV_STATE").textContent = data['EV_STATE']
             
             document.getElementById("E1_P").textContent  = data["E1_P"]*10
-            console.log(data["P_minuten"])
+             console.log("data: ",data["P_minuten"])
+            chartData = data["P_minuten"]
+            
             
             var Power = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             document.getElementById("Power").textContent = Power
 
+            refreshPowerChart()
              
              if(cnt == 100){
                 refreshEnergyChart()
@@ -182,26 +185,20 @@ function getTime(){
     }
 
 
-function refreshPowerChart() {
-    /*powerGraph.config.data.datasets.forEach(function(dataset) {
-        dataset.data.push({
-            x: Date.now(),
-            y: (chartData)
-        });
-    });*/
-    
-    for(var i = 0; i<60;i++){
-      //  if(data["P_minuten"][i] == undefined){
+
+function refreshPowerChart(){
+        for(var i = 0; i<60;i++){
+        if(chartData[2*i] == undefined){
             powerGraph.data.labels[i] = 0;
             powerGraph.data.datasets[0].data[i] = 0;
-  //      }else{
-        //    powerGraph.data.labels[i] = data["P_minuten"][i+1];
-      //      powerGraph.data.datasets[0].data[i] =  data["P_minuten"][i];
-       //     }
+        }else{
+            powerGraph.data.labels[i] = chartData[(2*i)+1];
+            powerGraph.data.datasets[0].data[i] =  chartData[2*i];
+            }
         powerGraph.update()
     }
-    
 }
+
 function refreshEnergyChart() {
     
     let dates = [];
