@@ -17,6 +17,7 @@ class Wattmeter:
         self.ntcShift = 2
         self.lastMinute =  int(time.localtime()[4])
         self.lastHour = int(time.localtime()[3])+2
+        self.lastDay =  int(time.localtime()[2])
 
     async def wattmeterHandler(self):
         #print("Minute: {}, Hour: ".format(self.lastMinute,self.lastHour))
@@ -27,19 +28,31 @@ class Wattmeter:
         status = await self.__readWattmeter_data(3102,1)
     
         #Check if time-sync puls must be send
-        if(self.lastMinute is not int(time.localtime()[2])):
+        if(self.lastMinute is not int(time.localtime()[4])):
             status = await self.__writeWattmeter_data(100,1)
             self.lastMinute = int(time.localtime()[4])
-            data = {("{}.{}.{}".format(time.localtime()[5],time.localtime()[1],time.localtime()[0])) : 10}
-          #  self.fileHandler.handleData(self.DAILY_CONSUMPTION)
-          #  self.fileHandler.writeData(self.DAILY_CONSUMPTION, data)
-            
+            if(len(self.dataLayer.data["P_minuten"])<120):
+                self.dataLayer.data["P_minuten"].append(10)
+                self.dataLayer.data["P_minuten"].append("{}:{}".format(self.lastHour,self.lastMinute))
+            else:
+                self.dataLayer.data["P_minuten"] = self.dataLayer.data["P_minuten"][1:]
+                self.dataLayer.data["P_minuten"].append(12)
+                self.dataLayer.data["P_minuten"].append("{}:{}".format(self.lastHour,self.lastMinute))
+                
+            print("Data: ",self.dataLayer.data["P_minuten"])
             
         if(self.lastHour is not int(time.localtime()[3]+self.ntcShift)):
             status = await self.__writeWattmeter_data(101,1)
-            self.lastHour = int(time.localtime()[3]+self.ntcShift)
-            print("Hour: ",self.lastHour)
-        
+            self.lastHour = int(time.localtime()[4])            
+
+            
+        if(self.lastDay is not int(time.localtime()[2])):
+            status = await self.__writeWattmeter_data(102,1)
+            data = {("{}.{}.{}".format(time.localtime()[2],time.localtime()[1],time.localtime()[0])) : 20}
+            #self.fileHandler.handleData(self.DAILY_CONSUMPTION)
+            #self.fileHandler.writeData(self.DAILY_CONSUMPTION, data)
+     
+         
     async def __writeWattmeter_data(self,reg,data):
         writeRegs = self.modbusClient.write_regs(reg, [int(data)])
         self.uart.write(writeRegs)
@@ -53,7 +66,20 @@ class Wattmeter:
                 return 'ERROR'
         except Exception as e:
             return "Exception: {}".format(e)
-        
+    
+    async def readWattmeterRegister(self,reg):
+        readRegs = self.modbusClient.read_regs(reg, 1)
+        self.uart.write(readRegs)
+        await asyncio.sleep(0.1)
+        receiveData = self.uart.read()
+        try:
+            if (receiveData and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+                return (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
+            else:
+                return "Null"
+        except:
+            return "Error"
+    
     async def __readWattmeter_data(self,reg,length):
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
@@ -117,7 +143,10 @@ class DataLayer:
         self.data["P1"] = 0
         self.data["P2"] = 0
         self.data["P3"] = 0
-        self.data["P24"] = []
+        self.data["P_minuten"] = []
+        self.data["E_hour"] = []
+        self.data["E_currentDay"] = 0
+        self.data["E_lastDay"] = 0
         
 class fileHandler:
             

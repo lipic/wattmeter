@@ -18,6 +18,7 @@ class Config:
             if i in setting:
                 if (self.config[i] != setting[i]):
                     self.config[i] = setting[i]
+                    print("Ukldadam")
             else:
                 setting[i] = self.config[i]
                 self.write_setting(setting)

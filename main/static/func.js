@@ -21,18 +21,19 @@ function update_ints_count() {
             var e2 =  (data['E2'] != undefined ?  ((hexToFloat("0x"+data['E2'].toString(16)))/1000): 0.0 )
             var e3 =  (data['E3'] != undefined ?  ((hexToFloat("0x"+data['E3'].toString(16)))/1000): 0.0 )
             var energy = parseFloat(e1) + parseFloat(e2)+ parseFloat(e3)
-            console.log(energy)
             document.getElementById("Energy").textContent = energy.toFixed(3)
+            
             document.getElementById("ACTUAL_CONFIG_CURRENT").textContent = data['ACTUAL_CONFIG_CURRENT']
             document.getElementById("ACTUAL_OUTPUT_CURRENT").textContent = data['ACTUAL_OUTPUT_CURRENT']
             document.getElementById("EV_STATE").textContent = data['EV_STATE']
             
             document.getElementById("E1_P").textContent  = data["E1_P"]*10
+            console.log(data["P_minuten"])
             
             var Power = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             document.getElementById("Power").textContent = Power
 
-            chartData = Power
+             
              if(cnt == 100){
                 refreshEnergyChart()
                 cnt = 0
@@ -109,7 +110,6 @@ $(document).ready(function()
             alert("I will try to connect wifi with ssid: " + ssid);
             $.ajax({
                 type: "POST", 
-                //the url where you want to sent the userName and password to
                 url: '/updateWificlient',
                 async: true,
                 data: JSON.stringify({"ssid": ssid, "password" :  password }),
@@ -131,6 +131,32 @@ $(document).ready(function()
        return 0 
      });
   
+  
+      $(document).on('click','#readReg',function(){
+        register = document.getElementById("modbusReg").value;
+        document.getElementById("modbusIO").value = "waiting ..."
+        if(register>0){
+            $.ajax({
+                type: "POST", 
+                url: '/readRegister',
+                async: true,
+                data: JSON.stringify({"register": register}),
+                success: function (data) {
+                    
+                    $('#readRegister').html(data.datalayer);
+                    $(this).parent('span').remove();
+                    document.getElementById("modbusIO").value =  data["data"] 
+                    
+                } 
+                
+            })
+        }else{ 
+            alert("Please choose register betwean 1-10000");
+             $(this).parent('span').remove();
+        }
+       return 0 
+     });
+  
     $(document).on('click','#refreshSSID',function(){
         $('div.mainContainer').load('settings',function(){
             $('#refreshSSID').append('<span class="spinner-border spinner-border-sm"></span>');
@@ -138,8 +164,6 @@ $(document).ready(function()
             setting.refreshSetting()
         });
     });
-  
-
  }); 
 
 
@@ -159,12 +183,24 @@ function getTime(){
 
 
 function refreshPowerChart() {
-    powerGraph.config.data.datasets.forEach(function(dataset) {
+    /*powerGraph.config.data.datasets.forEach(function(dataset) {
         dataset.data.push({
             x: Date.now(),
             y: (chartData)
         });
-    });
+    });*/
+    
+    for(var i = 0; i<60;i++){
+      //  if(data["P_minuten"][i] == undefined){
+            powerGraph.data.labels[i] = 0;
+            powerGraph.data.datasets[0].data[i] = 0;
+  //      }else{
+        //    powerGraph.data.labels[i] = data["P_minuten"][i+1];
+      //      powerGraph.data.datasets[0].data[i] =  data["P_minuten"][i];
+       //     }
+        powerGraph.update()
+    }
+    
 }
 function refreshEnergyChart() {
     
