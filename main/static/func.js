@@ -35,10 +35,11 @@ function update_ints_count() {
             var Power = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             document.getElementById("Power").textContent = Power
 
-            refreshPowerChart()
+            
              
-             if(cnt == 100){
+             if(cnt == 20){
                 refreshEnergyChart()
+                refreshPowerChart()
                 cnt = 0
             }else{
                 cnt = cnt + 1    
