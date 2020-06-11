@@ -41,16 +41,20 @@
     
     
     <div class="container-fluid bg-primary pt-2 text-center">
-        <h3>Setting interface</h3>
+        <h3>Modbus interface</h3>
     </div>
-    <div class="container -fluid  text-white">  
-        <table class="table table-borderless text-center  text-white">
+    <div class="container-fluid  text-white">  
+        <table class="table table-borderless text-center  text-white" > 
+            <thead  >
+                <tr>
+                    <th style="width:60%;">Register</th>
+                    <th style="width:80%;">Data</th>
+                </tr>
+            </thead>
             <tbody> 
                 <tr> 
-                    <td>Register:</td> 
-                    <td><input id="modbusReg" style="width: 70%;" name="number" type="number" /></td>
-                    <td>Data:</td>
-                    <td><input id="modbusIO" style="width: 90%;" name="text" type="text" /></td>
+                    <td><input id="modbusReg"  style="width:60%;" name="number" type="number" /></td>
+                    <td><input id="modbusIO"   style="width:80%;" name="text" type="text" /></td>
                 </tr>
             </tbody>
         </table>
