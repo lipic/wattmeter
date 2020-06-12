@@ -18,17 +18,14 @@ function update_ints_count() {
             document.getElementById("I1").textContent = (data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] )
             document.getElementById("I2").textContent = (data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )
             document.getElementById("I3").textContent = (data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )
-            var e1 =  (data['E1'] != undefined ?  ((hexToFloat("0x"+data['E1'].toString(16)))/1000): 0.0 )
-            var e2 =  (data['E2'] != undefined ?  ((hexToFloat("0x"+data['E2'].toString(16)))/1000): 0.0 )
-            var e3 =  (data['E3'] != undefined ?  ((hexToFloat("0x"+data['E3'].toString(16)))/1000): 0.0 )
-            var energy = parseFloat(e1) + parseFloat(e2)+ parseFloat(e3)
-            document.getElementById("Energy").textContent = energy.toFixed(3)
+
+            document.getElementById("Energy").textContent =  0
             
             document.getElementById("ACTUAL_CONFIG_CURRENT").textContent = data['ACTUAL_CONFIG_CURRENT']
             document.getElementById("ACTUAL_OUTPUT_CURRENT").textContent = data['ACTUAL_OUTPUT_CURRENT']
             document.getElementById("EV_STATE").textContent = data['EV_STATE']
             
-            document.getElementById("E1_P").textContent  = data["E1_P"]*10
+            document.getElementById("P1_min").textContent  = data["Emin_Positive"]
             chartData = data["P_minuten"]
             
             
@@ -45,12 +42,6 @@ function update_ints_count() {
             document.getElementById("time").textContent = getTime();
             
     
-     if(refreshGraphs <= 1){
-        refreshGraphs++;
-        if(refreshGraphs > 1){
-            loadPowerChart()
-        }
-   }
             timer = setTimeout(update_ints_count, ms); 
         });  
 }     
@@ -72,6 +63,7 @@ $(document).ready(function()
         energyGraph = new Chart(energyChartCtx,energyChartConfig)
         
         update_ints_count();
+        setTimeout(function(){loadPowerChart()}, 2000);
                
     })   
     
@@ -90,6 +82,7 @@ $(document).ready(function()
                 let energyChartConfig = energyBarChart.getConfig()
                 energyGraph = new Chart(energyChartCtx,energyChartConfig)
                  update_ints_count();
+                 setTimeout(function(){loadPowerChart()}, 2000);
             });          
             
          }else if($(this).attr('id') == 'settings'){

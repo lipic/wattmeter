@@ -23,7 +23,7 @@ class Wattmeter:
         #print("Minute: {}, Hour: ".format(self.lastMinute,self.lastHour))
         #Read data from wattmeter
         status = await self.__readWattmeter_data(1000,9)
-        status = await self.__readWattmeter_data(2000,6)
+        status = await self.__readWattmeter_data(2521,2)
         #status = await self.__readWattmeter_data(3000,3)
         status = await self.__readWattmeter_data(3102,1)
     
@@ -35,12 +35,12 @@ class Wattmeter:
             #zde se bude ukladat delka pole
         
             if(len(self.dataLayer.data["P_minuten"])<61):
-                import random
-                self.dataLayer.data["P_minuten"].append(random.randint(0, 20))#self.dataLayer.data["P1"])
+
+                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]/60)#self.dataLayer.data["P1"])
             else:
                 import random
                 self.dataLayer.data["P_minuten"] = self.dataLayer.data["P_minuten"][1:]
-                self.dataLayer.data["P_minuten"].append(random.randint(0, 20))#self.dataLayer.data["P1"])
+                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]/60)#self.dataLayer.data["P1"])
             
             self.dataLayer.data["P_minuten"][0] = len(self.dataLayer.data["P_minuten"])
             
@@ -105,11 +105,9 @@ class Wattmeter:
                 return "SUCCESS_READ"
                 
             
-            elif (receiveData and (reg == 2000) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+            elif (receiveData and (reg == 2521) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
                 
-                self.dataLayer.data["E1"] =     (float)(((receiveData[5]) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
-                self.dataLayer.data["E2"] =     (float)(((receiveData[9]) << 24) | ((receiveData[10])<< 16) | (((receiveData[7])) << 8) | ((receiveData[8])))
-                self.dataLayer.data["E3"] =     (float)(((receiveData[13]) << 24) | ((receiveData[14])<< 16) | (((receiveData[11])) << 8) | ((receiveData[12])))
+                self.dataLayer.data["Emin_Positive"] =     (int)(((receiveData[5]) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
                 return "SUCCESS_READ"
             
             elif (receiveData and (reg == 3000) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
@@ -140,10 +138,8 @@ class DataLayer:
         self.data["I3"] = 0
         self.data["U1"] = 0
         self.data["U2"] = 0
-        self.data["U3"] = 0
-        self.data["E1"] = 0
-        self.data["E2"] = 0
-        self.data["E3"] = 0
+        self.data["U3"] = 0 
+        self.data["Emin_Positive"] = 0
         self.data["P1"] = 0
         self.data["P2"] = 0
         self.data["P3"] = 0
