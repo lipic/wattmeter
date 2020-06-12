@@ -2,6 +2,7 @@ var timer;
 
 chartData = 0
 var cnt = 100
+var refreshGraphs = 0
 function update_ints_count() {
     
     $.ajax({ 
@@ -28,24 +29,28 @@ function update_ints_count() {
             document.getElementById("EV_STATE").textContent = data['EV_STATE']
             
             document.getElementById("E1_P").textContent  = data["E1_P"]*10
-             console.log("data: ",data["P_minuten"])
             chartData = data["P_minuten"]
             
             
             var Power = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
             document.getElementById("Power").textContent = Power
 
-            
-             
-             if(cnt == 20){
+       
+             if(cnt == 100){
                 refreshEnergyChart()
-                refreshPowerChart()
                 cnt = 0
             }else{
                 cnt = cnt + 1    
             }
             document.getElementById("time").textContent = getTime();
+            
     
+     if(refreshGraphs <= 1){
+        refreshGraphs++;
+        if(refreshGraphs > 1){
+            loadPowerChart()
+        }
+   }
             timer = setTimeout(update_ints_count, ms); 
         });  
 }     
@@ -84,8 +89,7 @@ $(document).ready(function()
                 let energyChartCtx = document.getElementById('energyGraph').getContext('2d');
                 let energyChartConfig = energyBarChart.getConfig()
                 energyGraph = new Chart(energyChartCtx,energyChartConfig)
-
-                 update_ints_count();  
+                 update_ints_count();
             });          
             
          }else if($(this).attr('id') == 'settings'){
@@ -183,21 +187,50 @@ function getTime(){
     var dt = new Date();
     var time = dt.getHours() + " : " + dt.getMinutes() + " : "+ dt.getSeconds();
     return time;
+    } 
+
+
+
+function loadPowerChart(){
+    len = chartData[0]
+    
+    for(var i = 1; i<(61-len);i++){
+        powerGraph.config.data.datasets.forEach(function(dataset) {
+            dataset.data.push({
+                x: (Date.now() - (1000*(61-i)*60)),
+                y: 0
+            });
+        });
     }
-
-
-
-function refreshPowerChart(){
-        for(var i = 0; i<60;i++){
-        if(chartData[2*i] == undefined){
-            powerGraph.data.labels[i] = 0;
-            powerGraph.data.datasets[0].data[i] = 0;
+    
+    for(var i = 1; i<len;i++){
+        var data = 0 
+        if(chartData[i] != undefined){ 
+            data = chartData[i];
         }else{
-            powerGraph.data.labels[i] = chartData[(2*i)+1];
-            powerGraph.data.datasets[0].data[i] =  chartData[2*i];
-            }
-        powerGraph.update()
+            data = 0;
+        }
+        powerGraph.config.data.datasets.forEach(function(dataset) {
+            dataset.data.push({
+                x: (Date.now() - (1000*(len-i)*60)),
+                y: data
+            });
+        });
     }
+    powerGraph.update()
+} 
+
+function refreshPowerChart() {
+
+    
+    len = chartData[0]
+    
+    powerGraph.config.data.datasets.forEach(function(dataset) {
+        dataset.data.push({
+            x: Date.now(),
+            y: (chartData[len-1])
+        });
+    });
 }
 
 function refreshEnergyChart() {

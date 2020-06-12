@@ -17,7 +17,7 @@ class powerChart{
         var config = {
         type: 'line',
         data: {
-            labels: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            labels: [],
             datasets: [{
                 label: 'Power [W]',
                 color: '#DCDCDC',
@@ -26,7 +26,7 @@ class powerChart{
                 fill: true,
                 lineTension: 0,
                 borderDash: [8 ,4],
-                data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                data: []
             }]
         },
         options: {
@@ -41,6 +41,13 @@ class powerChart{
             }, 
             scales: {
                 xAxes: [{
+                    type: 'realtime',
+                    realtime: {
+                        duration: 3600000,
+                        refresh: 60000,
+                        delay: 2000,
+                        onRefresh: this.refresher
+                    },
                     ticks: {
                             fontColor: '#DCDCDC',
                             fontSize: 14

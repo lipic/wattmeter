@@ -28,18 +28,22 @@ class Wattmeter:
         status = await self.__readWattmeter_data(3102,1)
     
         #Check if time-sync puls must be send
-        if(self.lastMinute is not int(time.localtime()[3])):
+        if(self.lastMinute is not int(time.localtime()[4])):
             status = await self.__writeWattmeter_data(100,1)
             self.lastMinute = int(time.localtime()[4])
             print("Hour: {} Minuten: {}".format((int(time.localtime()[3])+self.ntcShift),self.lastMinute))
-            if(len(self.dataLayer.data["P_minuten"])<120):
-                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["P1"])
-                self.dataLayer.data["P_minuten"].append("{}:{}".format((int(time.localtime()[3])+self.ntcShift),self.lastMinute))
+            #zde se bude ukladat delka pole
+        
+            if(len(self.dataLayer.data["P_minuten"])<61):
+                import random
+                self.dataLayer.data["P_minuten"].append(random.randint(0, 20))#self.dataLayer.data["P1"])
             else:
-                self.dataLayer.data["P_minuten"] = self.dataLayer.data["P_minuten"][2:]
-                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["P1"])
-                self.dataLayer.data["P_minuten"].append("{}:{}".format((int(time.localtime()[3])+self.ntcShift),self.lastMinute))
-
+                import random
+                self.dataLayer.data["P_minuten"] = self.dataLayer.data["P_minuten"][1:]
+                self.dataLayer.data["P_minuten"].append(random.randint(0, 20))#self.dataLayer.data["P1"])
+            
+            self.dataLayer.data["P_minuten"][0] = len(self.dataLayer.data["P_minuten"])
+            
             
         if(self.lastHour is not int(time.localtime()[3]+self.ntcShift)):
             status = await self.__writeWattmeter_data(101,1)
@@ -143,7 +147,7 @@ class DataLayer:
         self.data["P1"] = 0
         self.data["P2"] = 0
         self.data["P3"] = 0
-        self.data["P_minuten"] = []
+        self.data["P_minuten"] = [0]
         self.data["E_hour"] = []
         self.data["E_currentDay"] = 0
         self.data["E_lastDay"] = 0
