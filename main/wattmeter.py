@@ -23,7 +23,7 @@ class Wattmeter:
         #print("Minute: {}, Hour: ".format(self.lastMinute,self.lastHour))
         #Read data from wattmeter
         status = await self.__readWattmeter_data(1000,9)
-        status = await self.__readWattmeter_data(2521,2)
+        status = await self.__readWattmeter_data(2502,3)
         #status = await self.__readWattmeter_data(3000,3)
         status = await self.__readWattmeter_data(3102,3)
     
@@ -105,11 +105,11 @@ class Wattmeter:
                 return "SUCCESS_READ"
                 
             
-            elif (receiveData and (reg == 2521) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+            elif (receiveData and (reg == 2502) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
                 
-                self.dataLayer.data["Emin_Positive"] =     (int)(((receiveData[4]) << 24) | ((receiveData[3])<< 16) | (((receiveData[6])) << 8) | ((receiveData[5])))
+                self.dataLayer.data["Emin_Positive"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4]))) + (int)((((receiveData[5])) << 8)  | ((receiveData[6]))) + (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
                 return "SUCCESS_READ"
-            
+             
             elif (receiveData and (reg == 3000) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
                 
                 self.dataLayer.data["P1"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4])))

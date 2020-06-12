@@ -15,11 +15,11 @@ function update_ints_count() {
             document.getElementById("U1").textContent = data['U1'] 
             document.getElementById("U2").textContent = data['U2']
             document.getElementById("U3").textContent = data['U3']
-            document.getElementById("I1").textContent =((data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] ).toFixed(2))/1000
+            document.getElementById("I1").textContent =((data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] )/1000).toFixed(2)
             document.getElementById("I2").textContent = ((data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )/1000).toFixed(2)
             document.getElementById("I3").textContent = ((data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )/1000).toFixed(2)
 
-            document.getElementById("Energy").textContent =  data['E1_P'] +  data['E2_P'] +  data['E3_P']
+            document.getElementById("Energy").textContent = ((data['E1_P'] +  data['E2_P'] +  data['E3_P'])/1000).toFixed(2)
             
             document.getElementById("ACTUAL_CONFIG_CURRENT").textContent = data['ACTUAL_CONFIG_CURRENT']
             document.getElementById("ACTUAL_OUTPUT_CURRENT").textContent = data['ACTUAL_OUTPUT_CURRENT']
