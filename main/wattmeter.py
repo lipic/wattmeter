@@ -25,7 +25,7 @@ class Wattmeter:
         status = await self.__readWattmeter_data(1000,9)
         status = await self.__readWattmeter_data(2521,2)
         #status = await self.__readWattmeter_data(3000,3)
-        status = await self.__readWattmeter_data(3102,1)
+        status = await self.__readWattmeter_data(3102,3)
     
         #Check if time-sync puls must be send
         if(self.lastMinute is not int(time.localtime()[4])):
@@ -107,7 +107,7 @@ class Wattmeter:
             
             elif (receiveData and (reg == 2521) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
                 
-                self.dataLayer.data["Emin_Positive"] =     (int)(((receiveData[3]) << 24) | ((receiveData[4])<< 16) | (((receiveData[5])) << 8) | ((receiveData[6])))
+                self.dataLayer.data["Emin_Positive"] =     (int)(((receiveData[4]) << 24) | ((receiveData[3])<< 16) | (((receiveData[6])) << 8) | ((receiveData[5])))
                 return "SUCCESS_READ"
             
             elif (receiveData and (reg == 3000) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
@@ -120,6 +120,8 @@ class Wattmeter:
             elif (receiveData and (reg == 3102) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
                 
                 self.dataLayer.data["E1_P"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
+                self.dataLayer.data["E2_P"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
+                self.dataLayer.data["E3_P"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[7])))
              #   self.dataLayer.data["P2"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
               #  self.dataLayer.data["P3"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
                 return "SUCCESS_READ"
