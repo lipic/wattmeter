@@ -36,11 +36,11 @@ class Wattmeter:
         
             if(len(self.dataLayer.data["P_minuten"])<61):
 
-                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]/60)#self.dataLayer.data["P1"])
+                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]/600)#self.dataLayer.data["P1"])
             else:
                 import random
                 self.dataLayer.data["P_minuten"] = self.dataLayer.data["P_minuten"][1:]
-                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]/60)#self.dataLayer.data["P1"])
+                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]/600)#self.dataLayer.data["P1"])
             
             self.dataLayer.data["P_minuten"][0] = len(self.dataLayer.data["P_minuten"])
             
@@ -107,7 +107,7 @@ class Wattmeter:
             
             elif (receiveData and (reg == 2521) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
                 
-                self.dataLayer.data["Emin_Positive"] =     (int)(((receiveData[5]) << 24) | ((receiveData[6])<< 16) | (((receiveData[3])) << 8) | ((receiveData[4])))
+                self.dataLayer.data["Emin_Positive"] =     (int)(((receiveData[3]) << 24) | ((receiveData[4])<< 16) | (((receiveData[5])) << 8) | ((receiveData[6])))
                 return "SUCCESS_READ"
             
             elif (receiveData and (reg == 3000) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
