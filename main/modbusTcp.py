@@ -47,19 +47,22 @@ class Server:
                     raise OSError
                 
                 #proccess modbus msg
-                print("Coming data: ",res)
-                result = await self.tcpModbus.modbusCheckProccess(res)
-                print("Result: ",result)
-                await swriter.awrite(result)  # Echo back
-               # await swriter.drain()
-
-
+                try:
+                    #print(res)
+                    result = await self.tcpModbus.modbusCheckProccess(res)
+                    #print(result)
+                    await swriter.awrite(result)  # Echo back
+                except Exception as e:
+                    print(e)
 
         except OSError:
             pass
         print('Client {} disconnect.'.format(cid))
         sock.close()
         self.socks.remove(sock)
+
+
+
 
 class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
     
@@ -73,7 +76,7 @@ class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
         await asyncio.sleep(0.1)
         receiveData = self.uart.read()
         try:
-            if (receiveData and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+            if (receiveData and  (0 == self.mbrtu_data_processing(receiveData))):
                 data = []
                 for i in range(length):
                     data.append(receiveData[i+3])
@@ -92,24 +95,26 @@ class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
     async def modbusCheckProccess(self, receiveData):
         ID        = receiveData[6]
         FCE     = receiveData[7]
-        if(len(receiveData) < 2):
-            print("Err: data miss")
+        if(len(receiveData) < 12):
+            raise "Err: data miss"
         
         if((FCE != 3) and (FCE != 16)):
-            print("Err: bad function")
+            raise "Err: bad function"
         
         if((ID != 1) and (ID != 2)):
-            print("Err: bad function")
+            raise "Err: bad id"
     
         if(ID == 1):
             return await self.proccessWattmeterData(receiveData)
                 
-    def proccessWattmeterData(self,receiveData):
+    async def proccessWattmeterData(self,receiveData):
         data = b''
         length = 0
+        #modbus function 0x03
         if(receiveData[7] == 3):
             reg = int((receiveData[8]<<8) | receiveData[9])
             length = int((receiveData[10]<<8) | receiveData[11])
+            print("Reg: {} len:{}".format(reg,length))
             data = await self.__wattmeter_readData(reg,length)
 
         sendData = bytearray(receiveData[:8])
@@ -117,6 +122,9 @@ class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
         #sendData.append(5)
         if((data != "Error") and (data !="Null")):
             sendData.append(data)
+        #else:
+           # sendData.append(255)
+            #sendData.append(255)
         
         return sendData
 
