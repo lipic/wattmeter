@@ -6,6 +6,7 @@ from main import wattmeter
 from main import evse
 from main import loggingHandler
 from main import __config__
+from main import modbusTcp
 from ntptime import settime
                     
 
@@ -23,6 +24,7 @@ class TaskHandler:
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
         self.ledWifi = Pin(22, Pin.OUT) # set pin high on creation
         self.ledErr  = Pin(21, Pin.OUT) # set pin high on creation
+        self.uModBusTCP = modbusTcp.Server()
         if (logging == True):
             self.log.Logging = True
      
@@ -63,12 +65,19 @@ class TaskHandler:
             status = await self.evse.evseHandler()
             self.log.write("{} -> {}".format(type(self.evse),status))
             await asyncio.sleep(delay_secs)
-
-    def mainTaskHandlerRun(self):
+            
+    async def modbusTcpHandler(self,delay_secs):
+        while True:
+            await self.uModBusTCP.run()
+            await asyncio.sleep(delay_secs)
+ 
+    def mainTaskHandlerRun(self): 
         loop = asyncio.get_event_loop()
         loop.create_task(self.ledHandler(1))
         loop.create_task(self.getWifiStatus(10))
         loop.create_task(self.wattmeterHandler(1))
         loop.create_task(self.evseHandler(1))
         loop.create_task(self.webServerApp.webServerRun(0))
-        loop.run_forever();
+        loop.create_task(self.uModBusTCP.run(loop))
+
+        loop.run_forever()

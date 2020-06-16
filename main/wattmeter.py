@@ -31,7 +31,7 @@ class Wattmeter:
         if(self.lastMinute is not int(time.localtime()[4])):
             status = await self.__writeWattmeter_data(100,1)
             self.lastMinute = int(time.localtime()[4])
-            print("Hour: {} Minuten: {}".format((int(time.localtime()[3])+self.ntcShift),self.lastMinute))
+            #print("Hour: {} Minuten: {}".format((int(time.localtime()[3])+self.ntcShift),self.lastMinute))
             #zde se bude ukladat delka pole
         
             if(len(self.dataLayer.data["P_minuten"])<61):
