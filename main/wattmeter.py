@@ -83,6 +83,23 @@ class Wattmeter:
                 return "Null"
         except:
             return "Error"
+        
+    async def __wattmeter_readData(self,reg,length):
+        readRegs = self.modbusClient.read_regs(reg, length)
+        self.uart.write(readRegs)
+        await asyncio.sleep(0.1)
+        receiveData = self.uart.read()
+
+        try:
+            if (receiveData and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+                data = []
+                for i in range(0,length):
+                    data.append(receiveData[i+3])
+                return data
+            else:
+                return "Null"
+        except:
+            return "Error"
     
     async def __readWattmeter_data(self,reg,length):
         readRegs = self.modbusClient.read_regs(reg, length)

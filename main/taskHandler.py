@@ -24,7 +24,7 @@ class TaskHandler:
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
         self.ledWifi = Pin(22, Pin.OUT) # set pin high on creation
         self.ledErr  = Pin(21, Pin.OUT) # set pin high on creation
-        self.uModBusTCP = modbusTcp.Server()
+        self.uModBusTCP = modbusTcp.Server(self.wattmeter)
         if (logging == True):
             self.log.Logging = True
      

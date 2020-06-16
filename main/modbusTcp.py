@@ -8,8 +8,8 @@ import uasyncio as asyncio
 
 class Server:
     
-    def __init__(self):
-        self.tcpModbus = tcpModbus(ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27)
+    def __init__(self, wattmeter):
+        self.tcpModbus = tcpModbus(wattmeter)
 
         
     async def run(self, loop, port=8123):
@@ -66,25 +66,10 @@ class Server:
 
 class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
     
-    def __init__(self,ID, timeout, baudrate , rxPin, txPin):
-        wattmeter.Wattmeter.__init__(self,ID, timeout, baudrate , rxPin, txPin)
+    def __init__(self,wattmeter):
+        self.wattmeter = wattmeter
         modbus.Modbus.__init__(self)
         
-    async def __wattmeter_readData(self,reg,length):
-        readRegs = self.read_regs(reg, length)
-        self.uart.write(readRegs)
-        await asyncio.sleep(0.1)
-        receiveData = self.uart.read()
-        try:
-            if (receiveData and  (0 == self.mbrtu_data_processing(receiveData))):
-                data = []
-                for i in range(length):
-                    data.append(receiveData[i+3])
-                return data
-            else:
-                return "Null"
-        except:
-            return "Error"
         
     async def __evse_readData(self,reg,length):
         readRegs = self.read_regs(reg, length)
@@ -115,16 +100,16 @@ class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
             reg = int((receiveData[8]<<8) | receiveData[9])
             length = int((receiveData[10]<<8) | receiveData[11])
             print("Reg: {} len:{}".format(reg,length))
-            data = await self.__wattmeter_readData(reg,length)
+            data = await self.wattmeter.__wattmeter_readData(reg,length)
 
         sendData = bytearray(receiveData[:8])
         sendData.append(length * 2)
         #sendData.append(5)
         if((data != "Error") and (data !="Null")):
             sendData.append(data)
-        #else:
-           # sendData.append(255)
-            #sendData.append(255)
+        else:
+            sendData.append(255)
+            sendData.append(255)
         
         return sendData
 
