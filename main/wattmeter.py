@@ -46,21 +46,21 @@ class Wattmeter:
             
             
         if(self.lastHour is not int(time.localtime()[3]+self.ntcShift)):
-            status = await self.__writeWattmeter_data(101,1)
+            status = await self.writeWattmeterRegister(101,[1])
             self.lastHour = int(time.localtime()[4])            
 
             
         if(self.lastDay is not int(time.localtime()[2])):
-            status = await self.__writeWattmeter_data(102,1)
+            status = await self.writeWattmeterRegister(102,[1])
             data = {("{}.{}.{}".format(time.localtime()[2],time.localtime()[1],time.localtime()[0])) : 20}
             #self.fileHandler.handleData(self.DAILY_CONSUMPTION)
             #self.fileHandler.writeData(self.DAILY_CONSUMPTION, data)
      
          
-    async def __writeWattmeter_data(self,reg,data):
-        writeRegs = self.modbusClient.write_regs(reg, [int(data)])
+    async def writeWattmeterRegister(self,reg,data):
+        writeRegs = self.modbusClient.write_regs(reg, data)
         self.uart.write(writeRegs)
-        await asyncio.sleep(0.1)
+        await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
         try:
             receiveData = receiveData[1:]
@@ -71,40 +71,30 @@ class Wattmeter:
         except Exception as e:
             return "Exception: {}".format(e)
     
-    async def readWattmeterRegister(self,reg):
-        readRegs = self.modbusClient.read_regs(reg, 1)
-        self.uart.write(readRegs)
-        await asyncio.sleep(0.1)
-        receiveData = self.uart.read()
-        try:
-            if (receiveData and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
-                return (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
-            else:
-                return "Null"
-        except:
-            return "Error"
         
-    async def __wattmeter_readData(self,reg,length):
+    async def readWattmeterRegister(self,reg,length):
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
-        await asyncio.sleep(0.1)
+        await asyncio.sleep_ms(100)
         receiveData = self.uart.read()
-
+        
         try:
-            if (receiveData and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
-                data = []
-                for i in range(0,length):
+            if (receiveData  and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+                data = bytearray()
+                for i in range(0,(length*2)):
                     data.append(receiveData[i+3])
                 return data
             else:
                 return "Null"
-        except:
+        except Exception as e:
+            print(e)
             return "Error"
+    
     
     async def __readWattmeter_data(self,reg,length):
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
-        await asyncio.sleep(0.1)
+        await asyncio.sleep_ms(100)
         receiveData = self.uart.read()  
 
         try:

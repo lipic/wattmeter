@@ -16,7 +16,7 @@ class Server:
         addr = socket.getaddrinfo('', port, 0, socket.SOCK_STREAM)[0][-1]
         print(addr)
         s_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # server socket
-#         s_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s_sock.bind(addr) 
         s_sock.listen(5)
         self.socks = [s_sock]  # List of current sockets for .close()
@@ -28,7 +28,6 @@ class Server:
             res = poller.poll(1)  # 1ms block
             if res:  # Only s_sock is polled
                 c_sock, addr = s_sock.accept()  # get client socket
-                #self.run_client(c_sock, client_id)
                 loop.create_task(self.run_client(c_sock, client_id))
                 client_id += 1
             await asyncio.sleep_ms(200)
@@ -42,16 +41,19 @@ class Server:
         print('Got connection from client', cid)
         try:
             while True:
+                
                 res =await sreader.read(12)
+                
                 if res == b'':
                     raise OSError
                 
                 #proccess modbus msg
                 try:
-                    #print(res)
+                    print("Received Data: ",res)
                     result = await self.tcpModbus.modbusCheckProccess(res)
-                    #print(result)
+                    print("Sended Data: ",result)
                     await swriter.awrite(result)  # Echo back
+                    await swriter.drain()
                 except Exception as e:
                     print(e)
 
@@ -93,23 +95,32 @@ class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
             return await self.proccessWattmeterData(receiveData)
                 
     async def proccessWattmeterData(self,receiveData):
-        data = b''
+        data = bytearray()
         length = 0
         #modbus function 0x03
         if(receiveData[7] == 3):
             reg = int((receiveData[8]<<8) | receiveData[9])
             length = int((receiveData[10]<<8) | receiveData[11])
-            print("Reg: {} len:{}".format(reg,length))
-            data = await self.wattmeter.__wattmeter_readData(reg,length)
-
-        sendData = bytearray(receiveData[:8])
-        sendData.append(length * 2)
-        #sendData.append(5)
-        if((data != "Error") and (data !="Null")):
-            sendData.append(data)
-        else:
-            sendData.append(255)
-            sendData.append(255)
+            data = await self.wattmeter.readWattmeterRegister(reg,length)
+            sendData = bytearray(receiveData[:8])
+            sendData += bytearray([length * 2])
+            if((data != "Error") and (data !="Null")):
+                sendData += data
         
+        if(receiveData[7] == 16):
+            reg = int((receiveData[8]<<8) | receiveData[9])
+            numb = int((receiveData[10]<<8) | receiveData[11])
+            values = []
+            for i in range(0,numb):
+                values.append(int((receiveData[12+i]<<8) | receiveData[13+i]))
+            data = await self.wattmeter.writeWattmeterRegister(reg,values)
+            sendData = bytearray(receiveData[:7])
+            if((data != "Error") and (data !="Null")):
+                sendData += data
+               
+            sendData += bytearray([0]) 
+            sendData += bytearray([numb])
+
+
         return sendData
 
