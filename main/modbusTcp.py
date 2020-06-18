@@ -30,7 +30,7 @@ class Server:
                 c_sock, addr = s_sock.accept()  # get client socket
                 loop.create_task(self.run_client(c_sock, client_id))
                 client_id += 1
-            await asyncio.sleep_ms(200)
+            await asyncio.sleep(1)
 
     async def run_client(self, sock, cid):
 
@@ -42,7 +42,7 @@ class Server:
         try:
             while True:
                 
-                res =await sreader.read(12)
+                res = sock.recv(50)#sreader.read(12)
                 
                 if res == b'':
                     raise OSError
@@ -53,7 +53,8 @@ class Server:
                     result = await self.tcpModbus.modbusCheckProccess(res)
                     print("Sended Data: ",result)
                     await swriter.awrite(result)  # Echo back
-                    await swriter.drain()
+                    await asyncio.sleep_ms(500)
+            
                 except Exception as e:
                     print(e)
 

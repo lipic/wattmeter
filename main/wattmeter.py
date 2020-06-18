@@ -6,8 +6,8 @@ import uasyncio as asyncio
 
 class Wattmeter:
      
-    def __init__(self,ID, timeout, baudrate , rxPin, txPin):
-        
+    def __init__(self,lock ,ID, timeout, baudrate , rxPin, txPin):
+        self.lock = lock
         self.uart = machine.UART(ID, baudrate=baudrate, rx=rxPin, tx=txPin)
         self.modbusClient = modbus.Modbus()
         self.dataLayer = DataLayer()
@@ -22,6 +22,7 @@ class Wattmeter:
     async def wattmeterHandler(self):
         #print("Minute: {}, Hour: ".format(self.lastMinute,self.lastHour))
         #Read data from wattmeter
+        
         status = await self.__readWattmeter_data(1000,9)
         status = await self.__readWattmeter_data(2502,3)
         #status = await self.__readWattmeter_data(3000,3)
@@ -29,16 +30,15 @@ class Wattmeter:
     
         #Check if time-sync puls must be send
         if(self.lastMinute is not int(time.localtime()[4])):
-            status = await self.__writeWattmeter_data(100,1)
+            status = await self.writeWattmeterRegister(100,[1])
             self.lastMinute = int(time.localtime()[4])
             #print("Hour: {} Minuten: {}".format((int(time.localtime()[3])+self.ntcShift),self.lastMinute))
             #zde se bude ukladat delka pole
         
+            print("Positive Power: {}".format(self.dataLayer.data["Emin_Positive"]))
             if(len(self.dataLayer.data["P_minuten"])<61):
-
                 self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]/600)#self.dataLayer.data["P1"])
             else:
-                import random
                 self.dataLayer.data["P_minuten"] = self.dataLayer.data["P_minuten"][1:]
                 self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]/600)#self.dataLayer.data["P1"])
             
@@ -58,10 +58,12 @@ class Wattmeter:
      
          
     async def writeWattmeterRegister(self,reg,data):
+        await self.lock.acquire()
         writeRegs = self.modbusClient.write_regs(reg, data)
         self.uart.write(writeRegs)
         await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
+        self.lock.release()
         try:
             receiveData = receiveData[1:]
             if (0 == self.modbusClient.mbrtu_data_processing(receiveData)):
@@ -73,11 +75,12 @@ class Wattmeter:
     
         
     async def readWattmeterRegister(self,reg,length):
+        await self.lock.acquire()
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
-        await asyncio.sleep_ms(100)
+        await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
-        
+        self.lock.release()
         try:
             if (receiveData  and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
                 data = bytearray()
@@ -87,44 +90,39 @@ class Wattmeter:
             else:
                 return "Null"
         except Exception as e:
-            print(e)
             return "Error"
     
     
     async def __readWattmeter_data(self,reg,length):
-        readRegs = self.modbusClient.read_regs(reg, length)
-        self.uart.write(readRegs)
-        await asyncio.sleep_ms(100)
-        receiveData = self.uart.read()  
 
+        receiveData = await self.readWattmeterRegister(reg,length)
         try:
-            if (receiveData and (reg == 1000) and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
-
-                self.dataLayer.data["I1"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
-                self.dataLayer.data["I2"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
-                self.dataLayer.data["I3"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
-                self.dataLayer.data["U1"] =     (int)((((receiveData[9])) << 8)  | ((receiveData[10])))
-                self.dataLayer.data["U2"] =     (int)((((receiveData[11])) << 8) | ((receiveData[12])))
-                self.dataLayer.data["U3"] =     (int)((((receiveData[13])) << 8) | ((receiveData[14])))
-                self.dataLayer.data["P1"] =     (int)((((receiveData[15])) << 8)  | ((receiveData[16])))
-                self.dataLayer.data["P2"] =     (int)((((receiveData[17])) << 8)  | ((receiveData[18])))
-                self.dataLayer.data["P3"] =     (int)((((receiveData[19])) << 8)  | ((receiveData[20])))
+            if ((receiveData != "Null" and receiveData != "Error") and (reg == 1000)):
+                self.dataLayer.data["I1"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
+                self.dataLayer.data["I2"] =     (int)((((receiveData[2])) << 8)  | ((receiveData[3])))
+                self.dataLayer.data["I3"] =     (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
+                self.dataLayer.data["U1"] =     (int)((((receiveData[8])) << 8)  | ((receiveData[7])))
+                self.dataLayer.data["U2"] =     (int)((((receiveData[10])) << 8) | ((receiveData[9])))
+                self.dataLayer.data["U3"] =     (int)((((receiveData[12])) << 8) | ((receiveData[11])))
+                self.dataLayer.data["P1"] =     (int)((((receiveData[14])) << 8)  | ((receiveData[13])))
+                self.dataLayer.data["P2"] =     (int)((((receiveData[16])) << 8)  | ((receiveData[15])))
+                self.dataLayer.data["P3"] =     (int)((((receiveData[18])) << 8)  | ((receiveData[17])))
                 return "SUCCESS_READ"
                 
             
-            elif (receiveData and (reg == 2502) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 2502)):
                 
                 self.dataLayer.data["Emin_Positive"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4]))) + (int)((((receiveData[5])) << 8)  | ((receiveData[6]))) + (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
                 return "SUCCESS_READ"
              
-            elif (receiveData and (reg == 3000) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 3000)):
                 
                 self.dataLayer.data["P1"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
                 self.dataLayer.data["P2"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
                 self.dataLayer.data["P3"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
                 return "SUCCESS_READ"
 
-            elif (receiveData and (reg == 3102) and (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 3102)):
                 
                 self.dataLayer.data["E1_P"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
                 self.dataLayer.data["E2_P"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))

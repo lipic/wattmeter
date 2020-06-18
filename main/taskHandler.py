@@ -8,6 +8,7 @@ from main import loggingHandler
 from main import __config__
 from main import modbusTcp
 from ntptime import settime
+
                     
 
 class TaskHandler:
@@ -16,7 +17,7 @@ class TaskHandler:
         self.setting = __config__.Config()
         self.setting.update_Config()
         self.log= loggingHandler.LoggingHandler()
-        self.wattmeter = wattmeter.Wattmeter(ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
+        self.wattmeter = wattmeter.Wattmeter(lock = asyncio.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
         self.evse = evse.Evse(baudrate = 9600,setting = self.setting, wattmeter = self.wattmeter )
         self.webServerApp = webServerApp.WebServerApp(wifiManager,wlanStatus,self.wattmeter,self.log,setting = self.setting, evse = self.evse) #Create instance of Webserver App
         self.wlanStatus = wlanStatus #Get WIFi status from boot process
@@ -71,11 +72,11 @@ class TaskHandler:
             await self.uModBusTCP.run()
             await asyncio.sleep(delay_secs)
  
-    def mainTaskHandlerRun(self): 
+    def mainTaskHandlerRun(self):
         loop = asyncio.get_event_loop()
         loop.create_task(self.ledHandler(1))
         loop.create_task(self.getWifiStatus(10))
-       # loop.create_task(self.wattmeterHandler(1))
+        loop.create_task(self.wattmeterHandler(1))
         loop.create_task(self.evseHandler(1))
         loop.create_task(self.webServerApp.webServerRun(0))
         loop.create_task(self.uModBusTCP.run(loop))
