@@ -30,7 +30,7 @@ class Server:
                 c_sock, addr = s_sock.accept()  # get client socket
                 loop.create_task(self.run_client(c_sock, client_id))
                 client_id += 1
-            await asyncio.sleep(1)
+            await asyncio.sleep_ms(400)
 
     async def run_client(self, sock, cid):
 
@@ -42,7 +42,7 @@ class Server:
         try:
             while True:
                 
-                res = sock.recv(50)#sreader.read(12)
+                res = await sreader.read(12)
                 
                 if res == b'':
                     raise OSError
@@ -53,7 +53,7 @@ class Server:
                     result = await self.tcpModbus.modbusCheckProccess(res)
                     print("Sended Data: ",result)
                     await swriter.awrite(result)  # Echo back
-                    await asyncio.sleep_ms(500)
+                    await asyncio.sleep_ms(200)
             
                 except Exception as e:
                     print(e)
@@ -112,16 +112,15 @@ class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
             reg = int((receiveData[8]<<8) | receiveData[9])
             numb = int((receiveData[10]<<8) | receiveData[11])
             values = []
-            for i in range(0,numb):
-                values.append(int((receiveData[12+i]<<8) | receiveData[13+i]))
+            for i in range(0,numb*2):
+                values.append(receiveData[13+i])
+
             data = await self.wattmeter.writeWattmeterRegister(reg,values)
-            sendData = bytearray(receiveData[:7])
+            sendData = bytearray(receiveData[:8])
             if((data != "Error") and (data !="Null")):
                 sendData += data
-               
-            sendData += bytearray([0]) 
+            sendData += bytearray([0])
             sendData += bytearray([numb])
-
 
         return sendData
 

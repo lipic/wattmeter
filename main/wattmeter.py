@@ -65,9 +65,11 @@ class Wattmeter:
         receiveData = self.uart.read()
         self.lock.release()
         try:
-            receiveData = receiveData[1:]
             if (0 == self.modbusClient.mbrtu_data_processing(receiveData)):
-                return  'SUCCESS_WRITE'
+                data = bytearray()
+                data.append(receiveData[2])
+                data.append(receiveData[3])
+                return data
             else:
                 return 'ERROR'
         except Exception as e:
