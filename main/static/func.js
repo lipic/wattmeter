@@ -15,16 +15,18 @@ function update_ints_count() {
             var U1 = data['U1'] 
             var U2 = data['U2']
             var U3 = data['U3']
-            document.getElementById("U").textContent = "L1: "+U1+"V    L2: "+U2+"V    L3: "+U3+"V"
+            document.getElementById("U").textContent = "L1: "+U1+"   L2: "+U2+"   L3: "+U3
             
             var I1 =((data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] )/1000).toFixed(1)
             var I2 = ((data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )/1000).toFixed(1)
             var I3 = ((data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )/1000).toFixed(1)
-            document.getElementById("I").textContent = "L1: "+I1+"A    L2: "+I2+"A    L3: "+I3+"A"
+            document.getElementById("I").textContent = "L1: "+I1+"   L2: "+I2+"   L3: "+I3
             
-            document.getElementById("Total_Energy").textContent = ((data['E1_P'] +  data['E2_P'] +  data['E3_P'])/1000).toFixed(2) + " kWh"
+            document.getElementById("Total_Energy").textContent = ((data['E1_P'] +  data['E2_P'] +  data['E3_P'])/1000).toFixed(2)
 
-            document.getElementById("P1_min").textContent  = data["Emin_Positive"] + " W"
+            document.getElementById("Previous_Energy").textContent  = data["Emin_Positive"]
+            document.getElementById("Current_Energy").textContent  = data["Emin_Positive"] 
+            
             chartData = data["P_minuten"]
             
             var Power = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
