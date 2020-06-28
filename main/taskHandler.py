@@ -14,12 +14,11 @@ from ntptime import settime
 class TaskHandler:
     def __init__(self,wifiManager,wlanStatus,logging):
         #settime() # set time
-        self.setting = __config__.Config()
-        self.setting.update_Config()
+
         self.log= loggingHandler.LoggingHandler()
         self.wattmeter = wattmeter.Wattmeter(lock = asyncio.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
-        self.evse = evse.Evse(baudrate = 9600,setting = self.setting, wattmeter = self.wattmeter )
-        self.webServerApp = webServerApp.WebServerApp(wifiManager,wlanStatus,self.wattmeter,self.log,setting = self.setting, evse = self.evse) #Create instance of Webserver App
+        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter )
+        self.webServerApp = webServerApp.WebServerApp(wifiManager,wlanStatus,self.wattmeter,self.log, evse = self.evse) #Create instance of Webserver App
         self.wlanStatus = wlanStatus #Get WIFi status from boot process
         self.wifiManager = wifiManager #Get insatnce of wifimanager from boots
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
@@ -55,7 +54,11 @@ class TaskHandler:
      #Handler for wattmeter.        
     async def wattmeterHandler(self,delay_secs):
        while True:
-          
+            import gc
+            before= gc.mem_free()
+            gc.collect()
+            after = gc.mem_free()
+            print("Free mem before: {}, after: {}".format(before,after))
             status = await self.wattmeter.wattmeterHandler()
             #self.log.write("{} -> {}".format(type(self.wattmeter),status))            
             await asyncio.sleep(delay_secs)

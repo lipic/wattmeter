@@ -15,44 +15,82 @@ class Wattmeter:
         self.MONTHLY_CONSUMPTION = 'monthly_consumption.dat'
         self.DAILY_CONSUMPTION = 'daily_consumption.dat'
         self.ntcShift = 2
-        self.lastMinute =  int(time.localtime()[4])
-        self.lastHour = int(time.localtime()[3])+2
-        self.lastDay =  int(time.localtime()[2])
+        self.timeInit = False
+        self.lastMinute =  0
+        self.lastHour = 0
+        self.lastDay =  0
+        self.test = 0
 
     async def wattmeterHandler(self):
         #print("Minute: {}, Hour: ".format(self.lastMinute,self.lastHour))
         #Read data from wattmeter
-        
+        if(self.timeInit == False):
+            self.lastMinute =  int(time.localtime()[4])
+            self.lastHour = int(time.localtime()[3])+2
+            self.lastDay =  int(time.localtime()[2])
+            self.timeInit = True
+            
         status = await self.__readWattmeter_data(1000,9)
         status = await self.__readWattmeter_data(2502,3)
         #status = await self.__readWattmeter_data(3000,3)
         status = await self.__readWattmeter_data(3102,3)
     
+        
         #Check if time-sync puls must be send
         if(self.lastMinute is not int(time.localtime()[4])):
+                       
+            if(len(self.dataLayer.data["E_hour"])<50):
+                self.dataLayer.data["E_hour"].append(self.test)
+                self.dataLayer.data["E_hour"].append(self.test)#self.dataLayer.data["P1"])
+            else:
+                self.dataLayer.data["E_hour"] = self.dataLayer.data["E_hour"][2:]
+                self.dataLayer.data["E_hour"].append(self.test)
+                self.dataLayer.data["E_hour"].append(self.test)#self.dataLayer.data["P1"])
+            
+            self.dataLayer.data["E_hour"][0] = len(self.dataLayer.data["E_hour"])
+            self.dataLayer.data["E_hour"][1] = 1
+
+            self.test = self.test + 1
+            if(self.test>24):
+                self.test = 0
+            
+            if(len(self.dataLayer.data["P_minuten"])<61):
+                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]*6)#self.dataLayer.data["P1"])
+            else:
+                self.dataLayer.data["P_minuten"] = self.dataLayer.data["P_minuten"][1:]
+                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]*6)#self.dataLayer.data["P1"])
+            
+            self.dataLayer.data["P_minuten"][0] = len(self.dataLayer.data["P_minuten"])
             status = await self.writeWattmeterRegister(100,[1])
             self.lastMinute = int(time.localtime()[4])
             #print("Hour: {} Minuten: {}".format((int(time.localtime()[3])+self.ntcShift),self.lastMinute))
             #zde se bude ukladat delka pole
         
-            print("Positive Power: {}".format(self.dataLayer.data["Emin_Positive"]))
-            if(len(self.dataLayer.data["P_minuten"])<61):
-                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]/600)#self.dataLayer.data["P1"])
-            else:
-                self.dataLayer.data["P_minuten"] = self.dataLayer.data["P_minuten"][1:]
-                self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]/600)#self.dataLayer.data["P1"])
-            
-            self.dataLayer.data["P_minuten"][0] = len(self.dataLayer.data["P_minuten"])
             
             
         if(self.lastHour is not int(time.localtime()[3]+self.ntcShift)):
+            self.lastHour = int(time.localtime()[3])+self.ntcShift
+            
+            if(len(self.dataLayer.data["E_hour"])<49):
+                self.dataLayer.data["E_hour"].append(self.lastHour)
+                self.dataLayer.data["E_hour"].append(self.dataLayer.data["E_hour"])#self.dataLayer.data["P1"])
+            else:
+                self.dataLayer.data["E_hour"] = self.dataLayer.data["E_hour"][2:]
+                self.dataLayer.data["E_hour"].append(self.lastHour)
+                self.dataLayer.data["E_hour"].append(self.dataLayer.data["E_hour"])#self.dataLayer.data["P1"])
+            
+            self.dataLayer.data["E_hour"][0] = len(self.dataLayer.data["E_hour"])
+            
             status = await self.writeWattmeterRegister(101,[1])
-            self.lastHour = int(time.localtime()[4])            
+
+            print("New hour",self.lastHour )
 
             
         if(self.lastDay is not int(time.localtime()[2])):
             status = await self.writeWattmeterRegister(102,[1])
             data = {("{}.{}.{}".format(time.localtime()[2],time.localtime()[1],time.localtime()[0])) : 20}
+            print("New day",self.lastDay )
+            self.lastDay = int(time.localtime()[2])
             #self.fileHandler.handleData(self.DAILY_CONSUMPTION)
             #self.fileHandler.writeData(self.DAILY_CONSUMPTION, data)
      
@@ -98,39 +136,41 @@ class Wattmeter:
     async def __readWattmeter_data(self,reg,length):
 
         receiveData = await self.readWattmeterRegister(reg,length)
+       
         try:
             if ((receiveData != "Null" and receiveData != "Error") and (reg == 1000)):
+               # print("Ctu wattmeter:",receiveData, "Register: ",reg)
                 self.dataLayer.data["I1"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
                 self.dataLayer.data["I2"] =     (int)((((receiveData[2])) << 8)  | ((receiveData[3])))
                 self.dataLayer.data["I3"] =     (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
-                self.dataLayer.data["U1"] =     (int)((((receiveData[8])) << 8)  | ((receiveData[7])))
-                self.dataLayer.data["U2"] =     (int)((((receiveData[10])) << 8) | ((receiveData[9])))
-                self.dataLayer.data["U3"] =     (int)((((receiveData[12])) << 8) | ((receiveData[11])))
-                self.dataLayer.data["P1"] =     (int)((((receiveData[14])) << 8)  | ((receiveData[13])))
-                self.dataLayer.data["P2"] =     (int)((((receiveData[16])) << 8)  | ((receiveData[15])))
-                self.dataLayer.data["P3"] =     (int)((((receiveData[18])) << 8)  | ((receiveData[17])))
+                self.dataLayer.data["U1"] =     (int)((((receiveData[6])) << 8)  | ((receiveData[7])))
+                self.dataLayer.data["U2"] =     (int)((((receiveData[8])) << 8) | ((receiveData[9])))
+                self.dataLayer.data["U3"] =     (int)((((receiveData[10])) << 8) | ((receiveData[11])))
+                self.dataLayer.data["P1"] =     (int)((((receiveData[12])) << 8)  | ((receiveData[13])))
+                self.dataLayer.data["P2"] =     (int)((((receiveData[14])) << 8)  | ((receiveData[15])))
+                self.dataLayer.data["P3"] =     (int)((((receiveData[16])) << 8)  | ((receiveData[17])))
+
+                
                 return "SUCCESS_READ"
                 
             
             elif ((receiveData != "Null" and receiveData != "Error") and (reg == 2502)):
                 
-                self.dataLayer.data["Emin_Positive"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4]))) + (int)((((receiveData[5])) << 8)  | ((receiveData[6]))) + (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
+                self.dataLayer.data["Emin_Positive"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1]))) + (int)((((receiveData[2])) << 8)  | ((receiveData[3]))) + (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
                 return "SUCCESS_READ"
              
             elif ((receiveData != "Null" and receiveData != "Error") and (reg == 3000)):
                 
-                self.dataLayer.data["P1"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
-                self.dataLayer.data["P2"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
-                self.dataLayer.data["P3"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
+                self.dataLayer.data["P1"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
+                self.dataLayer.data["P2"] =     (int)((((receiveData[2])) << 8)  | ((receiveData[3])))
+                self.dataLayer.data["P3"] =     (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
                 return "SUCCESS_READ"
 
             elif ((receiveData != "Null" and receiveData != "Error") and (reg == 3102)):
                 
-                self.dataLayer.data["E1_P"] =     (int)((((receiveData[3])) << 8)  | ((receiveData[4])))
-                self.dataLayer.data["E2_P"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
-                self.dataLayer.data["E3_P"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[7])))
-             #   self.dataLayer.data["P2"] =     (int)((((receiveData[5])) << 8)  | ((receiveData[6])))
-              #  self.dataLayer.data["P3"] =     (int)((((receiveData[7])) << 8)  | ((receiveData[8])))
+                self.dataLayer.data["E1_P"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
+                self.dataLayer.data["E2_P"] =     (int)((((receiveData[2])) << 8)  | ((receiveData[3])))
+                self.dataLayer.data["E3_P"] =     (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
                 return "SUCCESS_READ"
 
             else: 
@@ -153,7 +193,7 @@ class DataLayer:
         self.data["P2"] = 0
         self.data["P3"] = 0
         self.data["P_minuten"] = [0]
-        self.data["E_hour"] = []
+        self.data["E_hour"] = [0,0]
         self.data["E_currentDay"] = 0
         self.data["E_lastDay"] = 0
         
