@@ -27,13 +27,12 @@ class Evse():
         current = 0
         state = ""
         status = ''
-        status = await self.__readEvse_data(1000,3)
+        #status = await self.__readEvse_data(1000,3)
         setting = self.setting.getConfig()
-
         if((status == 'SUCCESS_READ') == True):
             #If get max current accordig to wattmeter
-            if(setting["sw,ENABLE CHARGING"] == 'True'):
-                if (setting["sw,ENABLE BALANCING"] == 'True'):
+            if(setting["sw,ENABLE CHARGING"] == '1'):
+                if (setting["sw,ENABLE BALANCING"] == '1'):
                     current = self.balancEvseCurrent()
                     state = await self.writeEvseRegister(1000,[current])
                 else:
@@ -134,8 +133,6 @@ class Evse():
         if((I3 > I1)and(I3 > I2)):
             maxCurrent = math.ceil(I3/1000)
     
-
-        self.dataLayer.data["EV_STATE"]  = 3
         delta = int(self.setting.config["sl,BREAKER"]) - maxCurrent
 
         # Kdyz je proud vetsi nez dvojnasobek proudu jsitice okamzite vypni a pak pockej 10s
