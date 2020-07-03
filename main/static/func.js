@@ -4,6 +4,7 @@ powerAVGchartData = 0
 hourEnergyData = 0
 var refreshGraphs = 0
 var cnt = 60
+var dataCnt = 0
 function update_ints_count() {
     
     $.ajax({ 
@@ -16,36 +17,72 @@ function update_ints_count() {
             var U1 = data['U1'] 
             var U2 = data['U2']
             var U3 = data['U3']
-            document.getElementById("U").textContent = U1+"/"+U2+"/"+U3
+            document.getElementById("U1").textContent = U1
+            document.getElementById("U2").textContent = U2
+            document.getElementById("U3").textContent = U3
+            
             var I1 =((data['I1'] > 32767 ?  data['I1'] - 65535 : data['I1'] )/1000).toFixed(1)
             var I2 = ((data['I2'] > 32767 ?  data['I2'] - 65535 : data['I2'] )/1000).toFixed(1)
             var I3 = ((data['I3'] > 32767 ?  data['I3'] - 65535 : data['I3'] )/1000).toFixed(1)
-            document.getElementById("I").textContent = I1+"/"+I2+"/"+I3
+            document.getElementById("I1").textContent = I1
+            document.getElementById("I2").textContent = I2
+            document.getElementById("I3").textContent = I3
             
-            document.getElementById("Total_Energy").textContent = 0//((data['E1_P'] +  data['E2_P'] +  data['E3_P'])/1000).toFixed(2)
+            var P1 =  ((data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] )/1000).toFixed(2)
+            var P2 =  ((data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] )/1000).toFixed(2)
+            var P3 = ((data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )/1000).toFixed(2)
+            
+             var Power = P1 + P2 +P3
+            document.getElementById("P1").textContent = P1
+            document.getElementById("P2").textContent = P2
+            document.getElementById("P3").textContent = P3
 
-            document.getElementById("Previous_Energy").textContent  = (data["E_previousDay_positive"]/100).toFixed(2)
-            document.getElementById("Current_Energy").textContent  = (data["E_currentDay_positive"] /100).toFixed(2)
+            document.getElementById("PF1").textContent = (data['PF1']/100).toFixed(2)
+            document.getElementById("PF2").textContent = (data['PF2']/100).toFixed(2)
+            document.getElementById("PF3").textContent = (data['PF3']/100).toFixed(2)
+            
+            document.getElementById("PP1_peak").textContent = (data['PP1_peak']/1000).toFixed(2)
+            document.getElementById("PP2_peak").textContent = (data['PP2_peak']/1000).toFixed(2)
+            document.getElementById("PP3_peak").textContent = (data['PP3_peak']/1000).toFixed(2)
+            
+            document.getElementById("PN1_peak").textContent = (data['PN1_peak']/1000).toFixed(2)
+            document.getElementById("PN2_peak").textContent = (data['PN2_peak']/1000).toFixed(2)
+            document.getElementById("PN3_peak").textContent = (data['PN3_peak']/1000).toFixed(2)
+            
+            document.getElementById("Total_Energy_positive").textContent = (data["E_previousDay_positive"]/100).toFixed(2)
+            document.getElementById("Total_Energy_negative").textContent = ((data["E_previousDay_negative"] > 0) ? ((65535-data["E_previousDay_negative"])/100).toFixed(2): 0.0.toFixed(2))
+
+            document.getElementById("Previous_Energy_positive").textContent  = (data["E_previousDay_positive"]/100).toFixed(2)
+            document.getElementById("Previous_Energy_negative").textContent  = (data["E_previousDay_negative"]/100).toFixed(2)
+            
+            document.getElementById("Current_Energy_positive").textContent  = (data["E_currentDay_positive"]/100).toFixed(2)
+            document.getElementById("Current_Energy_negative").textContent  = (data["E_currentDay_negative"]/100).toFixed(2)
+            
+            
+            document.getElementById("Total_Energy_positive").textContent = (((data['E1_total_positive']) + (data['E2_total_positive']) + (data['E3_total_positive']))/100).toFixed(2)
+            document.getElementById("Total_Energy_negative").textContent =(((data['E1_total_negative']) + (data['E2_total_negative']) + (data['E3_total_negative']))/100).toFixed(2)
             
             powerAVGchartData = data["P_minuten"]
             hourEnergyData = data['E_hour']
             
-            var Power = (data['P1'] > 32767 ?  data['P1'] - 65535 : data['P1'] ) + (data['P2'] > 32767 ?  data['P2'] - 65535 : data['P2'] ) +   (data['P3'] > 32767 ?  data['P3'] - 65535 : data['P3'] )
-            document.getElementById("Power").textContent = Power + " W"
-
+           
             document.getElementById("ACTUAL_CONFIG_CURRENT").textContent = data['ACTUAL_CONFIG_CURRENT']
             document.getElementById("ACTUAL_OUTPUT_CURRENT").textContent = data['ACTUAL_OUTPUT_CURRENT']
             document.getElementById("EV_STATE").textContent = data['EV_STATE']
             
 
-             if(cnt >= 60){
+          if(cnt >= 60){
                 refreshEnergyChart()
                 cnt = 0
             }else{
                 cnt++;    
             }
             
-            document.getElementById("time").textContent = getTime();
+            if(document.getElementById("refresh").style.backgroundColor == 'green'){
+                document.getElementById("refresh").style.backgroundColor = ''
+            }else{
+                document.getElementById("refresh").style.backgroundColor = 'green'
+            }
             timer = setTimeout(update_ints_count, ms); 
         });  
 }     
@@ -68,6 +105,7 @@ $(document).ready(function()
         
         update_ints_count();
         setTimeout(function(){loadPowerChart()}, 2000);
+        setTimeout(function(){refreshEnergyChart()}, 2000);
                
     })   
     
@@ -87,6 +125,7 @@ $(document).ready(function()
                 energyGraph = new Chart(energyChartCtx,energyChartConfig)
                  update_ints_count();
                  setTimeout(function(){loadPowerChart()}, 1000);
+                 setTimeout(function(){refreshEnergyChart()}, 1000);
             });          
             
          }else if($(this).attr('id') == 'settings'){
@@ -178,14 +217,6 @@ $(document).ready(function()
             timer = 0;
         }
     } 
- 
-function getTime(){
-    var dt = new Date();
-    var time = dt.getHours() + " : " + dt.getMinutes() + " : "+ dt.getSeconds();
-    return time;
-    } 
-
-
 
 function loadPowerChart(){
     len = powerAVGchartData[0]
@@ -237,22 +268,25 @@ function refreshEnergyChart() {
     var hour = 0
     var startH = 0
     for(var i = 0; i<24;i++){
-        if(hourEnergyData[(2*i)+1] != undefined){
+        if(hourEnergyData[(2*i)+2] != undefined){
             hour =  hourEnergyData[(2*i)+1];
             data = hourEnergyData[(2*i)+2];
-            energyGraph.data.labels[24 - (((len-1)/2)-i)] = hour;
+            energyGraph.data.labels[24 - (((len-1)/2)-i)] = (hour)+"h";
             energyGraph.data.datasets[0].data[24 - (((len-1)/2)-i)] =  data;
         }else{
             if(hour<23){
-                hour++;
-                energyGraph.data.labels[startH] = hour;
+                hour = hour +1;
+                energyGraph.data.labels[startH] = (hour)+"h";
                 energyGraph.data.datasets[0].data[startH] =  0;
                 startH++;
             }else{
                 hour=0;
-                energyGraph.data.labels[startH] = hour;
+                energyGraph.data.labels[startH] = (hour)+"h";
                 energyGraph.data.datasets[0].data[startH] =  0;
                 startH++;
+            }
+            if(startH > 23){
+                startH = 0    
             }
         }
     }

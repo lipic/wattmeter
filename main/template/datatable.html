@@ -1,36 +1,109 @@
 <!DOCTYPE html>
 <html lang="cs-cz">
+
 <div class="container-sm mt-3">
     <div class="container-fluid text-white pt-2 text-center">
-        <h5>Wattmeter data</h5>
+        <h4>WATTMETER  <span class="dot" id="refresh"></span> </h4>
     </div>
-<table class="table  table-dark rounded" >
-    <thead>
-        <tr><th>Name</th><th colspan="3">Status/Value</th></tr>
-    </thead>   
-    <tbody> 
-        <tr><td>Time:</td><td><span id="time">0</span></td></tr>
-        <tr><td>Voltages L1/L2/L3 [V]</td><td ><span id="U">"-,-/-,-/-,-"</span></td></tr>
-        <tr><td>Currents L1/L2/L3 [A]</td><td ><span id="I">"-,-/-,-/-,-"</span></td></tr>
-        <tr><td>Power [W]</td><td><span id="Power">-,-</span></td></tr>
-        <tr><td>Total energy [kWh]</td><td><span id="Total_Energy">-,- </span></td></tr>
-        <tr><td>Previous day energy [kWh]</td><td><span id="Previous_Energy">-,- </span></td></tr>
-        <tr><td>Current day energy [kWh]</td><td><span id="Current_Energy">-,- </span></td></tr>
-    </tbody>  
-</table>  
+    <table class="table  table-dark text-center">
+        <thead>
+            <tr style="background-color: #282828;">
+                <th>Name</th>
+                <th>L1</th>
+                <th>L2</th>
+                <th>L3</th>
+            </tr>
+        </thead>   
+        <tbody> 
+            <tr>
+                <td>Voltages [V]</td>
+                <td ><span id="U1"> -,-</span></td>
+                <td ><span id="U2">-,-</span></td>
+                <td ><span id="U3">-,-</span></td>
+            </tr>
+            <tr>
+                <td>Currents [A]</td>
+                <td><span id="I1"> -,- </span></td>
+                <td ><span id="I2">-,-</span></td>
+                <td ><span id="I3">-,-</span></td>
+            </tr>
+            <tr>
+                <td>Powers [kW]</td>
+                <td><span id="P1">-,-</span></td>
+                <td><span id="P2">-,-</span></td>
+                <td><span id="P3">-,-</span></td>
+            </tr>
+            <tr>
+                <td>Power factor [-]</td>
+                <td><span id="PF1">-,-</span></td>
+                <td><span id="PF2">-,-</span></td>
+                <td><span id="PF3">-,-</span></td>
+            </tr>
+            <tr>
+                <td>Positive peak [kW]</td>
+                <td><span id="PP1_peak">-,-</span></td>
+                <td><span id="PP2_peak">-,-</span></td>
+                <td><span id="PP3_peak">-,-</span></td>
+            </tr>
+            <tr>
+                <td>Negative peak [kW]</td>
+                <td><span id="PN1_peak">-,-</span></td>
+                <td><span id="PN2_peak">-,-</span></td>
+                <td><span id="PN3_peak">-,-</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table  table-dark text-center">
+        <thead>
+            <tr  style="background-color:#282828;">
+                <th colspan='2'>Energy</th>
+                <th>Positive</th>
+                <th>Negative</th>
+            </tr>
+        </thead>
+        
+        <tbody> 
+            <tr>
+                <td colspan='2'>Total  [kWh]</td>
+                <td ><span id="Total_Energy_positive">-,- </span></td>
+                <td ><span id="Total_Energy_negative">-,-</span></td>
+            </tr>
+            <tr>
+                <td colspan='2'>Previous day [kWh]</td>
+                <td><span id="Previous_Energy_positive">-,-</span></td>
+                <td><span id="Previous_Energy_negative">-,-</span></td>
+            </tr>
+            <tr>
+                <td colspan='2'>Current day [kWh]</td>
+                <td><span id="Current_Energy_positive">-,-</span></td>
+                <td><span id="Current_Energy_negative">-,-</span></td>
+            </tr>
+        </tbody>  
+    </table>  
 
     <div class="container-fluid text-white pt-2 text-center">
-        <h5>Evse data</h5>
+        <h4>EVSE </h5>
     </div>
 <table class="table  table-dark rounded" >
     <thead>
-        <tr><th>Name</th><th colspan="2">Status/Value</th></tr>
+        <tr style="background-color: #282828;">
+            <th>Name</th>
+            <th colspan="2">Status/Value</th>
+        </tr>
     </thead>   
     <tbody> 
-        <tr><td>Actual configured amps value :</td><td><span id="ACTUAL_CONFIG_CURRENT">0</span></td></tr>
-        <tr><td>Actual amps value output:</td><td><span id="ACTUAL_OUTPUT_CURRENT">0</span></td></tr>
-        <tr><td>Vehicle state:</td><td><span id="EV_STATE">0</span></td></tr>
-
+        <tr>
+            <td>Actual configured amps value :</td>
+            <td><span id="ACTUAL_CONFIG_CURRENT">0</span></td>
+        </tr>
+        <tr>
+            <td>Actual amps value output:</td>
+            <td><span id="ACTUAL_OUTPUT_CURRENT">0</span></td>
+        </tr>
+        <tr>
+            <td>Vehicle state:</td>
+            <td><span id="EV_STATE">0</span></td>
+        </tr>
     </tbody>  
 </table>
 
@@ -41,6 +114,8 @@
         <canvas id="energyGraph" height ="250px">
             <p>Your browser does not support the canvas element.</p>
         </canvas>
+        
+
      </div>
 </html>
                      

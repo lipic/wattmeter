@@ -22,11 +22,9 @@ class Wattmeter:
         self.test = 0
 
     async def wattmeterHandler(self):
-        #print("Minute: {}, Hour: ".format(self.lastMinute,self.lastHour))
         #Read data from wattmeter
         if(self.timeInit == False):
             self.lastMinute =  int(time.localtime()[4])
-            #self.lastHour = int(time.localtime()[3])+2
             self.lastDay =  int(time.localtime()[2])
             self.timeInit = True
         
@@ -35,11 +33,13 @@ class Wattmeter:
         status = await self.__readWattmeter_data(2502,3)
         status = await self.__readWattmeter_data(2802,3)
         #Current Day consumption
-        status = await self.__readWattmeter_data(3102,6)
+        status = await self.__readWattmeter_data(3102,12)
         #Previous Day consumption
         status = await self.__readWattmeter_data(2902,6)
-        #Previous Day consumption
-        #status = await self.__readWattmeter_data(2902,6)
+        #Power factor Day 
+        status = await self.__readWattmeter_data(1015,3)
+        #Total energy 
+        status = await self.__readWattmeter_data(4000,12)
         
         #Check if time-sync puls must be send
         if(self.lastMinute is not int(time.localtime()[4])):
@@ -74,7 +74,7 @@ class Wattmeter:
         else:
             if(len(self.dataLayer.data["E_hour"])<49):
                 self.dataLayer.data["E_hour"][len(self.dataLayer.data["E_hour"])-1]= self.dataLayer.data["Ehour_Positive"]
-                print("Zapisuji: ",self.dataLayer.data["E_hour"])
+                #print("Zapisuji: ",self.dataLayer.data["E_hour"])
             else:
                 self.dataLayer.data["E_hour"][49]= self.dataLayer.data["Ehour_Positive"]
 
@@ -141,9 +141,15 @@ class Wattmeter:
                 self.dataLayer.data["P1"] =     (int)((((receiveData[12])) << 8)  | ((receiveData[13])))
                 self.dataLayer.data["P2"] =     (int)((((receiveData[14])) << 8)  | ((receiveData[15])))
                 self.dataLayer.data["P3"] =     (int)((((receiveData[16])) << 8)  | ((receiveData[17])))
-                
+     
                 return "SUCCESS_READ"
                 
+            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 1015)):
+                
+                self.dataLayer.data["PF1"] = (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
+                self.dataLayer.data["PF2"] = (int)((((receiveData[2])) << 8)  | ((receiveData[3])))
+                self.dataLayer.data["PF3"] = (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
+                return "SUCCESS_READ"
             
             elif ((receiveData != "Null" and receiveData != "Error") and (reg == 2502)):
                 
@@ -160,6 +166,23 @@ class Wattmeter:
                 
                 self.dataLayer.data["E_currentDay_positive"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1]))) + (int)((((receiveData[2])) << 8)  | ((receiveData[3]))) + (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
                 self.dataLayer.data["E_currentDay_negative"] =     (int)((((receiveData[6])) << 8)  | ((receiveData[7]))) + (int)((((receiveData[8])) << 8)  | ((receiveData[9]))) + (int)((((receiveData[10])) << 8)  | ((receiveData[11])))
+                self.dataLayer.data["PP1_peak"] =     (int)((((receiveData[12])) << 8)  | ((receiveData[13])))
+                self.dataLayer.data["PP2_peak"] =     (int)((((receiveData[14])) << 8)  | ((receiveData[15])))
+                self.dataLayer.data["PP3_peak"] =     (int)((((receiveData[16])) << 8)  | ((receiveData[17])))
+                self.dataLayer.data["PN1_peak"] =     (int)((((receiveData[18])) << 8)  | ((receiveData[19])))
+                self.dataLayer.data["PN2_peak"] =     (int)((((receiveData[20])) << 8)  | ((receiveData[21]))) 
+                self.dataLayer.data["PN3_peak"] =     (int)((((receiveData[22])) << 8)  | ((receiveData[23])))
+                return "SUCCESS_READ"
+                    
+            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 4000)):
+                
+                self.dataLayer.data["E1_total_positive"] =      (int)((receiveData[2] << 24) |  (receiveData[3] << 16) |  (receiveData[0] << 8)  | receiveData[1] )
+                self.dataLayer.data["E2_total_positive"] =      (int)((receiveData[6] << 24) |  (receiveData[7] << 16) |  (receiveData[4] << 8)  | receiveData[5] )
+                self.dataLayer.data["E3_total_positive"] =      (int)((receiveData[10] << 24) |  (receiveData[11] << 16) |  (receiveData[8] << 8)  | receiveData[9] )
+                self.dataLayer.data["E1_total_negative"] =     (int)((receiveData[14] << 24) |  (receiveData[15] << 16) |  (receiveData[12] << 8)  | receiveData[13] )
+                self.dataLayer.data["E2_total_negative"] =     (int)((receiveData[18] << 24) |  (receiveData[19] << 16) |  (receiveData[16] << 8)  | receiveData[17] )
+                self.dataLayer.data["E3_total_negative"] =     (int)((receiveData[22] << 24) |  (receiveData[23] << 16) |  (receiveData[20] << 8)  | receiveData[21] )
+
                 return "SUCCESS_READ"
             
             elif ((receiveData != "Null" and receiveData != "Error") and (reg == 2902)):
@@ -182,7 +205,16 @@ class DataLayer:
         self.data["I3"] = 0
         self.data["U1"] = 0
         self.data["U2"] = 0
-        self.data["U3"] = 0 
+        self.data["U3"] = 0
+        self.data["PF1"] = 0
+        self.data["PF2"] = 0
+        self.data["PF3"] = 0 
+        self.data["PP1_peak"] = 0
+        self.data["PP2_peak"] = 0
+        self.data["PP3_peak"] = 0
+        self.data["PN1_peak"] = 0
+        self.data["PN2_peak"] = 0
+        self.data["PN3_peak"] = 0
         self.data["Emin_Positive"] = 0
         self.data["Ehour_Positive"] = 0
         self.data["P1"] = 0
@@ -194,6 +226,12 @@ class DataLayer:
         self.data["E_currentDay_negative"] = 0
         self.data["E_previousDay_positive"] = 0
         self.data["E_previousDay_negative"] = 0
+        self.data["E1_total_positive"] = 0
+        self.data["E2_total_positive"] = 0
+        self.data["E3_total_positive"] = 0
+        self.data["E1_total_negative"] = 0
+        self.data["E2_total_negative"] = 0
+        self.data["E3_total_negative"] = 0
         
 class fileHandler:
             

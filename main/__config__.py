@@ -10,9 +10,8 @@ class Config:
         self.config['sw,AUTOMATIC UPDATE'] = 0 #Reg 1001
         self.config['txt,ACTUAL SW VERSION']=0  #Reg 1002
         self.config['sw,ENABLE CHARGING']=0       #Reg 1003
-        self.config['txt,CLOUD SW VERSION']=0    #Reg 1004
-        self.config['sl,BREAKER']=6                            #Reg 1005
-        self.config['sw,ENABLE BALANCING']=0     #Reg 1006
+        self.config['sl,BREAKER']=6                            #Reg 1004
+        self.config['sw,ENABLE BALANCING']=0     #Reg 1005
         
         self.SETTING_PROFILES = 'setting.dat'
         self.handle_configure('txt,ACTUAL SW VERSION',self.boot.get_version(""))
@@ -58,27 +57,29 @@ class Config:
 
     # Update self.config. Write new value to self.config and to file setting.dat
     def handle_configure(self,variable, value):
-        if len(variable)>0:
-            try:
-                setting = self.read_setting()
-            except OSError:
-                setting = {}
+        try:
+            if len(variable)>0:
+                try:
+                    setting = self.read_setting()
+                except OSError:
+                    setting = {}
 
-            if(variable == "bt,RESET WATTMETER"):
-                if(value == 1):
-                    self.resetESP()
-                else:
-                    pass
+                if(variable == "bt,RESET WATTMETER"):
+                    if(value == 1):
+                        self.resetESP()
+                    else:
+                        pass
                 
-            if(setting[variable] != value):
-                setting[variable] = value
-                print(variable,value)
-                self.write_setting(setting)
-                self.getConfig()
-                return True
-        else:
-            return False
-
+                if(setting[variable] != value):
+                    setting[variable] = value
+                    print(variable,value)
+                    self.write_setting(setting)
+                    self.getConfig()
+                    return True
+            else:
+                return False
+        except Exception as e:
+            print(e)
     #If exist read setting from setting.dat, esle create setting
     def read_setting(self):
         with open(self.SETTING_PROFILES) as f:

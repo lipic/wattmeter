@@ -53,6 +53,10 @@ class energyChart{
                         labelString: this.dim,
                         fontColor: '#DCDCDC'
                     },
+                    gridLines: {
+                      color: "#DCDCDC",
+                      lineWidth: 0.2
+                     },
                     ticks: {
                         fontColor: '#DCDCDC',
                         fontSize: 14,

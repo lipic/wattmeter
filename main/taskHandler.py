@@ -8,6 +8,7 @@ from main import loggingHandler
 from main import __config__
 from main import modbusTcp
 from ntptime import settime
+import gc
 
                     
 
@@ -17,7 +18,7 @@ class TaskHandler:
 
         self.log= loggingHandler.LoggingHandler()
         self.wattmeter = wattmeter.Wattmeter(lock = asyncio.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
-        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter )
+        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = asyncio.Lock())
         self.webServerApp = webServerApp.WebServerApp(wifiManager,wlanStatus,self.wattmeter,self.log, evse = self.evse) #Create instance of Webserver App
         self.wlanStatus = wlanStatus #Get WIFi status from boot process
         self.wifiManager = wifiManager #Get insatnce of wifimanager from boots
@@ -40,6 +41,9 @@ class TaskHandler:
                         self.wifiManager.get_connection()
             except Exception as e:
                 self.log.write("Exception: {0}".format(e))
+            
+            gc.collect()
+            gc.mem_free()
             await asyncio.sleep(delay_secs)   
 
      #Handler for led run.        
@@ -54,20 +58,25 @@ class TaskHandler:
      #Handler for wattmeter.        
     async def wattmeterHandler(self,delay_secs):
        while True:
-            import gc
-            before= gc.mem_free()
+            try:
+                status = await self.wattmeter.wattmeterHandler()
+            except Exception as e:
+                self.log.write("{} -> {}".format(type(self.wattmeter),e))
+            
             gc.collect()
-            after = gc.mem_free()
-            print("Free mem before: {}, after: {}".format(before,after))
-            status = await self.wattmeter.wattmeterHandler()
-            #self.log.write("{} -> {}".format(type(self.wattmeter),status))            
+            gc.mem_free()
             await asyncio.sleep(delay_secs)
             
      #Handler for evse.        
     async def evseHandler(self,delay_secs):
        while True:
-            status = await self.evse.evseHandler()
-            self.log.write("{} -> {}".format(type(self.evse),status))
+            try:
+                status = await self.evse.evseHandler()
+            except Exception as e:
+                self.log.write("{} -> {}".format(type(self.evse),e))
+                
+            gc.collect()
+            gc.mem_free()
             await asyncio.sleep(delay_secs)
             
     async def modbusTcpHandler(self,delay_secs):

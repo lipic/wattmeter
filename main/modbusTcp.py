@@ -9,7 +9,7 @@ import uasyncio as asyncio
 class Server:
     
     def __init__(self, wattmeter):
-        self.tcpModbus = tcpModbus(wattmeter)
+        self.tcpModbus = tcpModbus()
 
         
     async def run(self, loop, port=8123):
@@ -71,11 +71,14 @@ class Server:
 
 
 
-class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
+class tcpModbus(modbus.Modbus):
     
-    def __init__(self,wattmeter):
+    def __init__(self):
         from main import __config__
-        self.wattmeter = wattmeter
+        from main import wattmeter
+        from main import evse
+        self.wattmeter = wattmeter.Wattmeter(lock = asyncio.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27)
+        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = asyncio.Lock())
         modbus.Modbus.__init__(self)
         self.config = __config__.Config()
         
@@ -97,6 +100,9 @@ class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
         
         if((FCE != 3) and (FCE != 16)):
             raise Exception("Error: bad function")
+        
+        if((ID > 0) and (ID<100)):
+            return await self.proccessEvseData(receiveData)    
         
         if(ID == 100):
             return await self.proccessWattmeterData(receiveData)
@@ -122,9 +128,10 @@ class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
             reg = int((receiveData[8]<<8) | receiveData[9])
             numb = int((receiveData[10]<<8) | receiveData[11])
             values = []
-            for i in range(0,numb*2):
-                values.append(receiveData[13+i])
-
+            
+            for i in range(0,numb):
+                values.append(int(receiveData[13+(2*i)] | receiveData[14+(2*i)]))
+                
             data = await self.wattmeter.writeWattmeterRegister(reg,values)
             sendData = bytearray(receiveData[:8])
             if((data != "Error") and (data !="Null")):
@@ -213,5 +220,35 @@ class tcpModbus(modbus.Modbus, wattmeter.Wattmeter):
             sendData = bytearray(receiveData[:10])
             sendData += bytearray([0])
             sendData += bytearray([length])
+
+        return sendData
+              
+    async def proccessEvseData(self,receiveData):
+        data = bytearray()
+        length = 0
+        #modbus function 0x03
+        if(receiveData[7] == 3):
+            reg = int((receiveData[8]<<8) | receiveData[9])
+            length = int((receiveData[10]<<8) | receiveData[11])
+            data = await self.evse.readEvseRegister(reg,length)
+            sendData = bytearray(receiveData[:8])
+            sendData += bytearray([length * 2])
+            if((data != "Error") and (data !="Null")):
+                sendData += data
+            
+        
+        if(receiveData[7] == 16):
+            reg = int((receiveData[8]<<8) | receiveData[9])
+            numb = int((receiveData[10]<<8) | receiveData[11])
+            values = []
+            for i in range(0,numb):
+                values.append(int(receiveData[13+(2*i)] | receiveData[14+(2*i)]))
+
+            data = await self.evse.writeEvseRegister(reg,values)
+            sendData = bytearray(receiveData[:8])
+            if((data != "Error") and (data !="Null")):
+                sendData += data
+            sendData += bytearray([0])
+            sendData += bytearray([numb])
 
         return sendData
