@@ -89,7 +89,7 @@ function update_ints_count() {
 $(document).ready(function() 
  {
   $('div.mainContainer').load('datatable',function(){
-        $('.loading').hide();
+        $('.loader').hide(300);
         
         let energyBarChart  = new energyChart('Hourly energy consumption [Wh]','Wh')
         let powerLineChart  = new powerChart(refreshPowerChart)

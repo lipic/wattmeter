@@ -60,17 +60,23 @@ function Setting() {
                 self.saveSetting("sw," + $(this).attr("id"), ($(this).prop("checked")==true)? 1: 0);
             });
             
+           var secunde = 25
            $(document).on("click", "#resetEsp", function(event) {
-                console.log("Resetujuu")
-                //setTimeout(resetCounter, 1000); 
-                document.getElementById('resetEsp').innerText = 'WAITING ..'
-                $('#resetEsp').append('<span class="spinner-border spinner-border-sm"></span>');
+
+                setInterval(resetCounter, 1000); 
                 setTimeout(function(){
-                location.reload(true)} ,25000)
+                    location.reload(true)
+                    secunde = 0
+                    document.getElementById('resetEsp').innerText = 'FINISHING'
+                } ,25000)
+                
                 self.saveSetting("bt,RESET WATTMETER", 1);
             });
             resetCounter = function(){
-                console.log("Vuii")
+                if(secunde != 0){
+                     document.getElementById('resetEsp').innerText = 'WAITING '+secunde+'s'
+                    secunde = secunde-1;
+                }
             }
         });
     }),

@@ -7,9 +7,7 @@
         
          <meta name="viewport" content="width=device-width, initial-scale=1">
          <link href="main/static/style.css" rel="stylesheet">
-         <script type="text/javascript" src="main/static/cached-webpgr.js"></script>
         <script type="text/javascript" src="main/static/loadLibrary.js"></script>
-        <script type="text/javascript" src="https://kit.fontawesome.com/a076d05399.js"></script>
 
     
     </head> 
@@ -23,9 +21,26 @@
              </ul>
         </nav>
         
-        <h2 class="loading">Loading</h2>
+      <!-- Loading Spinner Wrapper-->
+        <div class="loader text-center">
+            <div class="loader-inner">
 
-                <div class="mainContainer"></div>
+                <!-- Animated Spinner -->
+                <div class="lds-roller mb-3">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+                <h4 class="text-uppercase font-weight-bold">Loading</h4>
+            </div>
+        </div>
+        
+        <div class="mainContainer"></div>
 
     </body>
     
