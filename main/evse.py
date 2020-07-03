@@ -27,7 +27,7 @@ class Evse():
         current = 0
         state = ""
         status = ''
-        #status = await self.__readEvse_data(1000,3)
+        status = await self.__readEvse_data(1000,3)
         setting = self.setting.getConfig()
         if((status == 'SUCCESS_READ') == True):
             #If get max current accordig to wattmeter

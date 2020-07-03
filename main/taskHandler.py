@@ -73,6 +73,7 @@ class TaskHandler:
             try:
                 status = await self.evse.evseHandler()
             except Exception as e:
+                print("EVSE error: ",e)
                 self.log.write("{} -> {}".format(type(self.evse),e))
                 
             gc.collect()
