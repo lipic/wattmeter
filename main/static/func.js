@@ -267,11 +267,12 @@ function refreshEnergyChart() {
     var data = 0
     var hour = 0
     var startH = 0
+    console.log("Hour data:",hourEnergyData)
     for(var i = 0; i<24;i++){
         if(hourEnergyData[(2*i)+2] != undefined){
             hour =  hourEnergyData[(2*i)+1];
             data = hourEnergyData[(2*i)+2];
-            energyGraph.data.labels[24 - (((len-1)/2)-i)] = (hour)+"h";
+            energyGraph.data.labels[24 - (((len-1)/2)-i)] = toString(hour)+"h";
             energyGraph.data.datasets[0].data[24 - (((len-1)/2)-i)] =  data;
         }else{
             if(hour<23){
