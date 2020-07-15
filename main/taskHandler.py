@@ -8,6 +8,8 @@ from main import loggingHandler
 from main import __config__
 from main import modbusTcp
 from ntptime import settime
+import utime
+import machine
 import gc
 
                     
@@ -36,6 +38,23 @@ class TaskHandler:
                 if(self.wlanStatus.isconnected()):
                     self.ledWifi.on()
                     settime()
+                    rtc=machine.RTC()
+
+                    # for time convert to second
+                    tampon1=utime.time() 
+    
+                    # for gmt. For me gmt+3. 
+                    # 1 hour = 3600 seconds
+                    # 3 hours = 10800 seconds
+                    tampon2=tampon1+7200
+
+                    # for second to convert time
+                    (year, month, mday, hour, minute, second, weekday, yearday)=utime.localtime(tampon2)
+
+                    # first 0 = week of year
+                    # second 0 = milisecond
+                    rtc.datetime((year, month, mday, 0, hour, minute, second, 0))
+
                 else:
                     if len(self.wifiManager.read_profiles()) != 0:
                         self.wifiManager.get_connection()

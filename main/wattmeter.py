@@ -14,7 +14,6 @@ class Wattmeter:
         self.fileHandler = fileHandler()
         self.MONTHLY_CONSUMPTION = 'monthly_consumption.dat'
         self.DAILY_CONSUMPTION = 'daily_consumption.dat'
-        self.ntcShift = 2
         self.timeInit = False
         self.lastMinute =  0
         self.lastHour = 0
@@ -57,9 +56,9 @@ class Wattmeter:
         
             
             
-        if(self.lastHour is not int(time.localtime()[3]+self.ntcShift)):
+        if(self.lastHour is not int(time.localtime()[3])):
             status = await self.writeWattmeterRegister(101,[1])
-            self.lastHour = int(time.localtime()[3])+self.ntcShift
+            self.lastHour = int(time.localtime()[3])
             
             if(len(self.dataLayer.data["E_hour"])<49):
                 self.dataLayer.data["E_hour"].append(self.lastHour)
