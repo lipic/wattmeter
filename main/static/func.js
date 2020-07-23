@@ -318,29 +318,37 @@ function refreshEnergyChartHourly() {
 function refreshEnergyChartDaily() {
     var data = 0
     var day = 0
-    var len = dailyEnergyData.length-1
+    var len  = 1
+    if(dailyEnergyData != null){
+        len = dailyEnergyData.length-1
+    }
     var energyAvgD = 0
     var numb = 0
     days = Last31Days ()
+    console.log("Dny: ",days)
     for(var i = 0; i<31;i++){
-        if((dailyEnergyData[len - i] != undefined)){
-            arr = dailyEnergyData[len-i].split(':')
-            day  = arr [0]
-            data= arr[1]
-            energyGraphDaily.data.labels[30-i] = day;
-            energyAvgD = energyAvgD + parseFloat(data/100)
-            numb = numb + 1
-            energyGraphDaily.data.datasets[0].data[30-i] =  parseFloat(data/100).toFixed(1)
-        }else{
-            data = 0
+        if(dailyEnergyData != null){
+            if(dailyEnergyData[len - i] != undefined){
+                arr = dailyEnergyData[len-i].split(':')
+                day  = arr [0]
+                data= arr[1]
+                energyGraphDaily.data.labels[30-i] = day;
+                energyAvgD = energyAvgD + parseFloat(data/100)
+                numb = numb + 1
+                energyGraphDaily.data.datasets[0].data[30-i] =  parseFloat(data/100).toFixed(1)
+            }else{
+                energyGraphDaily.data.labels[30-i] = days[i];
+                energyGraphDaily.data.datasets[0].data[30-i] =  0
+            }
+        }
+        else{
             energyGraphDaily.data.labels[30-i] = days[i];
-            energyGraphDaily.data.datasets[0].data[30-i] =  data
+            energyGraphDaily.data.datasets[0].data[30-i] =  0
         }
     }
     
         for(var i = 0; i<31;i++){
             var resultAvg =  (energyAvgD/numb).toFixed(1)
-            console.log(energyAvgD,".............",resultAvg)
             energyGraphDaily.data.datasets[1].data[30-i] = resultAvg
         }
     
