@@ -1,1 +1,124 @@
-class energyChart{constructor(r,o){this.label=r,this.dim=o}getConfig(r){for(var o=Chart.helpers.color,e=[],t=[],l=[],a=0;a<r;)e.push(a++),t.push(0),l.push(0);var i="rgb(255, 0, 0)",n="rgb(255, 128, 0 )",s="rgb(0, 191, 235)";return{type:"bar",data:{datasets:[{label:this.label,color:"#DCDCDC",backgroundColor:o(s).alpha(.5).rgbString(),borderColor:s,borderWidth:1,hoverBackgroundColor:o(i).alpha(.5).rgbString(),hoverBorderColor:i,hoverborderWidth:2,fill:!0,lineTension:0,yAxesGroup:"1",data:l},{type:"line",yAxesGroup:"2",label:"Averrage energy consumption [kWh]",backgroundColor:o(n).alpha(.2).rgbString(),borderColor:n,borderWidth:.5,fill:!0,order:1,data:t}],labels:e},options:{elements:{point:{radius:0}},legend:{labels:{fontColor:"#DCDCDC",fontSize:14}},scales:{xAxes:[{ticks:{fontColor:"#DCDCDC",fontSize:13}}],yAxes:[{scaleLabel:{display:!0,labelString:this.dim,fontColor:"#DCDCDC"},gridLines:{color:"#DCDCDC",lineWidth:.2},ticks:{fontColor:"#DCDCDC",fontSize:14,beginAtZero:!0}}]},tooltips:{mode:"nearest",intersect:!1},hover:{mode:"nearest",intersect:!1}}}}}
+class energyChart{ 
+    constructor(label, dim) {
+        this.label = label
+        this.dim = dim
+
+    }
+ getConfig(num){
+        var color = Chart.helpers.color;
+        var arrLabel = [];
+        var arrData = [];
+        var arrDataN = [];
+        var arrDataH = [];
+        var startNum = 0
+        while(startNum < num){
+          arrLabel.push(startNum++);
+          arrData.push(0)
+          arrDataH.push(0)
+          arrDataN.push(0)
+        }
+        var chartColors = { 
+            red: 'rgb(255, 0, 0)',
+            orange: 'rgb(255, 128, 0 )',
+            yellow: 'rgb(255, 255, 0)',
+            green: 'rgb(75, 192, 192)',
+            blue: 'rgb(0, 191, 235)',
+            purple: 'rgb(153, 102, 255)',
+            grey: 'rgb(201, 203, 207)'
+        }; 
+        var config = { 
+        type: 'bar', 
+        data: {
+            datasets: [
+            {
+                label: "+"+this.label, 
+                color: '#DCDCDC',
+                backgroundColor: color(chartColors.blue).alpha(0.6).rgbString(),
+                borderColor: chartColors.blue,
+                borderWidth: 1,
+                hoverBackgroundColor:color(chartColors.red).alpha(0.5).rgbString(),
+                hoverBorderColor:chartColors.red,
+                hoverborderWidth: 2,
+                fill: true,
+                lineTension: 0,
+                data: arrDataH
+                
+            },
+            {label: "-"+this.label, 
+                color: '#DCDCDC',
+                backgroundColor: color(chartColors.purple).alpha(0.6).rgbString(),
+                borderColor: chartColors.purple,
+                borderWidth: 1,
+                hoverBackgroundColor:color(chartColors.red).alpha(0.5).rgbString(),
+                hoverBorderColor:chartColors.red,
+                hoverborderWidth: 2,
+                fill: true,
+                lineTension: 0,
+                data: arrDataN
+                
+            },{
+                type: 'line',
+                yAxesGroup: "2",
+                label: 'Eavg ['+ this.dim+']',
+                backgroundColor: color(chartColors.yellow).alpha(0.1).rgbString(),
+                borderColor: chartColors.yellow,
+                borderWidth: 1,
+                fill: false,
+                order: 1,
+                data: arrData
+            }],
+            labels: arrLabel            
+        },
+        options: {
+            elements: {
+                point:{
+                radius: 0
+                }
+            },
+            legend: {
+                labels: {
+                    fontColor: "#DCDCDC",
+                    fontSize: 14 //nadpis
+                }
+            },
+
+            scales: {
+                xAxes:[{
+                    stacked: true,
+                    ticks: {
+                        fontColor: '#DCDCDC',
+                        fontSize: 13
+                        }
+                }],
+                yAxes: [{
+                    stacked: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: this.dim,
+                        fontColor: '#DCDCDC'
+                    },
+                    gridLines: {
+                      color: "#DCDCDC",
+                      lineWidth: 0.2
+                     },
+                    ticks: {
+                        fontColor: '#DCDCDC',
+                        fontSize: 14,
+                        beginAtZero: true
+                    }
+                }]
+            },
+            tooltips: {
+                mode: 'nearest',
+                intersect: false
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: false
+                }
+            }
+        };
+        return config
+    } 
+
+} 

@@ -37,7 +37,24 @@ function update_ints_count() {
             document.getElementById("P1").textContent = P1 
             document.getElementById("P2").textContent = P2
             document.getElementById("P3").textContent = P3
+            
+            
+            var S1 =  ((data['S1'] > 32767 ?  data['S1'] - 65535 : data['S1'] )/1000).toFixed(2)
+            var S2 =  ((data['S2'] > 32767 ?  data['S2'] - 65535 : data['S2'] )/1000).toFixed(2)
+            var S3 = ((data['S3'] > 32767 ?  data['S3'] - 65535 : data['S3'] )/1000).toFixed(2)
+            
+             var PowerS = S1 + S2 +S3
+            document.getElementById("S1").textContent = S1 
+            document.getElementById("S2").textContent = S2
+            document.getElementById("S3").textContent = S3
 
+            if(data['HDO'] > 0){
+                document.getElementById("HDO").textContent = "ON"
+                document.getElementById("HDO").style.color =  "#74DF00"
+            }else{
+                document.getElementById("HDO").textContent = "OFF"
+                document.getElementById("HDO").style.color = "#FF0000"
+            }    
             document.getElementById("PF1").textContent = (data['PF1']/100).toFixed(2)
             document.getElementById("PF2").textContent = (data['PF2']/100).toFixed(2)
             document.getElementById("PF3").textContent = (data['PF3']/100).toFixed(2)
@@ -91,9 +108,9 @@ $(document).ready(function()
  {
   $('div.mainContainer').load('datatable',function(){
         $('.loader').hide(300);
-        
-        let energyBarChartHourly  = new energyChart('Hourly energy consumption [Wh]','Wh')
-        let energyBarChartDaily  = new energyChart('Daily energy consumption [kWh]','kWh')
+         setTimeout(function(){console.log("Delay")}, 1000);
+        let energyBarChartHourly  = new energyChart('Hourly E [Wh]','Wh')
+        let energyBarChartDaily  = new energyChart('Daily E [kWh]','kWh')
         let powerLineChart  = new powerChart(refreshPowerChart)
         
         let powerChartCtx = document.getElementById('powerGraph').getContext('2d');
@@ -125,12 +142,12 @@ $(document).ready(function()
                 let powerChartConfig = powerLineChart.getConfig()
                 powerGraph = new Chart(powerChartCtx, powerChartConfig);
                 
-                let energyBarChartHourly  = new energyChart('Hourly energy consumption [Wh]','Wh')        
+                let energyBarChartHourly  = new energyChart('Hourly E [Wh]','Wh')        
                 let energyChartCtxHourly = document.getElementById('energyGraph_hourly').getContext('2d');
                 let energyChartConfigHourly = energyBarChartHourly.getConfig(24)
                 energyGraphHourly = new Chart(energyChartCtxHourly,energyChartConfigHourly)
                 
-                let energyBarChartDaily   = new energyChart('Daily  energy consumption [kWh]','kWh')        
+                let energyBarChartDaily   = new energyChart('Daily  E [kWh]','kWh')        
                 let energyChartCtxDaily  = document.getElementById('energyGraph_daily').getContext('2d');
                 let energyChartConfigDaily  = energyBarChartDaily .getConfig(31)
                 energyGraphDaily  = new Chart(energyChartCtxDaily ,energyChartConfigDaily )
@@ -285,23 +302,27 @@ function refreshEnergyChartHourly() {
     var numb = 0
     
     for(var i = 0; i<24;i++){
-        if(hourEnergyData[(2*i)+2] != undefined){
+        if(hourEnergyData[(2*i)+3] != undefined){
             hour =  hourEnergyData[(2*i)+1];
-            data = hourEnergyData[(2*i)+2];
-            energyAvg = energyAvg + data;
+            dataP = hourEnergyData[(2*i)+2];
+            dataN = hourEnergyData[(2*i)+3];
+            energyAvg = energyAvg + dataP - dataN;
             numb = numb + 1;
             energyGraphHourly.data.labels[24 - (((len-1)/2)-i)] = (((hour+1)<10)?("0"+(hour)+"-"+"0"+(hour+1)):(((hour+1)==10)?"09-10":(hour)+"-"+(hour+1)));
-            energyGraphHourly.data.datasets[0].data[24 - (((len-1)/2)-i)] =  data;
+            energyGraphHourly.data.datasets[0].data[24 -(i+1)] =  dataP;
+            energyGraphHourly.data.datasets[1].data[24 -(i+1)] =  -dataN;
         }else{
             if(hour<23){
                 hour = hour +1;
                 energyGraphHourly.data.labels[startH] = (((hour+1)<10)?("0"+(hour)+"-"+"0"+(hour+1)):(((hour+1)==10)?"09-10":(hour)+"-"+(hour+1)));
                 energyGraphHourly.data.datasets[0].data[startH] =  0;
+                energyGraphHourly.data.datasets[1].data[startH] =  0;
                 startH++;
             }else{
                 hour=0;
                 energyGraphHourly.data.labels[startH] = "0"+(hour) + "-0"+(hour+1);
                 energyGraphHourly.data.datasets[0].data[startH] =  0;
+                energyGraphHourly.data.datasets[1].data[startH] =  0;
                 startH++;
             }
             if(startH > 23){
@@ -310,7 +331,7 @@ function refreshEnergyChartHourly() {
         }
     }
     for(var i = 0; i<24;i++){
-        energyGraphHourly.data.datasets[1].data[23-i] = (energyAvg/numb).toFixed(1)
+        energyGraphHourly.data.datasets[2].data[23-i] = (energyAvg/numb).toFixed(1)
     }
     energyGraphHourly.update()
 }
@@ -325,31 +346,34 @@ function refreshEnergyChartDaily() {
     var energyAvgD = 0
     var numb = 0
     days = Last31Days ()
-    console.log("Dny: ",days)
     for(var i = 0; i<31;i++){
         if(dailyEnergyData != null){
             if(dailyEnergyData[len - i] != undefined){
                 arr = dailyEnergyData[len-i].split(':')
                 day  = arr [0]
-                data= arr[1]
+                dataP= arr[1]
+                dataN= arr[2]
                 energyGraphDaily.data.labels[30-i] = day;
-                energyAvgD = energyAvgD + parseFloat(data/100)
+                energyAvgD = energyAvgD + parseFloat(dataP/100)- parseFloat(dataN/100)
                 numb = numb + 1
-                energyGraphDaily.data.datasets[0].data[30-i] =  parseFloat(data/100).toFixed(1)
+                energyGraphDaily.data.datasets[0].data[30-i] =  parseFloat(dataP/100).toFixed(1)
+                energyGraphDaily.data.datasets[1].data[30-i] =  -parseFloat(dataN/100).toFixed(1)
             }else{
                 energyGraphDaily.data.labels[30-i] = days[i];
                 energyGraphDaily.data.datasets[0].data[30-i] =  0
+                energyGraphDaily.data.datasets[1].data[30-i] =  0
             }
         }
         else{
             energyGraphDaily.data.labels[30-i] = days[i];
             energyGraphDaily.data.datasets[0].data[30-i] =  0
+            energyGraphDaily.data.datasets[1].data[30-i] =  0
         }
     }
     
         for(var i = 0; i<31;i++){
             var resultAvg =  (energyAvgD/numb).toFixed(1)
-            energyGraphDaily.data.datasets[1].data[30-i] = resultAvg
+            energyGraphDaily.data.datasets[2].data[30-i] = resultAvg
         }
     
     energyGraphDaily.update()

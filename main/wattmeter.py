@@ -31,7 +31,7 @@ class Wattmeter:
         
         self.dataLayer.data['RUN_TIME'] = time.time() - self.startUpTime
         #read U,I,P
-        status = await self.__readWattmeter_data(1000,9)
+        status = await self.__readWattmeter_data(1000,12)
         status = await self.__readWattmeter_data(2502,3)
         status = await self.__readWattmeter_data(2802,3)
         #Current Day consumption
@@ -63,26 +63,29 @@ class Wattmeter:
             status = await self.writeWattmeterRegister(101,[1])
             self.lastHour = int(time.localtime()[3])
             
-            if(len(self.dataLayer.data["E_hour"])<49):
+            if(len(self.dataLayer.data["E_hour"])<73):
                 self.dataLayer.data["E_hour"].append(self.lastHour)
                 self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Positive"])
+                self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Negative"])
             else:
-                self.dataLayer.data["E_hour"] = self.dataLayer.data["E_hour"][2:]
+                self.dataLayer.data["E_hour"] = self.dataLayer.data["E_hour"][3:]
                 self.dataLayer.data["E_hour"].append(self.lastHour)
                 self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Positive"])
+                self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Negative"])
             
             self.dataLayer.data["E_hour"][0] = len(self.dataLayer.data["E_hour"])
             
-        else:
-            if(len(self.dataLayer.data["E_hour"])<49):
-                self.dataLayer.data["E_hour"][len(self.dataLayer.data["E_hour"])-1]= self.dataLayer.data["Ehour_Positive"]
+        else: 
+            if(len(self.dataLayer.data["E_hour"])<73):
+                self.dataLayer.data["E_hour"][len(self.dataLayer.data["E_hour"])-2]= self.dataLayer.data["Ehour_Positive"]
+                self.dataLayer.data["E_hour"][len(self.dataLayer.data["E_hour"])-1]= self.dataLayer.data["Ehour_Negative"]
             else:
-                self.dataLayer.data["E_hour"][49]= self.dataLayer.data["Ehour_Positive"]
-
+                self.dataLayer.data["E_hour"][73]= self.dataLayer.data["Ehour_Positive"]
+                self.dataLayer.data["E_hour"][73]= self.dataLayer.data["Ehour_Negative"]
             
         if(self.lastDay is not int(time.localtime()[2])):
             curentYear = str(time.localtime()[0])[-2:] 
-            data = {("{0:02}/{1:02}/{2}".format(time.localtime()[1],self.lastDay ,curentYear)) : self.dataLayer.data["E_currentDay_positive"]}
+            data = {("{0:02}/{1:02}/{2}".format(time.localtime()[1],self.lastDay ,curentYear)) : [self.dataLayer.data["E_currentDay_positive"], self.dataLayer.data["E_currentDay_negative"]]}
             status = await self.writeWattmeterRegister(102,[1])
             self.lastDay = int(time.localtime()[2])
             self.fileHandler.handleData(self.DAILY_CONSUMPTION)
@@ -142,9 +145,17 @@ class Wattmeter:
                 self.dataLayer.data["P1"] =     (int)((((receiveData[12])) << 8)  | ((receiveData[13])))
                 self.dataLayer.data["P2"] =     (int)((((receiveData[14])) << 8)  | ((receiveData[15])))
                 self.dataLayer.data["P3"] =     (int)((((receiveData[16])) << 8)  | ((receiveData[17])))
+                self.dataLayer.data["S1"] =     (int)((((receiveData[18])) << 8)  | ((receiveData[19])))
+                self.dataLayer.data["S2"] =     (int)((((receiveData[20])) << 8)  | ((receiveData[21])))
+                self.dataLayer.data["S3"] =     (int)((((receiveData[22])) << 8)  | ((receiveData[23])))
      
                 return "SUCCESS_READ"
                 
+            if ((receiveData != "Null" and receiveData != "Error") and (reg == 200)):
+                self.dataLayer.data["HDO"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
+                
+                return "SUCCESS_READ"
+            
             elif ((receiveData != "Null" and receiveData != "Error") and (reg == 1015)):
                 
                 self.dataLayer.data["PF1"] = (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
@@ -218,9 +229,14 @@ class DataLayer:
         self.data["PN3_peak"] = 0
         self.data["Emin_Positive"] = 0
         self.data["Ehour_Positive"] = 0
+        self.data["Ehour_Negative"] = 0
         self.data["P1"] = 0
         self.data["P2"] = 0
         self.data["P3"] = 0
+        self.data["S1"] = 0
+        self.data["S2"] = 0
+        self.data["S3"] = 0
+        self.data["HDO"] = 0
         self.data["P_minuten"] = [0]
         self.data["E_hour"] = [0]
         self.data["E_Daily"] = []
