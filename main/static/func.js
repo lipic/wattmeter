@@ -113,15 +113,15 @@ $(document).ready(function()
         let energyBarChartDaily  = new energyChart('Daily E [kWh]','kWh')
         let powerLineChart  = new powerChart(refreshPowerChart)
         
-        let powerChartCtx = document.getElementById('powerGraph').getContext('2d');
+        let powerChartCtx = document.getElementById('powerGraph');
         let powerChartConfig = powerLineChart.getConfig()
         powerGraph = new Chart(powerChartCtx, powerChartConfig);
         
-        let energyChartCtxHourly = document.getElementById('energyGraph_hourly').getContext('2d');
+        let energyChartCtxHourly = document.getElementById('energyGraph_hourly');
         let energyChartConfigHourly = energyBarChartHourly.getConfig(24)
         energyGraphHourly = new Chart(energyChartCtxHourly,energyChartConfigHourly)
         
-        let energyChartCtxDaily = document.getElementById('energyGraph_daily').getContext('2d');
+        let energyChartCtxDaily = document.getElementById('energyGraph_daily');
         let energyChartConfigDaily  = energyBarChartDaily.getConfig(31)
         energyGraphDaily  = new Chart(energyChartCtxDaily,energyChartConfigDaily)
                 
@@ -138,17 +138,17 @@ $(document).ready(function()
             stop(timer);
             $('div.mainContainer').load('datatable', function(){
                 let powerLineChart  = new powerChart(refreshPowerChart)
-                let powerChartCtx = document.getElementById('powerGraph').getContext('2d');
+                let powerChartCtx = document.getElementById('powerGraph');
                 let powerChartConfig = powerLineChart.getConfig()
                 powerGraph = new Chart(powerChartCtx, powerChartConfig);
                 
                 let energyBarChartHourly  = new energyChart('Hourly E [Wh]','Wh')        
-                let energyChartCtxHourly = document.getElementById('energyGraph_hourly').getContext('2d');
+                let energyChartCtxHourly = document.getElementById('energyGraph_hourly');
                 let energyChartConfigHourly = energyBarChartHourly.getConfig(24)
                 energyGraphHourly = new Chart(energyChartCtxHourly,energyChartConfigHourly)
                 
                 let energyBarChartDaily   = new energyChart('Daily  E [kWh]','kWh')        
-                let energyChartCtxDaily  = document.getElementById('energyGraph_daily').getContext('2d');
+                let energyChartCtxDaily  = document.getElementById('energyGraph_daily');
                 let energyChartConfigDaily  = energyBarChartDaily .getConfig(31)
                 energyGraphDaily  = new Chart(energyChartCtxDaily ,energyChartConfigDaily )
                 
