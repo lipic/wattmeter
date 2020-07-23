@@ -258,17 +258,19 @@ class fileHandler:
         
     def readData(self,file):
        # line = []
-        data = [] 
-        with open(file) as f:
-            for line in f:
-                line = line.replace("\n","")
-                data.append(line)
+        data = []
+        try:
+            with open(file) as f:
+                for line in f:
+                    line = line.replace("\n","")
+                    data.append(line)
              #   key, values = items[0], items[1]
              #   data[key] = values
             
-            f.close()
-        return data
-
+                f.close()
+            return data
+        except Exception as e:
+            return None
 
     def writeData(self,file,data):
         lines = []
