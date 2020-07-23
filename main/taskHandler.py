@@ -15,52 +15,67 @@ import gc
                     
 
 class TaskHandler:
-    def __init__(self,wifiManager,wlanStatus,logging):
-        #settime() # set time
+    def __init__(self,wifiManager,logging):
 
-        self.log= loggingHandler.LoggingHandler()
         self.wattmeter = wattmeter.Wattmeter(lock = asyncio.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
         self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = asyncio.Lock())
-        self.webServerApp = webServerApp.WebServerApp(wifiManager,wlanStatus,self.wattmeter,self.log, evse = self.evse) #Create instance of Webserver App
-        self.wlanStatus = wlanStatus #Get WIFi status from boot process
+        self.webServerApp = webServerApp.WebServerApp(wifiManager,self.wattmeter, evse = self.evse) #Create instance of Webserver App
         self.wifiManager = wifiManager #Get insatnce of wifimanager from boots
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
         self.ledWifi = Pin(22, Pin.OUT) # set pin high on creation
         self.ledErr  = Pin(21, Pin.OUT) # set pin high on creation
+        self.rel= Pin(25, Pin.OUT)
         self.uModBusTCP = modbusTcp.Server(self.wattmeter)
-        if (logging == True):
-            self.log.Logging = True
+        self.settingAfterNewConnection = False
+        self.wdt = machine.WDT(timeout=60000)
      
+     #Handler for time
+    async def timeHandler(self,delay_secs):
+        while True:
+            before = gc.mem_free()
+            gc.collect()
+            after = gc.mem_free()
+            print("Memory beofre: {} & after: {}".format(before,after))
+            self.wdt.feed()
+            
+            await asyncio.sleep(delay_secs)
+            
     #Handler for wifi.    
     async def getWifiStatus(self,delay_secs):
+        tryOfConnections = 0
         while True:
             try:
-                if(self.wlanStatus.isconnected()):
-                    self.ledWifi.on()
-                    settime()
-                    rtc=machine.RTC()
-
-                    # for time convert to second
-                    tampon1=utime.time() 
-    
-                    # for gmt. For me gmt+3. 
-                    # 1 hour = 3600 seconds
-                    # 3 hours = 10800 seconds
-                    tampon2=tampon1+7200
-
-                    # for second to convert time
-                    (year, month, mday, hour, minute, second, weekday, yearday)=utime.localtime(tampon2)
-
-                    # first 0 = week of year
-                    # second 0 = milisecond
-                    rtc.datetime((year, month, mday, 0, hour, minute, second, 0))
+                print("Wifi status: ",self.wifiManager.isConnected())
+                if(self.wifiManager.isConnected() == True):
+                    
+                    if(self.settingAfterNewConnection == False):
+                        settime()
+                        rtc=machine.RTC()
+                        tampon1=utime.time() 
+                        tampon2=tampon1+7200
+                        (year, month, mday, hour, minute, second, weekday, yearday)=utime.localtime(tampon2)
+                        rtc.datetime((year, month, mday, 0, hour, minute, second, 0))
+                        self.ledWifi.on()
+                    
+                        self.ledWifi.on()
+                        self.settingAfterNewConnection = True
+                        loop = asyncio.get_event_loop()
+                        ip = self.wifiManager.getIp()
+                        loop.run_until_complete(self.webServerApp.webServerRun(0,ip))
 
                 else:
-                    if len(self.wifiManager.read_profiles()) != 0:
-                        self.wifiManager.get_connection()
+                    if(self.ledWifi.value()):
+                        self.ledWifi.off()
+                    else:
+                        self.ledWifi.on()
+                    if (len(self.wifiManager.read_profiles())!= 0) and (self.settingAfterNewConnection == True):
+                        if(tryOfConnections > 30):
+                            self.settingAfterNewConnection = False
+                        await self.wifiManager.get_connection()                    
+
             except Exception as e:
-                self.log.write("Exception: {0}".format(e))
-            
+                print("WIFI: ",e)
+   
             gc.collect()
             gc.mem_free()
             await asyncio.sleep(delay_secs)   
@@ -69,9 +84,11 @@ class TaskHandler:
     async def ledHandler(self,delay_secs):
         while True:
             if(self.ledRun.value()):
+                #self.rel.off()
                 self.ledRun.off()
             else:
                 self.ledRun.on()
+                #self.rel.on()
             await asyncio.sleep(delay_secs)
             
      #Handler for wattmeter.        
@@ -80,7 +97,8 @@ class TaskHandler:
             try:
                 status = await self.wattmeter.wattmeterHandler()
             except Exception as e:
-                self.log.write("{} -> {}".format(type(self.wattmeter),e))
+                print("Wattmeter error: ",e)
+                #self.log.write("{} -> {}".format(type(self.wattmeter),e))
             
             gc.collect()
             gc.mem_free()
@@ -93,7 +111,7 @@ class TaskHandler:
                 status = await self.evse.evseHandler()
             except Exception as e:
                 print("EVSE error: ",e)
-                self.log.write("{} -> {}".format(type(self.evse),e))
+                #self.log.write("{} -> {}".format(type(self.evse),e))
                 
             gc.collect()
             gc.mem_free()
@@ -107,10 +125,11 @@ class TaskHandler:
     def mainTaskHandlerRun(self):
         loop = asyncio.get_event_loop()
         loop.create_task(self.ledHandler(1))
-        loop.create_task(self.getWifiStatus(10))
+        loop.create_task(self.getWifiStatus(2))
         loop.create_task(self.wattmeterHandler(1))
         loop.create_task(self.evseHandler(1))
-        loop.create_task(self.webServerApp.webServerRun(0))
+        loop.create_task(self.timeHandler(1))
+        loop.create_task(self.webServerApp.webServerRun(0,'192.168.4.1'))
         loop.create_task(self.uModBusTCP.run(loop))
 
         loop.run_forever()

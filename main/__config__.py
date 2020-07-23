@@ -11,7 +11,8 @@ class Config:
         self.config['txt,ACTUAL SW VERSION']=0  #Reg 1002
         self.config['sw,ENABLE CHARGING']=0       #Reg 1003
         self.config['sl,BREAKER']=6                            #Reg 1004
-        self.config['sw,ENABLE BALANCING']=0     #Reg 1005
+        self.config['sl,EVSE']=6                                    #Reg 1005
+        self.config['sw,ENABLE BALANCING']=0     #Reg 1006
         
         self.SETTING_PROFILES = 'setting.dat'
         self.handle_configure('txt,ACTUAL SW VERSION',self.boot.get_version(""))

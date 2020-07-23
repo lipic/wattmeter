@@ -51,6 +51,10 @@
                 <td><span id="PN2_peak">-,-</span></td>
                 <td><span id="PN3_peak">-,-</span></td>
             </tr>
+            <tr>
+                <td>Up time [s]</td>
+                <td colspan="3"><span id="RUN_TIME">-,-</span></td>
+            </tr>
         </tbody>
     </table>
     <table class="table  table-dark text-center">
@@ -107,14 +111,17 @@
     </tbody>  
 </table>
 
-        <canvas id="powerGraph" height ="250px">
+        <canvas id="powerGraph" height ="300px">
             <p>Your browser does not support the canvas element.</p>
         </canvas>
 
-        <canvas id="energyGraph" height ="250px">
+        <canvas id="energyGraph_hourly" height ="300px">
             <p>Your browser does not support the canvas element.</p>
         </canvas>
         
+        <canvas id="energyGraph_daily" height ="300px">
+            <p>Your browser does not support the canvas element.</p>
+        </canvas>
 
      </div>
 </html>

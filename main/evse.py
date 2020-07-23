@@ -33,10 +33,13 @@ class Evse():
             #If get max current accordig to wattmeter
             if(setting["sw,ENABLE CHARGING"] == '1'):
                 if (setting["sw,ENABLE BALANCING"] == '1'):
-                    current = self.balancEvseCurrent()
-                    state = await self.writeEvseRegister(1000,[current])
+                    current,regulation = self.balancEvseCurrent()
+                    if(regulation == True):
+                        state = await self.writeEvseRegister(1000,[current])
+                    else:
+                        state = await self.writeEvseRegister(1000,[int(setting["sl,EVSE"])])
                 else:
-                    current = setting["sl,BREAKER"]
+                    current = int(setting["sl,EVSE"])
                     state = await self.writeEvseRegister(1000,[current])
                     
             else: 
@@ -104,39 +107,45 @@ class Evse():
             return "Exception: {} ".format(e)
 
     def balancEvseCurrent(self):
-        I1 = 0
-        I2 = 0
-        I3 = 0
+        I1_P = 0
+        I2_P = 0
+        I3_P = 0
+        I1_N = 0
+        I2_N = 0
+        I3_N = 0
+        regulation = False
         import math
 
         if (self.wattmeter.dataLayer.data["I1"] > 32767):
-            I1 = self.wattmeter.dataLayer.data["I1"] - 65535
+            I1_N = self.wattmeter.dataLayer.data["I1"] - 65535
         else:
-            I1 = self.wattmeter.dataLayer.data["I1"]
+            I1_P = self.wattmeter.dataLayer.data["I1"]
 
         if (self.wattmeter.dataLayer.data["I2"] > 32767):
-            I2 += self.wattmeter.dataLayer.data["I2"] - 65535
+            I2_N += self.wattmeter.dataLayer.data["I2"] - 65535
         else:
-            I2 += self.wattmeter.dataLayer.data["I2"]
+            I2_P += self.wattmeter.dataLayer.data["I2"]
             
         if (self.wattmeter.dataLayer.data["I3"] > 32767):
-            I3 += self.wattmeter.dataLayer.data["I3"] - 65535
+            I3_N += self.wattmeter.dataLayer.data["I3"] - 65535
         else:
-            I3 += self.wattmeter.dataLayer.data["I3"]
+            I3_P += self.wattmeter.dataLayer.data["I3"]
 
-        if((I1 > I2)and(I1 > I3)):
-            maxCurrent = math.ceil(I1/1000)
+        if((I1_P > I2_P)and(I1_P > I3_P)):
+            maxCurrent = math.ceil(I1_P/1000)
 
-        if((I2 > I1)and(I2 > I3)):
-            maxCurrent = math.ceil(I2/1000)
+        if((I2_P > I1_P)and(I2_P > I3_P)):
+            maxCurrent = math.ceil(I2_P/1000)
             
-        if((I3 > I1)and(I3 > I2)):
-            maxCurrent = math.ceil(I3/1000)
+        if((I3_P > I1_P)and(I3_P > I2_P)):
+            maxCurrent = math.ceil(I3_P/1000)
     
         delta = int(self.setting.config["sl,BREAKER"]) - maxCurrent
+        if(delta < -1):
+            regulation = True
 
         # Kdyz je proud vetsi nez dvojnasobek proudu jsitice okamzite vypni a pak pockej 10s
-        if ((maxCurrent < int(self.setting.config["sl,BREAKER"])  * 2) and (0 == self.__Delay_for_breaker)) :
+        if ((maxCurrent <= int(self.setting.config["sl,BREAKER"])  * 2) and (0 == self.__Delay_for_breaker)) :
             self.__cntCurrent = self.__cntCurrent+1
             #Dle normy je zmena proudu EV nasledujici po zmene pracovni cyklu PWM maximalne 5s
             if (self.__cntCurrent >= 3) :
@@ -174,7 +183,7 @@ class Evse():
             self.__Delay_for_breaker = self.__Delay_for_breaker+1
         if (self.__Delay_for_breaker > 60):
             self.__Delay_for_breaker = 0
-        return  self.__requestCurrent
+        return  [self.__requestCurrent,regulation]
     
 class DataLayer:
     def __init__(self):

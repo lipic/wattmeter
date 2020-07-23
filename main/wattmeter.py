@@ -19,14 +19,17 @@ class Wattmeter:
         self.lastHour = 0
         self.lastDay =  0
         self.test = 0
+        self.startUpTime = time.time()
 
     async def wattmeterHandler(self):
         #Read data from wattmeter
         if(self.timeInit == False):
             self.lastMinute =  int(time.localtime()[4])
             self.lastDay =  int(time.localtime()[2])
+            self.dataLayer.data["E_Daily"] =  self.fileHandler.readData(self.DAILY_CONSUMPTION)
             self.timeInit = True
         
+        self.dataLayer.data['RUN_TIME'] = time.time() - self.startUpTime
         #read U,I,P
         status = await self.__readWattmeter_data(1000,9)
         status = await self.__readWattmeter_data(2502,3)
@@ -73,20 +76,19 @@ class Wattmeter:
         else:
             if(len(self.dataLayer.data["E_hour"])<49):
                 self.dataLayer.data["E_hour"][len(self.dataLayer.data["E_hour"])-1]= self.dataLayer.data["Ehour_Positive"]
-                #print("Zapisuji: ",self.dataLayer.data["E_hour"])
             else:
                 self.dataLayer.data["E_hour"][49]= self.dataLayer.data["Ehour_Positive"]
 
             
         if(self.lastDay is not int(time.localtime()[2])):
+            curentYear = str(time.localtime()[0])[-2:] 
+            data = {("{0:02}/{1:02}/{2}".format(time.localtime()[1],self.lastDay ,curentYear)) : self.dataLayer.data["E_currentDay_positive"]}
             status = await self.writeWattmeterRegister(102,[1])
-            data = {("{}.{}.{}".format(time.localtime()[2],time.localtime()[1],time.localtime()[0])) : 20}
-            print("New day",self.lastDay )
             self.lastDay = int(time.localtime()[2])
-            #self.fileHandler.handleData(self.DAILY_CONSUMPTION)
-            #self.fileHandler.writeData(self.DAILY_CONSUMPTION, data)
-     
-         
+            self.fileHandler.handleData(self.DAILY_CONSUMPTION)
+            self.fileHandler.writeData(self.DAILY_CONSUMPTION, data)
+            self.dataLayer.data["E_daily"] = self.fileHandler.readData(self.DAILY_CONSUMPTION)
+
     async def writeWattmeterRegister(self,reg,data):
         await self.lock.acquire()
         writeRegs = self.modbusClient.write_regs(reg, data)
@@ -231,6 +233,7 @@ class DataLayer:
         self.data["E1_total_negative"] = 0
         self.data["E2_total_negative"] = 0
         self.data["E3_total_negative"] = 0
+        self.data['RUN_TIME'] = 0
         
 class fileHandler:
             
@@ -240,12 +243,7 @@ class fileHandler:
         except OSError:
             return
         
-        print(data)
-
-        if(len(data)>3):
-
-            print("Before: ",data)
-            print("After: ",data[1:])
+        if(len(data)>31):
             
             lines = []
             for i in data:

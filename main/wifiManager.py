@@ -48,16 +48,14 @@ class WifiManager:
                     else:
                         print("skipping unknown encrypted network")
                 else:  # open
-                    connected = self.do_connect(ssid, None)
-                if connected:
-                    break
+                    if ssid in profiles:
+                        connected = self.do_connect(ssid, None)
 
         except Exception as e:
             print("Exception: {0}".format(e))
 
         # start web server for connection manager:
-        if not connected:
-            self.setToAP()
+        self.setToAP()
 
         return self.wlan_sta if connected else None
 
@@ -88,12 +86,13 @@ class WifiManager:
         print("password %s" %password)
         time.sleep(2)
         self.wlan_sta.connect(ssid, password)
-        for retry in range(100):
+        for retry in range(150):
             connected = self.wlan_sta.isconnected()
             if connected:
                 break
             time.sleep(0.1)
             print('.', end='')
+            
         if connected:
             print('\nConnected. Network config: ', self.wlan_sta.ifconfig())
         else:
@@ -131,7 +130,6 @@ class WifiManager:
 
     def setToAP(self):
 
-        self.wlan_sta.active(False)
         self.wlan_ap.active(True)
         self.wlan_ap.config(essid=self.ap_ssid, password=self.ap_password, authmode=self.ap_authmode)
         print(self.wlan_ap.ifconfig())
@@ -157,7 +155,7 @@ class WifiManager:
         return ssidUsers
 
     def getIp(self):
-        ip= []
+        ip= [] 
         try:
             if(self.wlan_sta.isconnected()):
                 ip = self.wlan_sta.ifconfig()
@@ -169,6 +167,16 @@ class WifiManager:
             print("exception", str(e))
             return "192.168.4.1"
         
-    
+    def isConnected(self):
+        if self.wlan_sta.isconnected():
+            return True
+        else:
+            return False
+        
+    def getCurrentConnectSSID(self):
+        if(self.isConnected()):
+            return self.wlan_sta.config('essid')
+        else:
+            return "None"
         
         
