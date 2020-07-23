@@ -223,6 +223,7 @@ class DataLayer:
         self.data["P3"] = 0
         self.data["P_minuten"] = [0]
         self.data["E_hour"] = [0]
+        self.data["E_Daily"] = []
         self.data["E_currentDay_positive"] = 0
         self.data["E_currentDay_negative"] = 0
         self.data["E_previousDay_positive"] = 0
