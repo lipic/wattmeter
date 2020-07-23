@@ -107,6 +107,7 @@ function update_ints_count() {
 $(function() 
  {
   $('div.mainContainer').load('datatable',function(){
+      setTimeout(function(){console.log("Loaded")}, 5000); 
         $('.loader').hide(100);
         let energyBarChartHourly  = new energyChart('Hourly E [Wh]','Wh')
         let energyBarChartDaily  = new energyChart('Daily E [kWh]','kWh')
