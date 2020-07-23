@@ -104,11 +104,10 @@ function update_ints_count() {
             timer = setTimeout(update_ints_count, ms); 
         });  
 }     
-$(document).ready(function() 
+$(function() 
  {
   $('div.mainContainer').load('datatable',function(){
-        $('.loader').hide(300);
-         setTimeout(function(){console.log("Delay")}, 1000);
+        $('.loader').hide(100);
         let energyBarChartHourly  = new energyChart('Hourly E [Wh]','Wh')
         let energyBarChartDaily  = new energyChart('Daily E [kWh]','kWh')
         let powerLineChart  = new powerChart(refreshPowerChart)
@@ -138,17 +137,17 @@ $(document).ready(function()
             stop(timer);
             $('div.mainContainer').load('datatable', function(){
                 let powerLineChart  = new powerChart(refreshPowerChart)
-                let powerChartCtx = document.getElementById('powerGraph');
+                let powerChartCtx = document.getElementById('powerGraph').getContext('2d');
                 let powerChartConfig = powerLineChart.getConfig()
                 powerGraph = new Chart(powerChartCtx, powerChartConfig);
                 
                 let energyBarChartHourly  = new energyChart('Hourly E [Wh]','Wh')        
-                let energyChartCtxHourly = document.getElementById('energyGraph_hourly');
+                let energyChartCtxHourly = document.getElementById('energyGraph_hourly').getContext('2d');
                 let energyChartConfigHourly = energyBarChartHourly.getConfig(24)
                 energyGraphHourly = new Chart(energyChartCtxHourly,energyChartConfigHourly)
                 
                 let energyBarChartDaily   = new energyChart('Daily  E [kWh]','kWh')        
-                let energyChartCtxDaily  = document.getElementById('energyGraph_daily');
+                let energyChartCtxDaily  = document.getElementById('energyGraph_daily').getContext('2d');
                 let energyChartConfigDaily  = energyBarChartDaily .getConfig(31)
                 energyGraphDaily  = new Chart(energyChartCtxDaily ,energyChartConfigDaily )
                 
