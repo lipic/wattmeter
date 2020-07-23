@@ -308,9 +308,9 @@ function refreshEnergyChartHourly() {
             dataN = hourEnergyData[(2*i)+3];
             energyAvg = energyAvg + dataP - dataN;
             numb = numb + 1;
-            energyGraphHourly.data.labels[24 - (((len-1)/2)-i)] = (((hour+1)<10)?("0"+(hour)+"-"+"0"+(hour+1)):(((hour+1)==10)?"09-10":(hour)+"-"+(hour+1)));
-            energyGraphHourly.data.datasets[0].data[24 -(i+1)] =  dataP;
-            energyGraphHourly.data.datasets[1].data[24 -(i+1)] =  -dataN;
+            energyGraphHourly.data.labels[24 - (((len-1)/3)-i)] = (((hour+1)<10)?("0"+(hour)+"-"+"0"+(hour+1)):(((hour+1)==10)?"09-10":(hour)+"-"+(hour+1)));
+            energyGraphHourly.data.datasets[0].data[24 - (((len-1)/3) - i)] =  dataP;
+            energyGraphHourly.data.datasets[1].data[24 - (((len-1)/3) -i)] =  -dataN;
         }else{
             if(hour<23){
                 hour = hour +1;
