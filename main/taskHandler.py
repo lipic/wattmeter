@@ -11,12 +11,10 @@ from ntptime import settime
 import utime
 import machine
 import gc
-
                     
 
 class TaskHandler:
     def __init__(self,wifiManager,logging):
-
         self.wattmeter = wattmeter.Wattmeter(lock = asyncio.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
         self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = asyncio.Lock())
         self.webServerApp = webServerApp.WebServerApp(wifiManager,self.wattmeter, evse = self.evse) #Create instance of Webserver App
@@ -28,6 +26,8 @@ class TaskHandler:
         self.uModBusTCP = modbusTcp.Server(self.wattmeter)
         self.settingAfterNewConnection = False
         self.wdt = machine.WDT(timeout=60000)
+        self.setting = __config__.Config()
+
      
      #Handler for time
     async def timeHandler(self,delay_secs):
@@ -35,7 +35,7 @@ class TaskHandler:
             before = gc.mem_free()
             gc.collect()
             after = gc.mem_free()
-            print("Memory beofre: {} & after: {}".format(before,after))
+            #print("Memory beofre: {} & after: {}".format(before,after))
             self.wdt.feed()
             
             await asyncio.sleep(delay_secs)
@@ -45,18 +45,16 @@ class TaskHandler:
         tryOfConnections = 0
         while True:
             try:
-                print("Wifi status: ",self.wifiManager.isConnected())
                 if(self.wifiManager.isConnected() == True):
+                    setting = self.setting.getConfig()
+                    settime()
+                    rtc=machine.RTC()
+                    tampon1=utime.time() 
+                    tampon2=tampon1+int(setting["sl,TIME-ZONE"])*3600
+                    (year, month, mday, hour, minute, second, weekday, yearday)=utime.localtime(tampon2)
+                    rtc.datetime((year, month, mday, 0, hour, minute, second, 0))
                     
                     if(self.settingAfterNewConnection == False):
-                        settime()
-                        rtc=machine.RTC()
-                        tampon1=utime.time() 
-                        tampon2=tampon1+7200
-                        (year, month, mday, hour, minute, second, weekday, yearday)=utime.localtime(tampon2)
-                        rtc.datetime((year, month, mday, 0, hour, minute, second, 0))
-                        self.ledWifi.on()
-                    
                         self.ledWifi.on()
                         self.settingAfterNewConnection = True
                         loop = asyncio.get_event_loop()
@@ -126,10 +124,9 @@ class TaskHandler:
         loop = asyncio.get_event_loop()
         loop.create_task(self.ledHandler(1))
         loop.create_task(self.getWifiStatus(2))
-        loop.create_task(self.wattmeterHandler(1))
         loop.create_task(self.evseHandler(1))
         loop.create_task(self.timeHandler(1))
         loop.create_task(self.webServerApp.webServerRun(0,'192.168.4.1'))
         loop.create_task(self.uModBusTCP.run(loop))
-
+        loop.create_task(self.wattmeterHandler(1))
         loop.run_forever()

@@ -30,6 +30,7 @@ class Wattmeter:
             self.timeInit = True
         
         self.dataLayer.data['RUN_TIME'] = time.time() - self.startUpTime
+        self.dataLayer.data['WATTMETER_TIME'] = ("{0:02}:{1:02}:{2:02} {3:02}.{4:02}.{5:02}".format(time.localtime()[3],time.localtime()[4],time.localtime()[5],time.localtime()[2],time.localtime()[1],time.localtime()[0]))
         #read U,I,P
         status = await self.__readWattmeter_data(1000,12)
         status = await self.__readWattmeter_data(2502,3)
@@ -251,6 +252,7 @@ class DataLayer:
         self.data["E2_total_negative"] = 0
         self.data["E3_total_negative"] = 0
         self.data['RUN_TIME'] = 0
+        self.data['WATTMETER_TIME'] = 0
         
 class fileHandler:
             

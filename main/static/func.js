@@ -14,6 +14,7 @@ function update_ints_count() {
             
             dailyEnergyData = data['E_Daily']            
             document.getElementById("RUN_TIME").textContent = data['RUN_TIME'] 
+            document.getElementById("WATTMETER_TIME").textContent = data['WATTMETER_TIME']
             
             var U1 = data['U1'] 
             var U2 = data['U2']
@@ -137,24 +138,24 @@ $(function()
             stop(timer);
             $('div.mainContainer').load('datatable', function(){
                 let powerLineChart  = new powerChart(refreshPowerChart)
-                let powerChartCtx = document.getElementById('powerGraph').getContext('2d');
+                let powerChartCtx = document.getElementById('powerGraph');
                 let powerChartConfig = powerLineChart.getConfig()
                 powerGraph = new Chart(powerChartCtx, powerChartConfig);
                 
                 let energyBarChartHourly  = new energyChart('Hourly E [Wh]','Wh')        
-                let energyChartCtxHourly = document.getElementById('energyGraph_hourly').getContext('2d');
+                let energyChartCtxHourly = document.getElementById('energyGraph_hourly');
                 let energyChartConfigHourly = energyBarChartHourly.getConfig(24)
                 energyGraphHourly = new Chart(energyChartCtxHourly,energyChartConfigHourly)
                 
                 let energyBarChartDaily   = new energyChart('Daily  E [kWh]','kWh')        
-                let energyChartCtxDaily  = document.getElementById('energyGraph_daily').getContext('2d');
+                let energyChartCtxDaily  = document.getElementById('energyGraph_daily');
                 let energyChartConfigDaily  = energyBarChartDaily .getConfig(31)
                 energyGraphDaily  = new Chart(energyChartCtxDaily ,energyChartConfigDaily )
                 
                  update_ints_count();
-                 setTimeout(function(){loadPowerChart()}, 1000);
-                 setTimeout(function(){refreshEnergyChartHourly()}, 1000);
-                setTimeout(function(){refreshEnergyChartDaily()}, 1000);
+                 setTimeout(function(){loadPowerChart()}, 500);
+                 setTimeout(function(){refreshEnergyChartHourly()}, 500);
+                setTimeout(function(){refreshEnergyChartDaily()}, 500);
             });          
             
          }else if($(this).attr('id') == 'settings'){
