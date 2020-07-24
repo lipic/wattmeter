@@ -4,7 +4,6 @@ from main import wifiManager
 import uasyncio as asyncio  
 from main import wattmeter
 from main import evse
-from main import loggingHandler
 from main import __config__
 from main import modbusTcp
 from ntptime import settime
@@ -15,8 +14,8 @@ import gc
 
 class TaskHandler:
     def __init__(self,wifiManager,logging):
-        self.wattmeter = wattmeter.Wattmeter(lock = asyncio.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
-        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = asyncio.Lock())
+        self.wattmeter = wattmeter.Wattmeter(lock = True, ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
+        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = True)
         self.webServerApp = webServerApp.WebServerApp(wifiManager,self.wattmeter, evse = self.evse) #Create instance of Webserver App
         self.wifiManager = wifiManager #Get insatnce of wifimanager from boots
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
@@ -35,7 +34,7 @@ class TaskHandler:
             before = gc.mem_free()
             gc.collect()
             after = gc.mem_free()
-            #print("Memory beofre: {} & after: {}".format(before,after))
+            print("Memory beofre: {} & after: {}".format(before,after))
             self.wdt.feed()
             
             await asyncio.sleep(delay_secs)

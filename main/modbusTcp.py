@@ -1,7 +1,7 @@
 import struct
 import socket
 import uselect as select
-from main import modbus
+import modbus
 from main import wattmeter
 
 import uasyncio as asyncio
@@ -77,8 +77,8 @@ class tcpModbus(modbus.Modbus):
         from main import __config__
         from main import wattmeter
         from main import evse
-        self.wattmeter = wattmeter.Wattmeter(lock = asyncio.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27)
-        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = asyncio.Lock())
+        self.wattmeter = wattmeter.Wattmeter(lock = True, ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27)
+        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = True)
         modbus.Modbus.__init__(self)
         self.config = __config__.Config()
         

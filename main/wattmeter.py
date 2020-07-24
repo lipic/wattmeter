@@ -1,4 +1,4 @@
-from main import modbus
+import modbus
 import machine
 import time
 import uasyncio as asyncio
@@ -55,10 +55,7 @@ class Wattmeter:
             
             self.dataLayer.data["P_minuten"][0] = len(self.dataLayer.data["P_minuten"])
             status = await self.writeWattmeterRegister(100,[1])
-            self.lastMinute = int(time.localtime()[4])
-
-        
-            
+            self.lastMinute = int(time.localtime()[4]) 
             
         if(self.lastHour is not int(time.localtime()[3])):
             status = await self.writeWattmeterRegister(101,[1])
@@ -76,13 +73,14 @@ class Wattmeter:
             
             self.dataLayer.data["E_hour"][0] = len(self.dataLayer.data["E_hour"])
             
-        else: 
+        else:  
             if(len(self.dataLayer.data["E_hour"])<73):
                 self.dataLayer.data["E_hour"][len(self.dataLayer.data["E_hour"])-2]= self.dataLayer.data["Ehour_Positive"]
                 self.dataLayer.data["E_hour"][len(self.dataLayer.data["E_hour"])-1]= self.dataLayer.data["Ehour_Negative"]
             else:
-                self.dataLayer.data["E_hour"][73]= self.dataLayer.data["Ehour_Positive"]
-                self.dataLayer.data["E_hour"][73]= self.dataLayer.data["Ehour_Negative"]
+                self.dataLayer.data["E_hour"][71]= self.dataLayer.data["Ehour_Positive"]
+                self.dataLayer.data["E_hour"][72]= self.dataLayer.data["Ehour_Negative"]
+        
             
         if(self.lastDay is not int(time.localtime()[2])):
             curentYear = str(time.localtime()[0])[-2:] 
@@ -90,16 +88,18 @@ class Wattmeter:
             status = await self.writeWattmeterRegister(102,[1])
             self.lastDay = int(time.localtime()[2])
             self.fileHandler.handleData(self.DAILY_CONSUMPTION)
+            print("Jsem tu") 
             self.fileHandler.writeData(self.DAILY_CONSUMPTION, data)
             self.dataLayer.data["E_daily"] = self.fileHandler.readData(self.DAILY_CONSUMPTION)
 
+    
     async def writeWattmeterRegister(self,reg,data):
-        await self.lock.acquire()
+       # await self.lock.acquire()
         writeRegs = self.modbusClient.write_regs(reg, data)
         self.uart.write(writeRegs)
         await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
-        self.lock.release()
+    #    self.lock.release()
         try:
             if (0 == self.modbusClient.mbrtu_data_processing(receiveData)):
                 data = bytearray()
@@ -113,12 +113,12 @@ class Wattmeter:
     
         
     async def readWattmeterRegister(self,reg,length):
-        await self.lock.acquire()
+       # await self.lock.acquire()
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
         await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
-        self.lock.release()
+       # self.lock.release()
         try:
             if (receiveData  and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
                 data = bytearray()
@@ -262,7 +262,7 @@ class fileHandler:
         except OSError:
             return
         
-        if(len(data)>31):
+        if(len(data)>30):
             
             lines = []
             for i in data:
@@ -275,20 +275,18 @@ class fileHandler:
 
         
     def readData(self,file):
-       # line = []
+
         data = []
         try:
             with open(file) as f:
                 for line in f:
                     line = line.replace("\n","")
                     data.append(line)
-             #   key, values = items[0], items[1]
-             #   data[key] = values
             
                 f.close()
             return data
         except Exception as e:
-            return None
+            return data 
 
     def writeData(self,file,data):
         lines = []

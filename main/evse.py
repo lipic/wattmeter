@@ -1,4 +1,4 @@
-from main import modbus
+import modbus
 from machine import UART
 import uasyncio as asyncio
 from machine import Pin
@@ -48,14 +48,14 @@ class Evse():
         return "Read: {}; Write: {}".format(status,state)
         
     async def writeEvseRegister(self,reg,data):
-        await self.lock.acquire()
+       # await self.lock.acquire()
         writeRegs = self.modbusClient.write_regs(reg, data)
         self.uart.write(writeRegs)
         self.DE.on()
         await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
         self.DE.off() 
-        self.lock.release()
+       # self.lock.release()
         receiveData = receiveData [1:]
         try:
             if (0 == self.modbusClient.mbrtu_data_processing(receiveData)):
@@ -69,14 +69,14 @@ class Evse():
             return "Exception: {}".format(e)
         
     async def readEvseRegister(self,reg,length):
-        await self.lock.acquire()
+      #  await self.lock.acquire()
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
         self.DE.on() 
         await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
         self.DE.off() 
-        self.lock.release()
+    #    self.lock.release()
         receiveData = receiveData [1:]
         try:
             if (receiveData  and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
