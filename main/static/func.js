@@ -306,6 +306,7 @@ function refreshEnergyChartHourly() {
             hour =  hourEnergyData[(2*i)+1];
             dataP = hourEnergyData[(2*i)+2];
             dataN = hourEnergyData[(2*i)+3];
+            console.log("EnergyData: ",hourEnergyData)
             energyAvg = energyAvg + dataP - dataN;
             numb = numb + 1;
             energyGraphHourly.data.labels[24 - (((len-1)/3)-i)] = (((hour+1)<10)?("0"+(hour)+"-"+"0"+(hour+1)):(((hour+1)==10)?"09-10":(hour)+"-"+(hour+1)));
@@ -350,9 +351,11 @@ function refreshEnergyChartDaily() {
         if(dailyEnergyData != null){
             if(dailyEnergyData[len - i] != undefined){
                 arr = dailyEnergyData[len-i].split(':')
+                console.log("ARR: ",arr)
                 day  = arr [0]
-                dataP= arr[1]
-                dataN= arr[2]
+                dat = JSON.parse(arr[1])
+                dataP= dat[0]
+                dataN= dat[1]
                 energyGraphDaily.data.labels[30-i] = day;
                 energyAvgD = energyAvgD + parseFloat(dataP/100)- parseFloat(dataN/100)
                 numb = numb + 1
