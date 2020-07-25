@@ -301,10 +301,10 @@ function refreshEnergyChartHourly() {
     var energyAvg = 0
     var numb = 0
     for(var i = 0; i<24;i++){
-        if(hourEnergyData[(2*i)+3] != undefined){
-            hour =  hourEnergyData[(2*i)+1];
-            dataP = hourEnergyData[(2*i)+2];
-            dataN = hourEnergyData[(2*i)+3];
+        if(hourEnergyData[(3*i)+3] != undefined){
+            hour =  hourEnergyData[(3*i)+1];
+            dataP = hourEnergyData[(3*i)+2];
+            dataN = hourEnergyData[(3*i)+3];
             console.log("EnergyData: ",hourEnergyData,"Hour: ",hour,"dataP: ",dataP)
             energyAvg = energyAvg + dataP - dataN;
             numb = numb + 1;
