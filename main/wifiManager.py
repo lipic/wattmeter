@@ -80,8 +80,9 @@ class WifiManager:
 
     def do_connect(self,ssid, password):
         self.wlan_sta.active(True)
-        if self.wlan_sta.isconnected():
-            return "You are currently connected"
+        if (self.getCurrentConnectSSID() == ssid):
+            print("You are currently connected")
+            return False
         print('Trying to connect to %s ...' % ssid )
         print("password %s" %password)
         time.sleep(2)
@@ -110,7 +111,8 @@ class WifiManager:
 
 
     def handle_configure(self,ssid, password):
-
+        
+        print("Jsem tuttt")
         if len(ssid) == 0:
             return False
 
@@ -142,6 +144,7 @@ class WifiManager:
         # Search WiFis in range
             self.wlan_sta.active(True)
             networks = self.wlan_sta.scan()
+            print("Jsem tu a jdu hledat")
             AUTHMODE = {0: "open", 1: "WEP", 2: "WPA-PSK", 3: "WPA2-PSK", 4: "WPA/WPA2-PSK"}
             for ssid, bssid, channel, rssi, authmode, hidden in sorted(networks, key=lambda x: x[3], reverse=True):
                 ssid = ssid.decode('utf-8')
