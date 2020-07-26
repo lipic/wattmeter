@@ -26,7 +26,7 @@ class Wattmeter:
         if(self.timeInit == False):
             self.lastMinute =  int(time.localtime()[4])
             self.lastDay =  int(time.localtime()[2])
-            self.dataLayer.data["E_Daily"] =  self.fileHandler.readData(self.DAILY_CONSUMPTION)
+            self.dataLayer.data['DailyEnergy'] = self.fileHandler.readData(self.DAILY_CONSUMPTION)
             self.timeInit = True
         
         self.dataLayer.data['RUN_TIME'] = time.time() - self.startUpTime
@@ -89,7 +89,7 @@ class Wattmeter:
             self.lastDay = int(time.localtime()[2])
             self.fileHandler.handleData(self.DAILY_CONSUMPTION)
             self.fileHandler.writeData(self.DAILY_CONSUMPTION, data)
-            self.dataLayer.data["E_daily"] = self.fileHandler.readData(self.DAILY_CONSUMPTION)
+            self.dataLayer.data["DailyEnergy"] = self.fileHandler.readData(self.DAILY_CONSUMPTION)
 
     
     async def writeWattmeterRegister(self,reg,data):
@@ -239,7 +239,7 @@ class DataLayer:
         self.data["HDO"] = 0
         self.data["P_minuten"] = [0]
         self.data["E_hour"] = [0]
-        self.data["E_Daily"] = []
+        self.data['DailyEnergy'] = None
         self.data["E_currentDay_positive"] = 0
         self.data["E_currentDay_negative"] = 0
         self.data["E_previousDay_positive"] = 0
