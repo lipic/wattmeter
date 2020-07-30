@@ -3,7 +3,9 @@ import socket
 import uselect as select
 import modbus
 from main import wattmeter
-
+from main import __config__
+from main import evse
+import asyn
 import uasyncio as asyncio
 
 class Server:
@@ -74,11 +76,8 @@ class Server:
 class tcpModbus(modbus.Modbus):
     
     def __init__(self):
-        from main import __config__
-        from main import wattmeter
-        from main import evse
-        self.wattmeter = wattmeter.Wattmeter(lock = True, ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27)
-        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = True)
+        self.wattmeter = wattmeter.Wattmeter(lock = asyn.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27)
+        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = asyn.Lock())
         modbus.Modbus.__init__(self)
         self.config = __config__.Config()
         

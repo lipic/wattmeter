@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <div class="container-sm mt-3">
     <div class="container-fluid text-white pt-2 text-center">
-        <h4>WATTMETER  <span class="dot" id="refresh"></span> </h4>
+        <h4>WATTMETER:  <span id="ID"> </span> <span class="dot" id="refresh"></span> </h4>
     </div>
     <table class="table  table-dark text-center">
         <thead>
@@ -60,12 +60,16 @@
                 <td colspan="3"><span id="HDO">-,-</span></td>
             </tr>
             <tr>
-                <td>Up time [s]</td>
-                <td colspan="3"><span id="RUN_TIME">-,-</span></td>
+                <td> <button  id="relay" type="button" class="btn btn-primary btn-xs">Relay</button></td>
+                <td colspan="3"><span id="RELAY">-,-</span></td>
             </tr>
             <tr>
-                <td>Wattmeter time</td>
+                <td> <button  id="synchroTime" type="button" class="btn btn-primary btn-xs">Sync. time</button></td>
                 <td colspan="3"><span id="WATTMETER_TIME">-,-</span></td>
+            </tr>
+            <tr>
+                <td>Up time [s]</td>
+                <td colspan="3"><span id="RUN_TIME">-,-</span></td>
             </tr>
         </tbody>
     </table>

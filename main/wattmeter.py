@@ -1,13 +1,15 @@
 import modbus
 import machine
+from machine import Pin
 import time
 import uasyncio as asyncio
-
+from main import __config__
 
 class Wattmeter:
      
     def __init__(self,lock ,ID, timeout, baudrate , rxPin, txPin):
         self.lock = lock
+        self.relay  = Pin(25, Pin.OUT)
         self.uart = machine.UART(ID, baudrate=baudrate, rx=rxPin, tx=txPin)
         self.modbusClient = modbus.Modbus()
         self.dataLayer = DataLayer()
@@ -19,18 +21,22 @@ class Wattmeter:
         self.lastHour = 0
         self.lastDay =  0
         self.test = 0
-        self.startUpTime = time.time()
+        self.startUpTime = 0 
 
     async def wattmeterHandler(self):
         #Read data from wattmeter
         if(self.timeInit == False):
+            self.startUpTime = time.time()
             self.lastMinute =  int(time.localtime()[4])
             self.lastDay =  int(time.localtime()[2])
             self.dataLayer.data['DailyEnergy'] = self.fileHandler.readData(self.DAILY_CONSUMPTION)
+            config = __config__.Config()
+            self.dataLayer.data['ID'] =config.getConfig()['ID'] 
             self.timeInit = True
         
         self.dataLayer.data['RUN_TIME'] = time.time() - self.startUpTime
-        self.dataLayer.data['WATTMETER_TIME'] = ("{0:02}.{1:02}.{2:02}  {3:02}:{4:02}:{5:02}".format(time.localtime()[2],time.localtime()[1],time.localtime()[0],time.localtime()[3],time.localtime()[4],time.localtime()[5]))
+        curentYear = str(time.localtime()[0])[-2:] 
+        self.dataLayer.data['WATTMETER_TIME'] = self.dataLayer.data['WATTMETER_TIME'] = ("{0:02}.{1:02}.{2}  {3:02}:{4:02}:{5:02}".format(time.localtime()[2],time.localtime()[1],curentYear,time.localtime()[3],time.localtime()[4],time.localtime()[5]))
         #read U,I,P
         status = await self.__readWattmeter_data(1000,12)
         status = await self.__readWattmeter_data(2502,3)
@@ -43,7 +49,10 @@ class Wattmeter:
         status = await self.__readWattmeter_data(1015,3)
         #Total energy 
         status = await self.__readWattmeter_data(4000,12)
+        #Total energy 
+        status = await self.__readWattmeter_data(200,1)
         
+        self.controlRelay()
         #Check if time-sync puls must be send
         if(self.lastMinute is not int(time.localtime()[4])):
             
@@ -60,7 +69,6 @@ class Wattmeter:
         if(self.lastHour is not int(time.localtime()[3])):
             status = await self.writeWattmeterRegister(101,[1])
             self.lastHour = int(time.localtime()[3])
-            
             if(len(self.dataLayer.data["E_hour"])<73):
                 self.dataLayer.data["E_hour"].append(self.lastHour)
                 self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Positive"])
@@ -93,12 +101,12 @@ class Wattmeter:
 
     
     async def writeWattmeterRegister(self,reg,data):
-       # await self.lock.acquire()
+        await self.lock.acquire()
         writeRegs = self.modbusClient.write_regs(reg, data)
         self.uart.write(writeRegs)
         await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
-    #    self.lock.release()
+        self.lock.release()
         try:
             if (0 == self.modbusClient.mbrtu_data_processing(receiveData)):
                 data = bytearray()
@@ -112,12 +120,12 @@ class Wattmeter:
     
         
     async def readWattmeterRegister(self,reg,length):
-       # await self.lock.acquire()
+        await self.lock.acquire()
         readRegs = self.modbusClient.read_regs(reg, length)
         self.uart.write(readRegs)
         await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
-       # self.lock.release()
+        self.lock.release()
         try:
             if (receiveData  and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
                 data = bytearray()
@@ -203,11 +211,33 @@ class Wattmeter:
                 self.dataLayer.data["E_previousDay_negative"] =     (int)((((receiveData[6])) << 8)  | ((receiveData[7]))) + (int)((((receiveData[8])) << 8)  | ((receiveData[9]))) + (int)((((receiveData[10])) << 8)  | ((receiveData[11])))
                 return "SUCCESS_READ"
 
-            else: 
+            else:  
                 return "Timed out waiting for result."
             
         except Exception as e:
             return "Exception: {}. UART is probably not connected.".format(e)
+        
+    def negotiationRelay(self):
+        if(self.relay.value()):
+            self.relay.off()
+            self.dataLayer.data["RELAY"]=0
+            return False
+        else:
+            self.relay.on()
+            self.dataLayer.data["RELAY"]=1
+            return True
+        
+    def controlRelay(self):
+        config = __config__.Config()
+        if((config.getConfig()['sw,WHEN HDO: RELAY ON']) == '1'):
+            if(self.dataLayer.data["HDO"] == 1):
+                self.relay.on()
+            else:
+                self.relay.off()
+        if(self.relay.value()):
+            self.dataLayer.data["RELAY"]=1
+        else:
+            self.dataLayer.data["RELAY"]=0
         
 class DataLayer:
     def __init__(self):
@@ -252,6 +282,7 @@ class DataLayer:
         self.data["E3_total_negative"] = 0
         self.data['RUN_TIME'] = 0
         self.data['WATTMETER_TIME'] = 0
+        self.data['ID'] = 0
         
 class fileHandler:
             

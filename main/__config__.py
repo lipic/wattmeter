@@ -1,4 +1,5 @@
 import bootloader
+import random
 
 class Config:
     
@@ -14,6 +15,8 @@ class Config:
         self.config['sl,EVSE']=6                                    #Reg 1005
         self.config['sl,TIME-ZONE']=2                          #Reg 1005
         self.config['sw,ENABLE BALANCING']=0     #Reg 1006
+        self.config['sw,WHEN HDO: RELAY ON']=0     #Reg 1006
+        self.config['ID'] = 0
         
         self.SETTING_PROFILES = 'setting.dat'
         self.handle_configure('txt,ACTUAL SW VERSION',self.boot.get_version(""))
@@ -52,9 +55,13 @@ class Config:
             
             else:
                 setting[i] = self.config[i]
-                self.write_setting(setting)      
-        
-        #print("Config: ",self.config)
+                self.write_setting(setting)
+                
+        if(self.config['ID'] == '0'):
+            self.config['ID'] = random.randint(0, 65535)
+            self.handle_configure('ID', self.config['ID'])
+            self.config = self.getConfig()
+            
         return self.config
 
     # Update self.config. Write new value to self.config and to file setting.dat

@@ -4,6 +4,7 @@ import uasyncio as asyncio
 from machine import Pin
 import time
 from main import __config__
+import math
 
 class Evse():
 
@@ -17,7 +18,13 @@ class Evse():
         self.setting = __config__.Config()
 
         self.wattmeter = wattmeter
-        self.__Delay_for_breaker = 0
+        self.regulationLock1 = False
+        self.regulationLock2 = False
+        self.regulationLock3 = False
+        self.lock1Counter = 0
+        self.lock2Counter = 0
+        self.lock3Counter = 0
+        self.secondWarning = False
         self.__cntCurrent = 0
         self.__requestCurrent = 0
                 
@@ -33,11 +40,9 @@ class Evse():
             #If get max current accordig to wattmeter
             if(setting["sw,ENABLE CHARGING"] == '1'):
                 if (setting["sw,ENABLE BALANCING"] == '1'):
-                    current,regulation = self.balancEvseCurrent()
-                    if(regulation == True):
-                        state = await self.writeEvseRegister(1000,[current])
-                    else:
-                        state = await self.writeEvseRegister(1000,[int(setting["sl,EVSE"])])
+                    current = self.balancEvseCurrent()
+                   # print("Setting current: ",current)
+                    state = await self.writeEvseRegister(1000,[current])
                 else:
                     current = int(setting["sl,EVSE"])
                     state = await self.writeEvseRegister(1000,[current])
@@ -48,14 +53,14 @@ class Evse():
         return "Read: {}; Write: {}".format(status,state)
         
     async def writeEvseRegister(self,reg,data):
-       # await self.lock.acquire()
+        await self.lock.acquire()
         writeRegs = self.modbusClient.write_regs(reg, data)
         self.uart.write(writeRegs)
         self.DE.on()
         await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
         self.DE.off() 
-       # self.lock.release()
+        self.lock.release()
         receiveData = receiveData [1:]
         try:
             if (0 == self.modbusClient.mbrtu_data_processing(receiveData)):
@@ -113,8 +118,6 @@ class Evse():
         I1_N = 0
         I2_N = 0
         I3_N = 0
-        regulation = False
-        import math
 
         if (self.wattmeter.dataLayer.data["I1"] > 32767):
             I1_N = self.wattmeter.dataLayer.data["I1"] - 65535
@@ -122,68 +125,64 @@ class Evse():
             I1_P = self.wattmeter.dataLayer.data["I1"]
 
         if (self.wattmeter.dataLayer.data["I2"] > 32767):
-            I2_N += self.wattmeter.dataLayer.data["I2"] - 65535
+            I2_N = self.wattmeter.dataLayer.data["I2"] - 65535
         else:
-            I2_P += self.wattmeter.dataLayer.data["I2"]
+            I2_P = self.wattmeter.dataLayer.data["I2"]
             
         if (self.wattmeter.dataLayer.data["I3"] > 32767):
-            I3_N += self.wattmeter.dataLayer.data["I3"] - 65535
+            I3_N = self.wattmeter.dataLayer.data["I3"] - 65535
         else:
-            I3_P += self.wattmeter.dataLayer.data["I3"]
+            I3_P = self.wattmeter.dataLayer.data["I3"]
 
         if((I1_P > I2_P)and(I1_P > I3_P)):
-            maxCurrent = math.ceil(I1_P/1000)
+            maxCurrent = int(I1_P/100)
 
         if((I2_P > I1_P)and(I2_P > I3_P)):
-            maxCurrent = math.ceil(I2_P/1000)
+            maxCurrent = int(I2_P/100)
             
         if((I3_P > I1_P)and(I3_P > I2_P)):
-            maxCurrent = math.ceil(I3_P/1000)
-    
+            maxCurrent = int(I3_P/100)
+            
         delta = int(self.setting.config["sl,BREAKER"]) - maxCurrent
-        if(delta < -1):
-            regulation = True
-
+        self.dataLayer.data["EV_STATE"]  = 3
         # Kdyz je proud vetsi nez dvojnasobek proudu jsitice okamzite vypni a pak pockej 10s
-        if ((maxCurrent <= int(self.setting.config["sl,BREAKER"])  * 2) and (0 == self.__Delay_for_breaker)) :
-            self.__cntCurrent = self.__cntCurrent+1
-            #Dle normy je zmena proudu EV nasledujici po zmene pracovni cyklu PWM maximalne 5s
-            if (self.__cntCurrent >= 3) :
-                #self.stopTime = int(round(time.time() * 1000)) - self.startTime
-                #print("Stop time: ",self.stopTime)
-                #jestli je deltaBreaker zaporna a vetsi nez request current nastav request Current na 0
-                if ((self.__requestCurrent + delta) < 0):
+      #  if ((maxCurrent <= int(self.setting.config["sl,BREAKER"])  * 2) and (0 == self.__Delay_for_breaker)) :
+        self.__cntCurrent = self.__cntCurrent+1
+        #Dle normy je zmena proudu EV nasledujici po zmene pracovni cyklu PWM maximalne 5s
+        if (self.__cntCurrent >= 3) :
+            if (self.dataLayer.data["EV_STATE"] != 3):
+                if(delta < 0):
                     self.__requestCurrent = 0
-                # jestli ze se nenabiji a nastavovany proud by byl vetsi nez je hodnota jistice, tak nastav proud na 0
-                elif (self.dataLayer.data["EV_STATE"] != 3):
-                    if ((self.__requestCurrent + maxCurrent) > int(self.setting.config["sl,BREAKER"])):
-                        delta = 0
+                else:
+                    self.__requestCurrent  = int(self.setting.config["sl,EVSE"])
+            else :
+                # kdyz proud presahne proud jistice, tak odecti deltu od nastavovaneho proudu
+                if (delta < 0):
+                    if((self.__requestCurrent + delta)< 0):
                         self.__requestCurrent = 0
-                        #pri zahajeni nabijeni, je-li dostatek pvolneho proudu (>5A), tak nastavit porud na volnou deltu
-                    if (delta > 5):
-                        self.__requestCurrent  = 6
-
-                else :
-                    # kdyz proud presahne proud jistice, tak odecti deltu od nastavovaneho proudu
-                    if (delta < 0):
-                        self.__requestCurrent =  self.__requestCurrent + delta
                     else:
-                        # kdyz je delta mensi nez 2A tak pricti deltu
-                        if ((self.__requestCurrent + 1) <= int(self.setting.config["sl,BREAKER"])):
-                            if (delta > 0) :
-                                if(delta >= 6):
-                                    self.__requestCurrent  = self.__requestCurrent + 2
-                                else:
-                                    self.__requestCurrent  = self.__requestCurrent + 1            
+                        self.__requestCurrent = self.__requestCurrent + delta
+                        self.regulationLock1 = True
+                        self.lock1Counter = 1
                         
-                #self.startTime = int(round(time.time() * 1000))
-                self.__cntCurrent = 0
-        else:
-            self.__requestCurrent = 0
-            self.__Delay_for_breaker = self.__Delay_for_breaker+1
-        if (self.__Delay_for_breaker > 60):
-            self.__Delay_for_breaker = 0
-        return  [self.__requestCurrent,regulation]
+                else:
+                    if((self.regulationLock1 != True)):
+                        self.__requestCurrent  = self.__requestCurrent + delta
+
+            self.__cntCurrent = 0
+            
+       # print("self.regulationLock1",self.regulationLock1)
+        if(self.lock1Counter>=30):
+            self.lock1Counter = 0
+            self.regulationLock1 = False
+                
+        if((self.regulationLock1 == True) or (self.lock1Counter > 0)):                        
+            self.lock1Counter = self.lock1Counter + 1
+        
+        if(self.__requestCurrent > int(self.setting.config["sl,EVSE"])):
+            self.__requestCurrent = int(self.setting.config["sl,EVSE"])
+        
+        return  self.__requestCurrent
     
 class DataLayer:
     def __init__(self):

@@ -9,29 +9,22 @@ class WifiManager:
     def __init__(self,ap_ssid, ap_passwd):   
         self.ap_ssid = ap_ssid
         self.ap_password = ap_passwd
-        self.ap_authmode = 3  # WPA2
+        self.ap_authmode = 4  # WPA2
         self.NETWORK_PROFILES = 'wifi.dat'
         self.wlan_ap = network.WLAN(network.AP_IF)
         self.wlan_sta = network.WLAN(network.STA_IF)
     
     def get_connection(self):
         """return a working WLAN(STA_IF) instance or None"""
-
-        # First check if there already is any connection:
-        if self.wlan_sta.isconnected():
-            return self.wlan_sta
-
         connected = False
   
         try:
             # ESP connecting to WiFi takes time, wait a bit and try again:
-            time.sleep(3)
             if self.wlan_sta.isconnected():
                 return self.wlan_sta
 
             # Read known network profiles from file
             profiles = self.read_profiles()
-
             # Search WiFis in range 
             self.wlan_sta.active(True)
             networks = self.wlan_sta.scan()
@@ -61,14 +54,16 @@ class WifiManager:
 
 
     def read_profiles(self):
-        with open(self.NETWORK_PROFILES) as f:
-            lines = f.readlines()
-        profiles = {}
-        for line in lines:
-            ssid, password = line.strip("\n").split(";")
-            profiles[ssid] = password
-        return profiles
-
+        try:
+            with open(self.NETWORK_PROFILES) as f:
+                lines = f.readlines()
+            profiles = {}
+            for line in lines:
+                ssid, password = line.strip("\n").split(";")
+                profiles[ssid] = password
+            return profiles
+        except Exception as e:
+            return {}
 
     def write_profiles(self,profiles):
         lines = []
@@ -77,16 +72,41 @@ class WifiManager:
         with open(self.NETWORK_PROFILES, "w") as f:
             f.write(''.join(lines))
 
-
+    def handle_root(self):
+        self.wlan_sta.active(True)
+        ssids = sorted(ssid.decode('utf-8') for ssid, *_ in self.wlan_sta.scan())
+        print("----------------------->",ssids)
+        while len(ssids):
+            ssid = ssids.pop(0) 
+       
+    def getSSID(self):
+        ssidUsers = {}
+        self.handle_root()
+        try:
+        # Search WiFis in range            
+            self.wlan_sta.active(True)
+            networks = self.wlan_sta.scan()
+            
+            AUTHMODE = {0: "open", 1: "WEP", 2: "WPA-PSK", 3: "WPA2-PSK", 4: "WPA/WPA2-PSK"}
+            for ssid, bssid, channel, rssi, authmode, hidden in sorted(networks, key=lambda x: x[3], reverse=True):
+                ssid = ssid.decode('utf-8')
+                ssidUsers[ssid]=rssi
+                encrypted = authmode > 0
+                print("ssid: %s chan: %d rssi: %d authmode: %s" % (ssid, channel, rssi, AUTHMODE.get(authmode, '?')))
+        
+        except Exception as e:
+            print("getSSID exception: {}".format(e))
+    
+        return ssidUsers
+    
     def do_connect(self,ssid, password):
         self.wlan_sta.active(True)
         if (self.getCurrentConnectSSID() == ssid):
             print("You are currently connected")
-            return False
-        print('Trying to connect to %s ...' % ssid )
-        print("password %s" %password)
-        time.sleep(2)
+            return "connected"
+        
         self.wlan_sta.connect(ssid, password)
+        print(self.getWlanInfo(self.wlan_sta.status()), end='')
         for retry in range(150):
             connected = self.wlan_sta.isconnected()
             if connected:
@@ -96,66 +116,49 @@ class WifiManager:
             
         if connected:
             print('\nConnected. Network config: ', self.wlan_sta.ifconfig())
+            return True
         else:
             print('\nFailed. Not Connected to: ' + ssid)
-        return connected
-
-
-    def handle_root(self,client):
-        self.wlan_sta.active(True)
-        ssids = sorted(ssid.decode('utf-8') for ssid, *_ in self.wlan_sta.scan())
-    
-        while len(ssids):
-            ssid = ssids.pop(0)
-       
-
+            return False
 
     def handle_configure(self,ssid, password):
         
-        print("Jsem tuttt")
         if len(ssid) == 0:
-            return False
+            print("Please choose ssid client first!")
+            return 0
+        
+        if(len(ssid) > 8):
+            if(ssid[:9] == "Wattmeter"):
+                print("Can not connect to: Wattmeter")
+                return 1
 
-        if self.do_connect(ssid, password):
+        result = self.do_connect(ssid, password)
+        if(result == "connected"):
+            print("Currently connected to: {}".format(ssid))
+            return 2
+        
+        if (result == True):
             try:
                 profiles = self.read_profiles()
             except OSError:
                 profiles = {}
             profiles[ssid] = password
             self.write_profiles(profiles)
-            time.sleep(5)
-
-            return True
+            time.sleep(1)
+            print("Success connection to: {}".format(ssid))
+            return 3
         else:
-            return False 
+            print("Error during connection to: {}, maybe bad PASSWORD".format(ssid))
+            self.wlan_sta.disconnect()
+            return 4
 
 
     def setToAP(self):
-
         self.wlan_ap.active(True)
         self.wlan_ap.config(essid=self.ap_ssid, password=self.ap_password, authmode=self.ap_authmode)
         print(self.wlan_ap.ifconfig())
         print('and access the ESP via your favorite web browser at 192.168.4.1.')
 
-
-    def getSSID(self):
-        ssidUsers = {}
-        try:
-        # Search WiFis in range
-            self.wlan_sta.active(True)
-            networks = self.wlan_sta.scan()
-            print("Jsem tu a jdu hledat")
-            AUTHMODE = {0: "open", 1: "WEP", 2: "WPA-PSK", 3: "WPA2-PSK", 4: "WPA/WPA2-PSK"}
-            for ssid, bssid, channel, rssi, authmode, hidden in sorted(networks, key=lambda x: x[3], reverse=True):
-                ssid = ssid.decode('utf-8')
-                ssidUsers[ssid]=rssi
-                encrypted = authmode > 0
-                print("ssid: %s chan: %d rssi: %d authmode: %s" % (ssid, channel, rssi, AUTHMODE.get(authmode, '?')))
-
-        except OSError as e:
-            print("exception", str(e))
-    
-        return ssidUsers
 
     def getIp(self):
         ip= [] 
@@ -182,4 +185,22 @@ class WifiManager:
         else:
             return "None"
         
+    def getWlanInfo(self, resp):
+        if(resp == 200):
+            return "BEACON_TIMEOUT"
+        if(resp == 201):
+            return "NO_AP_FOUND"
+        if(resp == 202):
+            return "WRONG_PASSWORD"
+        if(resp == 203):
+            return "ASSOC_FAIL"
+        if(resp == 204):
+            return "HANDSHAKE_TIMEOUT"
+        if(resp == 1000):
+            return "IDLE"
+        if(resp == 1001):
+            return "CONNECTING"
+        if(resp == 1010):
+            return "GOT_IP"
+
         
