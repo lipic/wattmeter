@@ -119,6 +119,7 @@ class WifiManager:
             return True
         else:
             print('\nFailed. Not Connected to: ' + ssid)
+            self.wlan_sta.disconnect()
             return False
 
     def handle_configure(self,ssid, password):
@@ -149,7 +150,6 @@ class WifiManager:
             return 3
         else:
             print("Error during connection to: {}, maybe bad PASSWORD".format(ssid))
-            self.wlan_sta.disconnect()
             return 4
 
 
