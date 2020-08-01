@@ -216,6 +216,7 @@ class WifiManager:
 
     def doStart_connect(self,ssid, password):
         self.wlan_sta.active(True)
+        self.wlan_sta.config(dhcp_hostname=self.ap_ssid)
         if (self.getCurrentConnectSSID() == ssid):
             print("You are currently connected")
             return "connected"
