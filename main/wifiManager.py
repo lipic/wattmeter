@@ -1,8 +1,6 @@
 import network
-import socket 
-import ure
+import uasyncio as asyncio
 import time
-import machine
 
 class WifiManager:
     
@@ -12,15 +10,12 @@ class WifiManager:
         self.ap_authmode = 4  # WPA2
         self.NETWORK_PROFILES = 'wifi.dat'
         self.wlan_ap = network.WLAN(network.AP_IF)
-        self.wlan_sta = network.WLAN(network.STA_IF)
+        self.wlan_sta = network.WLAN(network.STA_IF)  
     
-    def get_connection(self):
-        """return a working WLAN(STA_IF) instance or None"""
+    async def get_connection(self):
         connected = False
-  
         try:
-            # ESP connecting to WiFi takes time, wait a bit and try again:
-            if self.wlan_sta.isconnected():
+            if self.isConnected():
                 return self.wlan_sta
 
             # Read known network profiles from file
@@ -37,19 +32,17 @@ class WifiManager:
                 if encrypted:
                     if ssid in profiles:
                         password = profiles[ssid]
-                        connected = self.do_connect(ssid, password)
-                    else:
-                        print("skipping unknown encrypted network")
+                        connected = await self.do_connect(ssid, password)
                 else:  # open
                     if ssid in profiles:
-                        connected = self.do_connect(ssid, None)
+                        connected = await self.do_connect(ssid, None)
 
         except Exception as e:
-            print("Exception: {0}".format(e))
+            print("wifiManager exception: {0}".format(e))
 
         # start web server for connection manager:
-        self.setToAP()
-
+        self.wlan_ap.active(True)
+        self.wlan_ap.config(essid=self.ap_ssid, password=self.ap_password, authmode=self.ap_authmode)
         return self.wlan_sta if connected else None
 
 
@@ -71,17 +64,9 @@ class WifiManager:
             lines.append("%s;%s\n" % (ssid, password))
         with open(self.NETWORK_PROFILES, "w") as f:
             f.write(''.join(lines))
-
-    def handle_root(self):
-        self.wlan_sta.active(True)
-        ssids = sorted(ssid.decode('utf-8') for ssid, *_ in self.wlan_sta.scan())
-        print("----------------------->",ssids)
-        while len(ssids):
-            ssid = ssids.pop(0) 
        
     def getSSID(self):
         ssidUsers = {}
-        self.handle_root()
         try:
         # Search WiFis in range            
             self.wlan_sta.active(True)
@@ -99,7 +84,7 @@ class WifiManager:
     
         return ssidUsers
     
-    def do_connect(self,ssid, password):
+    async def do_connect(self,ssid, password):
         self.wlan_sta.active(True)
         if (self.getCurrentConnectSSID() == ssid):
             print("You are currently connected")
@@ -111,7 +96,7 @@ class WifiManager:
             connected = self.wlan_sta.isconnected()
             if connected:
                 break
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             print('.', end='')
             
         if connected:
@@ -133,7 +118,7 @@ class WifiManager:
                 print("Can not connect to: Wattmeter")
                 return 1
 
-        result = self.do_connect(ssid, password)
+        result = await self.do_connect(ssid, password)
         if(result == "connected"):
             print("Currently connected to: {}".format(ssid))
             return 2
@@ -151,14 +136,6 @@ class WifiManager:
         else:
             print("Error during connection to: {}, maybe bad PASSWORD".format(ssid))
             return 4
-
-
-    def setToAP(self):
-        self.wlan_ap.active(True)
-        self.wlan_ap.config(essid=self.ap_ssid, password=self.ap_password, authmode=self.ap_authmode)
-        print(self.wlan_ap.ifconfig())
-        print('and access the ESP via your favorite web browser at 192.168.4.1.')
-
 
     def getIp(self):
         ip= [] 
@@ -202,5 +179,61 @@ class WifiManager:
             return "CONNECTING"
         if(resp == 1010):
             return "GOT_IP"
+        
+        
+    def getStart_connection(self):
+        connected = False
+        try:
+            if self.isConnected():
+                return self.wlan_sta
 
+            # Read known network profiles from file
+            profiles = self.read_profiles()
+            # Search WiFis in range 
+            self.wlan_sta.active(True)
+            networks = self.wlan_sta.scan()
+
+            AUTHMODE = {0: "open", 1: "WEP", 2: "WPA-PSK", 3: "WPA2-PSK", 4: "WPA/WPA2-PSK"}
+            for ssid, bssid, channel, rssi, authmode, hidden in sorted(networks, key=lambda x: x[3], reverse=True):
+                ssid = ssid.decode('utf-8')
+                encrypted = authmode > 0
+                print("ssid: %s chan: %d rssi: %d authmode: %s" % (ssid, channel, rssi, AUTHMODE.get(authmode, '?')))
+                if encrypted:
+                    if ssid in profiles:
+                        password = profiles[ssid]
+                        connected = self.doStart_connect(ssid, password)
+                else:  # open
+                    if ssid in profiles:
+                        connected = self.doStart_connect(ssid, None)
+
+        except Exception as e:
+            print("wifiManager exception: {0}".format(e))
+
+        # start web server for connection manager:
+        self.wlan_ap.active(True)
+        self.wlan_ap.config(essid=self.ap_ssid, password=self.ap_password, authmode=self.ap_authmode)
+        return self.wlan_sta if connected else None
+
+    def doStart_connect(self,ssid, password):
+        self.wlan_sta.active(True)
+        if (self.getCurrentConnectSSID() == ssid):
+            print("You are currently connected")
+            return "connected"
+        
+        self.wlan_sta.connect(ssid, password)
+        print(self.getWlanInfo(self.wlan_sta.status()), end='')
+        for retry in range(150):
+            connected = self.wlan_sta.isconnected()
+            if connected:
+                break
+            time.sleep(0.1)
+            print('.', end='')
+            
+        if connected:
+            print('\nConnected. Network config: ', self.wlan_sta.ifconfig())
+            return True
+        else:
+            print('\nFailed. Not Connected to: ' + ssid)
+            self.wlan_sta.disconnect()
+            return False
         

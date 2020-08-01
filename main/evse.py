@@ -4,7 +4,6 @@ import uasyncio as asyncio
 from machine import Pin
 import time
 from main import __config__
-import math
 
 class Evse():
 
@@ -16,15 +15,9 @@ class Evse():
         self.modbusClient = modbus.Modbus()
         self.dataLayer = DataLayer()
         self.setting = __config__.Config()
-
         self.wattmeter = wattmeter
         self.regulationLock1 = False
-        self.regulationLock2 = False
-        self.regulationLock3 = False
         self.lock1Counter = 0
-        self.lock2Counter = 0
-        self.lock3Counter = 0
-        self.secondWarning = False
         self.__cntCurrent = 0
         self.__requestCurrent = 0
                 

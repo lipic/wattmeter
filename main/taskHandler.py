@@ -94,8 +94,8 @@ class TaskHandler:
                             
                         if(tryOfConnections > 10):
                             tryOfConnections = 0
-                            self.wifiManager.get_connection()
-                            if self.wifiManager.get_connection():
+                            result = await self.wifiManager.get_connection()
+                            if result:
                                 self.settingAfterNewConnection = False
                         tryOfConnections = tryOfConnections + 1
 

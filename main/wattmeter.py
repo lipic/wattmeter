@@ -1,8 +1,7 @@
 import modbus
-import machine
-from machine import Pin
 import time
 import uasyncio as asyncio
+from machine import Pin,UART
 from main import __config__
 
 class Wattmeter:
@@ -10,7 +9,7 @@ class Wattmeter:
     def __init__(self,lock ,ID, timeout, baudrate , rxPin, txPin):
         self.lock = lock
         self.relay  = Pin(25, Pin.OUT)
-        self.uart = machine.UART(ID, baudrate=baudrate, rx=rxPin, tx=txPin)
+        self.uart = UART(ID, baudrate=baudrate, rx=rxPin, tx=txPin)
         self.modbusClient = modbus.Modbus()
         self.dataLayer = DataLayer()
         self.fileHandler = fileHandler()
@@ -293,7 +292,6 @@ class fileHandler:
             return
         
         if(len(data)>30):
-            
             lines = []
             for i in data:
                 a,b = i.split(":")
@@ -312,8 +310,6 @@ class fileHandler:
                 for line in f:
                     line = line.replace("\n","")
                     data.append(line)
-            
-                f.close()
             return data
         except Exception as e:
             return data 
@@ -325,4 +321,3 @@ class fileHandler:
             
         with open(file, "a+") as f:
             f.write(''.join(lines))
-            f.close()

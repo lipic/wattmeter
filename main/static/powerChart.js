@@ -11,6 +11,8 @@ class powerChart {
             options: {
                 legend: { labels: { fontColor: "#DCDCDC", fontSize: 14 } },
                 title: { display: !0 },
+                maintainAspectRatio: false,
+                responsive:true,
                 scales: {
                     xAxes: [{ type: "realtime", realtime: { duration: 36e5, refresh: 6e4, delay: 2e3, onRefresh: this.refresher }, ticks: { fontColor: "#DCDCDC", fontSize: 14 } }],
                     yAxes: [{ scaleLabel: { display: !0, labelString: "W", fontColor: "#DCDCDC" }, gridLines: { color: "#DCDCDC", lineWidth: 0.2 }, ticks: { fontColor: "#DCDCDC", fontSize: 14 } }],

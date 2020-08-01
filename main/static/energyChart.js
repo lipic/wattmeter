@@ -70,6 +70,8 @@ class energyChart{
             labels: arrLabel            
         },
         options: {
+            maintainAspectRatio: false,
+            responsive:true,
             elements: {
                 point:{
                 radius: 0

@@ -5,7 +5,7 @@ var refreshGraphs = 0,
 
 function update_ints_count() {
     $.ajax({ url: "/updateData" }).done(function (e) {
-        $("#updateData").html(e.datalayer), (dailyEnergyData = e.E_Daily), (document.getElementById("RUN_TIME").textContent = e.RUN_TIME), (document.getElementById("WATTMETER_TIME").textContent = e.WATTMETER_TIME);
+        $("#updateData").html(e.datalayer), (dailyEnergyData = e.DailyEnergy), (document.getElementById("RUN_TIME").textContent = e.RUN_TIME), (document.getElementById("WATTMETER_TIME").textContent = e.WATTMETER_TIME);
         var t = e.U1,
             n = e.U2, 
             a = e.U3;
@@ -58,6 +58,7 @@ function update_ints_count() {
             (timer = setTimeout(update_ints_count, 1e3));
     });
 }
+
 function stop() {
     timer && (console.log("stopTimer"), clearTimeout(timer), (timer = 0));
 }
@@ -131,6 +132,7 @@ function refreshEnergyChartDaily() {
               (dat = JSON.parse(arr[1])),
               (dataP = dat[0]),
               (dataN = dat[1]),
+               (console.log("dataP:",dataP,"dataN:",dataN)),
               (energyGraphDaily.data.labels[30 - r] = e),
               (n = n + parseFloat(dataP / 100) - parseFloat(dataN / 100)),
               (a += 1),
@@ -162,10 +164,10 @@ $(function () {
         let e = new energyChart("Hourly E [Wh]", "Wh"),
             t = new energyChart("Daily E [kWh]", "kWh"),
             n = new powerChart(refreshPowerChart),
-            a = document.getElementById("powerGraph"),
-            r = n.getConfig();
-        powerGraph = new Chart(a, r);
-        let o = document.getElementById("energyGraph_hourly"),
+            a = document.getElementById("powerGraph").getContext('2d'),
+            r = n.getConfig(); 
+            powerGraph = new Chart(a, r);
+            o = document.getElementById("energyGraph_hourly"),
             d = e.getConfig(24);
         energyGraphHourly = new Chart(o, d);
         let i = document.getElementById("energyGraph_daily"),
