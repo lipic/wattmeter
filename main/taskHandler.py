@@ -4,7 +4,7 @@ from asyn import Lock,NamedTask
 from gc import mem_free, collect
 from machine import Pin, WDT, RTC
 from main import webServerApp
-from main import wifiManager
+import wifiManager
 from main import wattmeter
 from main import evse
 from main import __config__
@@ -13,16 +13,16 @@ from main import modbusTcp
                     
 
 class TaskHandler:
-    def __init__(self,wifiManager,logging):
-        self.wattmeter = wattmeter.Wattmeter(lock = Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
-        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = Lock())
-        self.webServerApp = webServerApp.WebServerApp(wifiManager,self.wattmeter, evse = self.evse) #Create instance of Webserver App
-        self.wifiManager = wifiManager #Get insatnce of wifimanager from boots
+    def __init__(self,wifi):
+        self.wattmeter = wattmeter.Wattmeter(lock = Lock(delay_ms = 50), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
+        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = Lock(delay_ms = 50))
+        self.webServerApp = webServerApp.WebServerApp(wifi,self.wattmeter, self.evse) #Create instance of Webserver App
+        self.wifiManager = wifi #Get insatnce of wifimanager from boots
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
         self.ledWifi = Pin(22, Pin.OUT) # set pin high on creation
         self.ledErr  = Pin(21, Pin.OUT) # set pin high on creation
         self.rel= Pin(25, Pin.OUT)
-        self.uModBusTCP = modbusTcp.Server(self.wattmeter)
+        self.uModBusTCP = modbusTcp.Server()
         self.settingAfterNewConnection = False
         self.wdt = WDT(timeout=60000)
         self.setting = __config__.Config()
@@ -56,7 +56,7 @@ class TaskHandler:
             before = mem_free()
             collect()
             after = mem_free()
-            print("Memory beofre: {} & after: {}".format(before,after))
+            #print("Memory beofre: {} & after: {}".format(before,after))
             await asyncio.sleep(delay_secs)
                     
     #Handler for wifi.    
@@ -69,7 +69,7 @@ class TaskHandler:
                         self.ledWifi.on()
                         self.settingAfterNewConnection = True
                         ip = self.wifiManager.getIp()
-                        if((NamedTask.is_running('app')) == False):
+                        if((NamedTask.is_running('app2')) == False):
                             loop = asyncio.get_event_loop()
                             loop.create_task(NamedTask('app2',self.webServerApp.webServerRun,0,ip)())
                         else:
@@ -147,8 +147,8 @@ class TaskHandler:
         loop.create_task(self.ledHandler(1))
         loop.create_task(self.wdgHandler(1))
         loop.create_task(self.wifiHandler(2))
-        loop.create_task(self.evseHandler(1))
         loop.create_task(self.uModBusTCP.run(loop))
         loop.create_task(self.wattmeterHandler(1))
+        loop.create_task(self.evseHandler(1))
         loop.create_task(NamedTask('app1',self.webServerApp.webServerRun,0,'192.168.4.1')())
         loop.run_forever()

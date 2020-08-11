@@ -18,6 +18,7 @@ class Evse():
         self.wattmeter = wattmeter
         self.regulationLock1 = False
         self.lock1Counter = 0
+        self.__regulationDelay = 0
         self.__cntCurrent = 0
         self.__requestCurrent = 0
                 
@@ -27,57 +28,58 @@ class Evse():
         current = 0
         state = ""
         status = ''
-        status = await self.__readEvse_data(1000,3)
+        status = await self.__readEvse_data(1000,3,ID=1)
         setting = self.setting.getConfig()
         if((status == 'SUCCESS_READ') == True):
             #If get max current accordig to wattmeter
             if(setting["sw,ENABLE CHARGING"] == '1'):
                 if (setting["sw,ENABLE BALANCING"] == '1'):
                     current = self.balancEvseCurrent()
-                   # print("Setting current: ",current)
-                    state = await self.writeEvseRegister(1000,[current])
+                    print("Setting current: ",current)
+                    state = await self.writeEvseRegister(1000,[current],1)
                 else:
                     current = int(setting["sl,EVSE"])
-                    state = await self.writeEvseRegister(1000,[current])
+                    state = await self.writeEvseRegister(1000,[current],1)
                     
             else: 
-                state = await self.writeEvseRegister(1000,[0])
+                state = await self.writeEvseRegister(1000,[0],1)
                 
         return "Read: {}; Write: {}".format(status,state)
         
-    async def writeEvseRegister(self,reg,data):
+    async def writeEvseRegister(self,reg,data,ID):
         await self.lock.acquire()
-        writeRegs = self.modbusClient.write_regs(reg, data)
+        writeRegs = self.modbusClient.write_regs(reg, data,ID)
         self.uart.write(writeRegs)
         self.DE.on()
-        await asyncio.sleep_ms(50)
+        await asyncio.sleep_ms(80)
         receiveData = self.uart.read()
         self.DE.off() 
         self.lock.release()
         receiveData = receiveData [1:]
         try:
-            if (0 == self.modbusClient.mbrtu_data_processing(receiveData)):
+            if ((receiveData) and (0 == self.modbusClient.mbrtu_data_processing(receiveData,ID))):
                 data = bytearray()
-                data.append(receiveData[2])
+                data.append(receiveData[2]) 
                 data.append(receiveData[3])
                 return data
             else:
-                return 'ERROR'
+                return "Null"
         except Exception as e:
-            return "Exception: {}".format(e)
+            raise Exception("writeEvseRegister method: {}, Data: {}".format(e,receiveData))
         
-    async def readEvseRegister(self,reg,length):
-      #  await self.lock.acquire()
-        readRegs = self.modbusClient.read_regs(reg, length)
+    async def readEvseRegister(self,reg,length,ID):
+        await self.lock.acquire()
+        readRegs = self.modbusClient.read_regs(reg, length,ID)
         self.uart.write(readRegs)
         self.DE.on() 
-        await asyncio.sleep_ms(50)
-        receiveData = self.uart.read()
+        await asyncio.sleep_ms(80)
         self.DE.off() 
-    #    self.lock.release()
-        receiveData = receiveData [1:]
+        receiveData = self.uart.read()
+        self.lock.release()
         try:
-            if (receiveData  and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+            if(receiveData[0] == 0 or receiveData[0]>100):
+                receiveData = receiveData[1:]
+            if ((receiveData) and  (0 == self.modbusClient.mbrtu_data_processing(receiveData,ID))):
                 data = bytearray()
                 for i in range(0,(length*2)):
                     data.append(receiveData[i+3])
@@ -85,14 +87,14 @@ class Evse():
             else:
                 return "Null"
         except Exception as e:
-            return "Error"
+            raise Exception("readEvseRegister method: {}, Data:{}".format(e,receiveData))
         
         
-    async def __readEvse_data(self,reg,length):
+    async def __readEvse_data(self,reg,length,ID):
         
-        receiveData = await self.readEvseRegister(reg,length)
-        try:             
-            if (reg == 1000):
+        receiveData = await self.readEvseRegister(reg,length,ID)
+        try:
+            if (reg == 1000 and (receiveData != "Null") and (receiveData)):
                 self.dataLayer.data["ACTUAL_CONFIG_CURRENT"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
                 self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"] =     (int)((((receiveData[2])) << 8)  | ((receiveData[3])))
                 self.dataLayer.data["EV_STATE"] =     (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
@@ -111,7 +113,7 @@ class Evse():
         I1_N = 0
         I2_N = 0
         I3_N = 0
-
+        maxCurrent = 0
         if (self.wattmeter.dataLayer.data["I1"] > 32767):
             I1_N = self.wattmeter.dataLayer.data["I1"] - 65535
         else:
@@ -137,30 +139,35 @@ class Evse():
             maxCurrent = int(I3_P/100)
             
         delta = int(self.setting.config["sl,BREAKER"]) - maxCurrent
-        self.dataLayer.data["EV_STATE"]  = 3
+        print("Max Current: {}, Delta: {} ".format(maxCurrent,delta))
         # Kdyz je proud vetsi nez dvojnasobek proudu jsitice okamzite vypni a pak pockej 10s
       #  if ((maxCurrent <= int(self.setting.config["sl,BREAKER"])  * 2) and (0 == self.__Delay_for_breaker)) :
         self.__cntCurrent = self.__cntCurrent+1
         #Dle normy je zmena proudu EV nasledujici po zmene pracovni cyklu PWM maximalne 5s
         if (self.__cntCurrent >= 3) :
-            if (self.dataLayer.data["EV_STATE"] != 3):
+            if (int(self.dataLayer.data["EV_STATE"]) != 3):
                 if(delta < 0):
                     self.__requestCurrent = 0
                 else:
-                    self.__requestCurrent  = int(self.setting.config["sl,EVSE"])
+                    if(self.__regulationDelay>0):
+                        self.__requestCurrent  = 0
+                    else:
+                        self.__requestCurrent  = 6
             else :
                 # kdyz proud presahne proud jistice, tak odecti deltu od nastavovaneho proudu
                 if (delta < 0):
                     if((self.__requestCurrent + delta)< 0):
                         self.__requestCurrent = 0
                     else:
+                        if((self.__requestCurrent + delta)<6):
+                            self.__regulationDelay = 1
                         self.__requestCurrent = self.__requestCurrent + delta
                         self.regulationLock1 = True
                         self.lock1Counter = 1
                         
                 else:
                     if((self.regulationLock1 != True)):
-                        self.__requestCurrent  = self.__requestCurrent + delta
+                        self.__requestCurrent  = self.__requestCurrent + 1
 
             self.__cntCurrent = 0
             
@@ -171,6 +178,11 @@ class Evse():
                 
         if((self.regulationLock1 == True) or (self.lock1Counter > 0)):                        
             self.lock1Counter = self.lock1Counter + 1
+            
+        if(self.__regulationDelay>0):
+            self.__regulationDelay = self.__regulationDelay +1
+        if(self.__regulationDelay>120):
+            self.__regulationDelay = 0
         
         if(self.__requestCurrent > int(self.setting.config["sl,EVSE"])):
             self.__requestCurrent = int(self.setting.config["sl,EVSE"])

@@ -20,7 +20,7 @@ class Wattmeter:
         self.lastHour = 0
         self.lastDay =  0
         self.test = 0
-        self.startUpTime = 0 
+        self.startUpTime = 0
 
     async def wattmeterHandler(self):
         #Read data from wattmeter
@@ -101,13 +101,13 @@ class Wattmeter:
     
     async def writeWattmeterRegister(self,reg,data):
         await self.lock.acquire()
-        writeRegs = self.modbusClient.write_regs(reg, data)
+        writeRegs = self.modbusClient.write_regs(reg, data,1)
         self.uart.write(writeRegs)
         await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
         self.lock.release()
         try:
-            if (0 == self.modbusClient.mbrtu_data_processing(receiveData)):
+            if (0 == self.modbusClient.mbrtu_data_processing(receiveData,1)):
                 data = bytearray()
                 data.append(receiveData[2])
                 data.append(receiveData[3])
@@ -120,13 +120,13 @@ class Wattmeter:
         
     async def readWattmeterRegister(self,reg,length):
         await self.lock.acquire()
-        readRegs = self.modbusClient.read_regs(reg, length)
+        readRegs = self.modbusClient.read_regs(reg, length,1)
         self.uart.write(readRegs)
         await asyncio.sleep_ms(50)
         receiveData = self.uart.read()
         self.lock.release()
         try:
-            if (receiveData  and  (0 == self.modbusClient.mbrtu_data_processing(receiveData))):
+            if (receiveData  and  (0 == self.modbusClient.mbrtu_data_processing(receiveData,1))):
                 data = bytearray()
                 for i in range(0,(length*2)):
                     data.append(receiveData[i+3])

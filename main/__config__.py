@@ -7,16 +7,16 @@ class Config:
         #all variables saved in flash
         self.boot = bootloader.Bootloader('https://github.com/lipic/wattmeter',"")
         self.config = {}
-        self.config['bt,RESET WATTMETER'] = 0     #Reg 1000
-        self.config['sw,AUTOMATIC UPDATE'] = 0 #Reg 1001
-        self.config['txt,ACTUAL SW VERSION']=0  #Reg 1002
-        self.config['sw,ENABLE CHARGING']=0       #Reg 1003
-        self.config['sl,BREAKER']=6                            #Reg 1004 
-        self.config['sl,EVSE']=6                                    #Reg 1005
-        self.config['sl,TIME-ZONE']=2                          #Reg 1005
-        self.config['sw,ENABLE BALANCING']=0     #Reg 1006
-        self.config['sw,WHEN HDO: RELAY ON']=0     #Reg 1006
-        self.config['ID'] = 0
+        self.config['bt,RESET WATTMETER'] = '0'     #Reg 1000
+        self.config['sw,AUTOMATIC UPDATE'] = '0' #Reg 1001
+        self.config['txt,ACTUAL SW VERSION']='0'  #Reg 1002
+        self.config['sw,ENABLE CHARGING']='0'       #Reg 1003
+        self.config['sl,BREAKER']='6'                            #Reg 1004 
+        self.config['sl,EVSE']='6'                                    #Reg 1005
+        self.config['sl,TIME-ZONE']='2'                          #Reg 1005
+        self.config['sw,ENABLE BALANCING']='0'     #Reg 1006
+        self.config['sw,WHEN HDO: RELAY ON']='0'    #Reg 1006
+        self.config['ID'] = '0'
         self.SETTING_PROFILES = 'setting.dat'
         self.handle_configure('txt,ACTUAL SW VERSION',self.boot.get_version(""))
 
@@ -38,7 +38,7 @@ class Config:
                     if (self.config[i] != setting[i]):
                         self.config[i] = setting[i]
             setting = {}
-             
+        
         for i in self.config: 
             if i in setting:
                 if (self.config[i] != setting[i]):
@@ -46,11 +46,10 @@ class Config:
             else:
                 setting[i] = self.config[i]
                 self.write_setting(setting)
-                
+        
         if(self.config['ID'] == '0'):
-            self.config['ID'] = random.randint(10000, 65535)
+            self.config['ID'] = random.randrange(10000, 65000)
             self.handle_configure('ID', self.config['ID'])
-            self.config = self.getConfig()
             
         return self.config
 

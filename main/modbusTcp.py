@@ -10,10 +10,9 @@ import uasyncio as asyncio
 
 class Server:
     
-    def __init__(self, wattmeter):
+    def __init__(self):
         self.tcpModbus = tcpModbus()
 
-        
     async def run(self, loop, port=8123):
         addr = socket.getaddrinfo('', port, 0, socket.SOCK_STREAM)[0][-1]
         print(addr)
@@ -32,7 +31,7 @@ class Server:
                 c_sock, addr = s_sock.accept()  # get client socket
                 loop.create_task(self.run_client(c_sock, client_id))
                 client_id += 1
-            await asyncio.sleep_ms(300)
+            await asyncio.sleep_ms(200)
 
     async def run_client(self, sock, cid):
 
@@ -52,14 +51,13 @@ class Server:
                     print(e)
                 if res == b'':
                     raise OSError
-                
                 #proccess modbus msg
                 try:
                     print("Received Data: ",res)
                     result = await self.tcpModbus.modbusCheckProccess(res)
                     print("Sended Data: ",result)
                     await swriter.awrite(result)  # Echo back
-                    await asyncio.sleep_ms(200)
+                    #await asyncio.sleep_ms(100)
             
                 except Exception as e:
                     print(e)
@@ -73,22 +71,13 @@ class Server:
 
 
 
-class tcpModbus(modbus.Modbus):
+class tcpModbus():
     
     def __init__(self):
         self.wattmeter = wattmeter.Wattmeter(lock = asyn.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27)
         self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = asyn.Lock())
-        modbus.Modbus.__init__(self)
         self.config = __config__.Config()
-        
-        
-        
-    async def __evse_readData(self,reg,length):
-        readRegs = self.read_regs(reg, length)
-        self.uart.write(readRegs)
-        await asyncio.sleep(0.1)
-        receiveData = self.uart.read()
-    
+            
     async def modbusCheckProccess(self, receiveData):
 
         ID = receiveData[6]
@@ -139,12 +128,8 @@ class tcpModbus(modbus.Modbus):
             sendData += bytearray([numb])
 
         return sendData
-
-    def str2bool(self, v):
-        return v.lower() in ("yes", "true", "t", "1")
     
     async def proccessEspData(self,receiveData):
-        
         length = 0
         data = bytearray()
         ID = receiveData[7]
@@ -174,7 +159,7 @@ class tcpModbus(modbus.Modbus):
                 if(cnt<length):
                     cnt = cnt + 1
                     if(((newESPReg[i]) == 'True') or ((newESPReg[i]) == 'False') ):
-                        value = int(self.str2bool(newESPReg[i]))
+                        value = int(newESPReg[i])
                         data += bytearray([((value>>8) & 0xff)])
                         data += bytearray([(value) & 0xff])
                     else:
@@ -225,11 +210,14 @@ class tcpModbus(modbus.Modbus):
     async def proccessEvseData(self,receiveData):
         data = bytearray()
         length = 0
+        ID = receiveData[6]
         #modbus function 0x03
         if(receiveData[7] == 3):
             reg = int((receiveData[8]<<8) | receiveData[9])
             length = int((receiveData[10]<<8) | receiveData[11])
-            data = await self.evse.readEvseRegister(reg,length)
+            print("REG: {} ID: {} length: {}".format(reg,ID,length))
+            data = await self.evse.readEvseRegister(reg,length,ID)
+            print("data",data)
             sendData = bytearray(receiveData[:8])
             sendData += bytearray([length * 2])
             if((data != "Error") and (data !="Null")):
@@ -243,7 +231,7 @@ class tcpModbus(modbus.Modbus):
             for i in range(0,numb):
                 values.append(int(receiveData[13+(2*i)] | receiveData[14+(2*i)]))
 
-            data = await self.evse.writeEvseRegister(reg,values)
+            data = await self.evse.writeEvseRegister(reg,values,ID)
             sendData = bytearray(receiveData[:8])
             if((data != "Error") and (data !="Null")):
                 sendData += data
