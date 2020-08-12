@@ -27,7 +27,6 @@ class Evse():
         current = 0
         state = ""
         status = ''
-        status = await self.__readEvse_data(1000,3,ID=1)
         setting = self.setting.getConfig()
         self.dataLayer.data['NUMBER_OF_EVSE'] = setting["in,EVSE-NUMBER"]
         for i in range(0,int(self.dataLayer.data['NUMBER_OF_EVSE'])):
