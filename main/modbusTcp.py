@@ -43,10 +43,10 @@ class Server:
         print('Got connection from client', cid)
         try:
             while True:
-                res = await sreader.read(12)
+                res = await sreader.read(6)
                 try:
                     length = int((res[4]<<8) | res[5])
-                    #res += await sreader.read(length)
+                    res += await sreader.read(length)
                 except Exception as e: 
                     print(e)
                 if res == b'':
