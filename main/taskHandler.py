@@ -14,15 +14,15 @@ from main import modbusTcp
 
 class TaskHandler:
     def __init__(self,wifi):
-        self.wattmeter = wattmeter.Wattmeter(lock = Lock(delay_ms = 50), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
-        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = Lock(delay_ms = 50))
+        self.wattmeter = wattmeter.Wattmeter(lock = Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
+        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = Lock())
         self.webServerApp = webServerApp.WebServerApp(wifi,self.wattmeter, self.evse) #Create instance of Webserver App
         self.wifiManager = wifi #Get insatnce of wifimanager from boots
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
         self.ledWifi = Pin(22, Pin.OUT) # set pin high on creation
         self.ledErr  = Pin(21, Pin.OUT) # set pin high on creation
         self.rel= Pin(25, Pin.OUT)
-        self.uModBusTCP = modbusTcp.Server()
+        self.uModBusTCP = modbusTcp.Server(lock = Lock())
         self.settingAfterNewConnection = False
         self.wdt = WDT(timeout=60000)
         self.setting = __config__.Config()
@@ -130,11 +130,12 @@ class TaskHandler:
             try:
                 status = await self.evse.evseHandler()
             except Exception as e:
+                #pass
                 print("EVSE error: ",e)
                 #self.log.write("{} -> {}".format(type(self.evse),e))
 
             await asyncio.sleep(delay_secs)
-            
+             
     async def modbusTcpHandler(self,delay_secs):
         while True:
             await self.uModBusTCP.run()

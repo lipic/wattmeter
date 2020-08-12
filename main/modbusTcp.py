@@ -10,8 +10,9 @@ import uasyncio as asyncio
 
 class Server:
     
-    def __init__(self):
+    def __init__(self,lock):
         self.tcpModbus = tcpModbus()
+        self.lock = lock
 
     async def run(self, loop, port=8123):
         addr = socket.getaddrinfo('', port, 0, socket.SOCK_STREAM)[0][-1]
@@ -31,7 +32,7 @@ class Server:
                 c_sock, addr = s_sock.accept()  # get client socket
                 loop.create_task(self.run_client(c_sock, client_id))
                 client_id += 1
-            await asyncio.sleep_ms(200)
+            await asyncio.sleep_ms(100)
 
     async def run_client(self, sock, cid):
 
@@ -42,24 +43,24 @@ class Server:
         print('Got connection from client', cid)
         try:
             while True:
-
-                res = await sreader.read(6)
+                res = await sreader.read(12)
                 try:
                     length = int((res[4]<<8) | res[5])
-                    res += await sreader.read(length)
-                except Exception as e:
+                    #res += await sreader.read(length)
+                except Exception as e: 
                     print(e)
                 if res == b'':
                     raise OSError
                 #proccess modbus msg
                 try:
                     print("Received Data: ",res)
+                    await self.lock.acquire()
                     result = await self.tcpModbus.modbusCheckProccess(res)
                     print("Sended Data: ",result)
-                    await swriter.awrite(result)  # Echo back
-                    #await asyncio.sleep_ms(100)
-            
+                    await swriter.awrite(result) 
+                    self.lock.release()
                 except Exception as e:
+                    self.lock.release()
                     print(e)
 
         except OSError:
@@ -79,9 +80,13 @@ class tcpModbus():
         self.config = __config__.Config()
             
     async def modbusCheckProccess(self, receiveData):
-
+        a = (receiveData[0]<<8)|receiveData[1]
+        b = (receiveData[2]<<8)|receiveData[3]
+        c = (receiveData[4]<<8)|receiveData[5]
         ID = receiveData[6]
         FCE = receiveData[7]
+        
+        print("Transaction Identifier: {}, Protocol Identifier: {}, Message Length: {}, ID: {}, Function: {}".format(a,b,c,ID,FCE))
 
         if(len(receiveData) < 12):
             raise Exception("Error: data miss")
@@ -132,10 +137,10 @@ class tcpModbus():
     async def proccessEspData(self,receiveData):
         length = 0
         data = bytearray()
-        ID = receiveData[7]
+        FCE = receiveData[7]
     
         #modbus function 0x03
-        if(ID == 3):
+        if(FCE == 3):
             reg = int((receiveData[8]<<8) | receiveData[9])
             length = int((receiveData[10]<<8) | receiveData[11])
             sendData = bytearray(receiveData[:8])
@@ -143,7 +148,7 @@ class tcpModbus():
             espData = self.config.getConfig()
             ESP_REGISTER_LEN =  len(espData)
             START_REGISTER = 1000
-            
+        
             if(reg> (ESP_REGISTER_LEN + START_REGISTER)):
                 raise Exception("Error, bad number of reading register")
             if((reg+length)>(ESP_REGISTER_LEN + START_REGISTER)):
@@ -169,9 +174,8 @@ class tcpModbus():
                 else:
                     break
             sendData += data
-            print(sendData)
                     
-        if(ID == 16):
+        if(FCE == 16):
             reg = int((receiveData[8]<<8) | receiveData[9])
             length = int((receiveData[10]<<8) | receiveData[11])
             
@@ -215,9 +219,7 @@ class tcpModbus():
         if(receiveData[7] == 3):
             reg = int((receiveData[8]<<8) | receiveData[9])
             length = int((receiveData[10]<<8) | receiveData[11])
-            print("REG: {} ID: {} length: {}".format(reg,ID,length))
             data = await self.evse.readEvseRegister(reg,length,ID)
-            print("data",data)
             sendData = bytearray(receiveData[:8])
             sendData += bytearray([length * 2])
             if((data != "Error") and (data !="Null")):

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <div class="container-sm mt-3">
     <div class="container-fluid text-white pt-2 text-center">
-        <h4>WATTMETER:  <span id="ID"> </span> <span class="dot" id="refresh"></span> </h4>
+        <h4>WATTMETER:  <span id="ID"> </span> <span class="dot"></span> </h4>
     </div>
     <table class="table  table-dark text-center">
         <thead>
@@ -30,12 +30,6 @@
                 <td><span id="P1">-,-</span></td>
                 <td><span id="P2">-,-</span></td>
                 <td><span id="P3">-,-</span></td>
-            </tr>
-            <tr>
-                <td>Powers [kVA]</td>
-                <td><span id="S1">-,-</span></td>
-                <td><span id="S2">-,-</span></td>
-                <td><span id="S3">-,-</span></td>
             </tr>
             <tr>
                 <td>Power factor [-]</td>
@@ -101,31 +95,8 @@
         </tbody>  
     </table>  
 
-    <div class="container-fluid text-white pt-2 text-center">
-        <h4>EVSE </h5>
+    <div id="evseContainer">
     </div>
-<table class="table  table-dark rounded" >
-    <thead>
-        <tr style="background-color: #282828;">
-            <th>Name</th>
-            <th colspan="2">Status/Value</th>
-        </tr>
-    </thead>   
-    <tbody> 
-        <tr>
-            <td>Actual configured amps value :</td>
-            <td><span id="ACTUAL_CONFIG_CURRENT">0</span></td>
-        </tr>
-        <tr>
-            <td>Actual amps value output:</td>
-            <td><span id="ACTUAL_OUTPUT_CURRENT">0</span></td>
-        </tr>
-        <tr>
-            <td>Vehicle state:</td>
-            <td><span id="EV_STATE">0</span></td>
-        </tr>
-    </tbody>  
-</table>
         <canvas id="powerGraph" height ="300px" style="max-height: 400px;">
             <p>Your browser does not support the canvas element.</p>
         </canvas>

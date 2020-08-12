@@ -14,6 +14,7 @@ class Config:
         self.config['sl,BREAKER']='6'                            #Reg 1004 
         self.config['sl,EVSE']='6'                                    #Reg 1005
         self.config['sl,TIME-ZONE']='2'                          #Reg 1005
+        self.config['in,EVSE-NUMBER']='0'                          #Reg 1005
         self.config['sw,ENABLE BALANCING']='0'     #Reg 1006
         self.config['sw,WHEN HDO: RELAY ON']='0'    #Reg 1006
         self.config['ID'] = '0'

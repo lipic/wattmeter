@@ -21,7 +21,6 @@ class Evse():
         self.__regulationDelay = 0
         self.__cntCurrent = 0
         self.__requestCurrent = 0
-                
     
     async def evseHandler(self):
         #first read data from evse
@@ -30,19 +29,20 @@ class Evse():
         status = ''
         status = await self.__readEvse_data(1000,3,ID=1)
         setting = self.setting.getConfig()
-        if((status == 'SUCCESS_READ') == True):
-            #If get max current accordig to wattmeter
-            if(setting["sw,ENABLE CHARGING"] == '1'):
-                if (setting["sw,ENABLE BALANCING"] == '1'):
-                    current = self.balancEvseCurrent()
-                    print("Setting current: ",current)
-                    state = await self.writeEvseRegister(1000,[current],1)
-                else:
-                    current = int(setting["sl,EVSE"])
-                    state = await self.writeEvseRegister(1000,[current],1)
-                    
-            else: 
-                state = await self.writeEvseRegister(1000,[0],1)
+        self.dataLayer.data['NUMBER_OF_EVSE'] = setting["in,EVSE-NUMBER"]
+        for i in range(0,int(self.dataLayer.data['NUMBER_OF_EVSE'])):
+            status = await self.__readEvse_data(1000,3,ID=(i+1))
+            if((status == 'SUCCESS_READ') == True):
+                #If get max current accordig to wattmeter
+                if(setting["sw,ENABLE CHARGING"] == '1'):
+                    if (setting["sw,ENABLE BALANCING"] == '1'):
+                        current = self.balancEvseCurrent()
+                        state = await self.writeEvseRegister(1000,[current],i+1)
+                    else:
+                        current = int(setting["sl,EVSE"])
+                        state = await self.writeEvseRegister(1000,[current],i+1)    
+                else: 
+                    state = await self.writeEvseRegister(1000,[0],i+1)
                 
         return "Read: {}; Write: {}".format(status,state)
         
@@ -95,9 +95,15 @@ class Evse():
         receiveData = await self.readEvseRegister(reg,length,ID)
         try:
             if (reg == 1000 and (receiveData != "Null") and (receiveData)):
-                self.dataLayer.data["ACTUAL_CONFIG_CURRENT"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
-                self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"] =     (int)((((receiveData[2])) << 8)  | ((receiveData[3])))
-                self.dataLayer.data["EV_STATE"] =     (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
+                if(len(self.dataLayer.data["ACTUAL_CONFIG_CURRENT"])<ID):
+                    self.dataLayer.data["ACTUAL_CONFIG_CURRENT"].append((int)((((receiveData[0])) << 8)  | ((receiveData[1]))))
+                    self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"].append((int)((((receiveData[2])) << 8)  | ((receiveData[3]))))
+                    self.dataLayer.data["EV_STATE"].append((int)((((receiveData[4])) << 8)  | ((receiveData[5]))))
+                else:
+                    self.dataLayer.data["ACTUAL_CONFIG_CURRENT"][ID-1] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
+                    self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"][ID-1] =     (int)((((receiveData[2])) << 8)  | ((receiveData[3])))
+                    self.dataLayer.data["EV_STATE"][ID-1] =     (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
+                
                 return 'SUCCESS_READ'
                         
             else: 
@@ -188,10 +194,12 @@ class Evse():
             self.__requestCurrent = int(self.setting.config["sl,EVSE"])
         
         return  self.__requestCurrent
-    
+
+        
 class DataLayer:
     def __init__(self):
         self.data = {}
-        self.data["ACTUAL_CONFIG_CURRENT"] = 0
-        self.data["ACTUAL_OUTPUT_CURRENT"] = 0
-        self.data["EV_STATE"] = 0
+        self.data["ACTUAL_CONFIG_CURRENT"] = []
+        self.data["ACTUAL_OUTPUT_CURRENT"] = []
+        self.data["EV_STATE"] = []
+        self.data["NUMBER_OF_EVSE"] = 0
