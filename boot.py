@@ -1,5 +1,6 @@
 #version 1.0
-from main import wifiManager
+
+import wifiManager
 from machine import Pin
  
 def download_and_install_update_if_available():
@@ -45,7 +46,7 @@ def boot():
         print("Error {0}".format(e))
     print("Setting main application")
     from main import taskHandler
-    handler = taskHandler.TaskHandler(wifiManager = wifiClient,logging = True)
+    handler = taskHandler.TaskHandler(wifiClient)
     print("Starting main application")
     
     Pin(21, Pin.OUT).off() # set pin high on creation
