@@ -1,28 +1,32 @@
-import uasyncio as asyncio  
+import uasyncio as asyncio
+import wattmeterComInterface
+import evseComInterface
 from ntptime import settime
 from asyn import Lock,NamedTask
 from gc import mem_free, collect
 from machine import Pin, WDT, RTC
 from main import webServerApp
-import wifiManager
+import wifiManager 
 from main import wattmeter
 from main import evse
-from main import __config__
+from main import __config__ 
 from main import modbusTcp
 
                     
 
 class TaskHandler:
     def __init__(self,wifi):
-        self.wattmeter = wattmeter.Wattmeter(lock = Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27) #Create instance of Wattmeter
-        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = Lock())
+        wattInterface = wattmeterComInterface.Interface(9600,lock = Lock())
+        evseInterface = evseComInterface.Interface(9600,lock = Lock())
+        self.wattmeter = wattmeter.Wattmeter(wattInterface) #Create instance of Wattmeter
+        self.evse = evse.Evse(self.wattmeter,evseInterface)
         self.webServerApp = webServerApp.WebServerApp(wifi,self.wattmeter, self.evse) #Create instance of Webserver App
         self.wifiManager = wifi #Get insatnce of wifimanager from boots
         self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
         self.ledWifi = Pin(22, Pin.OUT) # set pin high on creation
         self.ledErr  = Pin(21, Pin.OUT) # set pin high on creation
         self.rel= Pin(25, Pin.OUT)
-        self.uModBusTCP = modbusTcp.Server(lock = Lock())
+        self.uModBusTCP = modbusTcp.Server(wattInterface,evseInterface)
         self.settingAfterNewConnection = False
         self.wdt = WDT(timeout=60000)
         self.setting = __config__.Config()
@@ -56,7 +60,7 @@ class TaskHandler:
             before = mem_free()
             collect()
             after = mem_free()
-            #print("Memory beofre: {} & after: {}".format(before,after))
+            print("Memory beofre: {} & after: {}".format(before,after))
             await asyncio.sleep(delay_secs)
                     
     #Handler for wifi.    

@@ -49,7 +49,7 @@ class Config:
                 self.write_setting(setting)
         
         if(self.config['ID'] == '0'):
-            self.config['ID'] = random.randrange(10000, 65000)
+            self.config['ID'] = random.randrange(100, 999)*random.randrange(0, 90)+10000
             self.handle_configure('ID', self.config['ID'])
             
         return self.config

@@ -1,4 +1,3 @@
-import modbus
 import time
 import uasyncio as asyncio
 from machine import Pin,UART
@@ -6,11 +5,9 @@ from main import __config__
 
 class Wattmeter:
      
-    def __init__(self,lock ,ID, timeout, baudrate , rxPin, txPin):
-        self.lock = lock
+    def __init__(self,wattmeter):
         self.relay  = Pin(25, Pin.OUT)
-        self.uart = UART(ID, baudrate=baudrate, rx=rxPin, tx=txPin)
-        self.modbusClient = modbus.Modbus()
+        self.wattmeterInterface = wattmeter
         self.dataLayer = DataLayer()
         self.fileHandler = fileHandler()
         self.MONTHLY_CONSUMPTION = 'monthly_consumption.dat'
@@ -62,11 +59,11 @@ class Wattmeter:
                 self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]*6)#self.dataLayer.data["P1"])
             
             self.dataLayer.data["P_minuten"][0] = len(self.dataLayer.data["P_minuten"])
-            status = await self.writeWattmeterRegister(100,[1])
+            status = await self.wattmeterInterface.writeWattmeterRegister(100,[1])
             self.lastMinute = int(time.localtime()[4]) 
             
         if(self.lastHour is not int(time.localtime()[3])):
-            status = await self.writeWattmeterRegister(101,[1])
+            status = await self.wattmeterInterface.writeWattmeterRegister(101,[1])
             self.lastHour = int(time.localtime()[3])
             if(len(self.dataLayer.data["E_hour"])<73):
                 self.dataLayer.data["E_hour"].append(self.lastHour)
@@ -92,57 +89,18 @@ class Wattmeter:
         if(self.lastDay is not int(time.localtime()[2])):
             curentYear = str(time.localtime()[0])[-2:] 
             data = {("{0:02}/{1:02}/{2}".format(time.localtime()[1],self.lastDay ,curentYear)) : [self.dataLayer.data["E_currentDay_positive"], self.dataLayer.data["E_currentDay_negative"]]}
-            status = await self.writeWattmeterRegister(102,[1])
+            status = await self.wattmeterInterface.writeWattmeterRegister(102,[1])
             self.lastDay = int(time.localtime()[2])
             self.fileHandler.handleData(self.DAILY_CONSUMPTION)
             self.fileHandler.writeData(self.DAILY_CONSUMPTION, data)
-            self.dataLayer.data["DailyEnergy"] = self.fileHandler.readData(self.DAILY_CONSUMPTION)
-
-    
-    async def writeWattmeterRegister(self,reg,data):
-        await self.lock.acquire()
-        writeRegs = self.modbusClient.write_regs(reg, data,1)
-        self.uart.write(writeRegs)
-        await asyncio.sleep_ms(50)
-        receiveData = self.uart.read()
-        self.lock.release()
-        try:
-            if (0 == self.modbusClient.mbrtu_data_processing(receiveData,1)):
-                data = bytearray()
-                data.append(receiveData[2])
-                data.append(receiveData[3])
-                return data
-            else:
-                return 'ERROR'
-        except Exception as e:
-            return "Exception: {}".format(e)
-    
-        
-    async def readWattmeterRegister(self,reg,length):
-        await self.lock.acquire()
-        readRegs = self.modbusClient.read_regs(reg, length,1)
-        self.uart.write(readRegs)
-        await asyncio.sleep_ms(50)
-        receiveData = self.uart.read()
-        self.lock.release()
-        try:
-            if (receiveData  and  (0 == self.modbusClient.mbrtu_data_processing(receiveData,1))):
-                data = bytearray()
-                for i in range(0,(length*2)):
-                    data.append(receiveData[i+3])
-                return data
-            else:
-                return "Null"
-        except Exception as e:
-            return "Error"
-    
+            self.dataLayer.data["DailyEnergy"] = self.fileHandler.readData(self.DAILY_CONSUMPTION) 
     
     async def __readWattmeter_data(self,reg,length):
 
-        receiveData = await self.readWattmeterRegister(reg,length)
+        receiveData = await self.wattmeterInterface.readWattmeterRegister(reg,length)
        
         try:
-            if ((receiveData != "Null" and receiveData != "Error") and (reg == 1000)):
+            if ((receiveData != "Null") and (reg == 1000)):
                 self.dataLayer.data["I1"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
                 self.dataLayer.data["I2"] =     (int)((((receiveData[2])) << 8)  | ((receiveData[3])))
                 self.dataLayer.data["I3"] =     (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
@@ -158,30 +116,30 @@ class Wattmeter:
      
                 return "SUCCESS_READ"
                 
-            if ((receiveData != "Null" and receiveData != "Error") and (reg == 200)):
+            if ((receiveData != "Null") and (reg == 200)):
                 self.dataLayer.data["HDO"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
                 
                 return "SUCCESS_READ"
             
-            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 1015)):
+            elif ((receiveData != "Null") and (reg == 1015)):
                 
                 self.dataLayer.data["PF1"] = (int)((((receiveData[0])) << 8)  | ((receiveData[1])))
                 self.dataLayer.data["PF2"] = (int)((((receiveData[2])) << 8)  | ((receiveData[3])))
                 self.dataLayer.data["PF3"] = (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
                 return "SUCCESS_READ"
             
-            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 2502)):
+            elif ((receiveData != "Null") and (reg == 2502)):
                 
                 self.dataLayer.data["Emin_Positive"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1]))) + (int)((((receiveData[2])) << 8)  | ((receiveData[3]))) + (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
                 return "SUCCESS_READ"
              
-            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 2802)):
+            elif ((receiveData != "Null") and (reg == 2802)):
                 
                 self.dataLayer.data["Ehour_Positive"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1]))) + (int)((((receiveData[2])) << 8)  | ((receiveData[3]))) + (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
                 self.dataLayer.data["Ehour_Negative"] =     (int)((((receiveData[6])) << 8)  | ((receiveData[7]))) + (int)((((receiveData[8])) << 8)  | ((receiveData[9]))) + (int)((((receiveData[10])) << 8)  | ((receiveData[11])))
                 return "SUCCESS_READ"
 
-            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 3102)):
+            elif ((receiveData != "Null") and (reg == 3102)):
                 
                 self.dataLayer.data["E_currentDay_positive"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1]))) + (int)((((receiveData[2])) << 8)  | ((receiveData[3]))) + (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
                 self.dataLayer.data["E_currentDay_negative"] =     (int)((((receiveData[6])) << 8)  | ((receiveData[7]))) + (int)((((receiveData[8])) << 8)  | ((receiveData[9]))) + (int)((((receiveData[10])) << 8)  | ((receiveData[11])))
@@ -193,7 +151,7 @@ class Wattmeter:
                 self.dataLayer.data["PN3_peak"] =     (int)((((receiveData[22])) << 8)  | ((receiveData[23])))
                 return "SUCCESS_READ"
                     
-            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 4000)):
+            elif ((receiveData != "Null") and (reg == 4000)):
                 
                 self.dataLayer.data["E1_total_positive"] =      (int)((receiveData[2] << 24) |  (receiveData[3] << 16) |  (receiveData[0] << 8)  | receiveData[1] )
                 self.dataLayer.data["E2_total_positive"] =      (int)((receiveData[6] << 24) |  (receiveData[7] << 16) |  (receiveData[4] << 8)  | receiveData[5] )
@@ -204,7 +162,7 @@ class Wattmeter:
 
                 return "SUCCESS_READ"
             
-            elif ((receiveData != "Null" and receiveData != "Error") and (reg == 2902)):
+            elif ((receiveData != "Null") and (reg == 2902)):
                 
                 self.dataLayer.data["E_previousDay_positive"] =     (int)((((receiveData[0])) << 8)  | ((receiveData[1]))) + (int)((((receiveData[2])) << 8)  | ((receiveData[3]))) + (int)((((receiveData[4])) << 8)  | ((receiveData[5])))
                 self.dataLayer.data["E_previousDay_negative"] =     (int)((((receiveData[6])) << 8)  | ((receiveData[7]))) + (int)((((receiveData[8])) << 8)  | ((receiveData[9]))) + (int)((((receiveData[10])) << 8)  | ((receiveData[11])))
@@ -282,7 +240,7 @@ class DataLayer:
         self.data['RUN_TIME'] = 0
         self.data['WATTMETER_TIME'] = 0
         self.data['ID'] = 0
-        
+         
 class fileHandler:
             
     def handleData(self,file):

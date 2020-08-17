@@ -1,24 +1,22 @@
-import struct
 import socket
 import uselect as select
-import modbus
-from main import wattmeter
 from main import __config__
-from main import evse
-import asyn
+import  evseComInterface
+import  wattmeterComInterface
+import asyn 
 import uasyncio as asyncio
-
+ 
 class Server:
     
-    def __init__(self,lock):
-        self.tcpModbus = tcpModbus()
-        self.lock = lock
+    def __init__(self,wattmeterInterface,evseInterface):
+        self.tcpModbus = tcpModbus(wattmeterInterface,evseInterface)
 
     async def run(self, loop, port=8123):
         addr = socket.getaddrinfo('', port, 0, socket.SOCK_STREAM)[0][-1]
-        print(addr)
-        s_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # server socket
-        s_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        print("Tcp Modbus client listen on port:{} and addr: {}".format(port,addr))
+        s_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM,socket.IPPROTO_TCP)  # server socket
+        s_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 10)
+        #s_sock.setsockopt(level=socket.IPPROTO_TCP, value=400)
         s_sock.bind(addr) 
         s_sock.listen(5)
         self.socks = [s_sock]  # List of current sockets for .close()
@@ -32,7 +30,7 @@ class Server:
                 c_sock, addr = s_sock.accept()  # get client socket
                 loop.create_task(self.run_client(c_sock, client_id))
                 client_id += 1
-            await asyncio.sleep_ms(100)
+            await asyncio.sleep_ms(20)
 
     async def run_client(self, sock, cid):
 
@@ -54,14 +52,11 @@ class Server:
                 #proccess modbus msg
                 try:
                     print("Received Data: ",res)
-                    await self.lock.acquire()
                     result = await self.tcpModbus.modbusCheckProccess(res)
                     print("Sended Data: ",result)
-                    await swriter.awrite(result) 
-                    self.lock.release()
+                    await swriter.awrite(result)
                 except Exception as e:
-                    self.lock.release()
-                    print(e)
+                    print("run_client exception: {}".format(e))
 
         except OSError:
             pass
@@ -69,86 +64,73 @@ class Server:
         sock.close()
         self.socks.remove(sock)
 
-
-
-
 class tcpModbus():
     
-    def __init__(self):
-        self.wattmeter = wattmeter.Wattmeter(lock = asyn.Lock(), ID=1,timeout=50,baudrate =9600,rxPin=26,txPin=27)
-        self.evse = evse.Evse(baudrate = 9600, wattmeter = self.wattmeter, lock = asyn.Lock())
+    def __init__(self,wattmeterInterface,evseInterface):
+        self.wattmeter = wattmeterInterface
+        self.evse = evseInterface
         self.config = __config__.Config()
             
     async def modbusCheckProccess(self, receiveData):
-        a = (receiveData[0]<<8)|receiveData[1]
-        b = (receiveData[2]<<8)|receiveData[3]
-        c = (receiveData[4]<<8)|receiveData[5]
-        ID = receiveData[6]
-        FCE = receiveData[7]
-        
-        print("Transaction Identifier: {}, Protocol Identifier: {}, Message Length: {}, ID: {}, Function: {}".format(a,b,c,ID,FCE))
-
         if(len(receiveData) < 12):
             raise Exception("Error: data miss")
+        try:
+            ID = receiveData[6]
+            FCE = receiveData[7]
+            LEN = int((receiveData[10]<<8) | receiveData[11])
+            REG = int((receiveData[8]<<8) | receiveData[9])
         
-        if((FCE != 3) and (FCE != 16)):
-            raise Exception("Error: bad function")
-        
-        if((ID > 0) and (ID<100)):
-            return await self.proccessEvseData(receiveData)    
-        
-        if(ID == 100):
-            return await self.proccessWattmeterData(receiveData)
-        
-        if(ID == 101):
-            return await self.proccessEspData(receiveData)    
+            if((FCE != 3) and (FCE != 16)):
+                raise Exception("Error: Unsuported MODBUS function")
             
-    async def proccessWattmeterData(self,receiveData):
-        data = bytearray()
-        length = 0
-        #modbus function 0x03
-        if(receiveData[7] == 3):
-            reg = int((receiveData[8]<<8) | receiveData[9])
-            length = int((receiveData[10]<<8) | receiveData[11])
-            data = await self.wattmeter.readWattmeterRegister(reg,length)
+            UD = bytearray()
+            if((ID > 0) and (ID<100)):
+                UD = await self.proccessEvseData(FCE,LEN,REG,ID)    
+        
+            if(ID == 100):
+                UD = await self.proccessWattmeterData(FCE,LEN,REG)
+        
+            if(ID == 101):
+                UD = await self.proccessEspData(FCE,LEN,REG)    
+    
             sendData = bytearray(receiveData[:8])
-            sendData += bytearray([length * 2])
-            if((data != "Error") and (data !="Null")):
-                sendData += data
-            
+            sendData[4]=0
+            if(FCE == 3):
+                sendData[5]=(LEN*2)+3
+                sendData += bytearray([LEN * 2])
+                if(UD!="Null"):
+                    sendData+= UD
+                else:
+                    sendData[5] = 0
+            elif(FCE == 16):
+                sendData[5]==6
+                if(UD!="Null"):
+                    sendData+= UD
+                else:
+                    sendData[5] = 0
+                sendData += bytearray([0])
+                sendData += bytearray([LEN])
+            return sendData
+        except Exception as e:
+            return b''
+    async def proccessWattmeterData(self,fce,length,reg,ID=1):
+        #modbus function 0x03
+        if(fce == 3):
+            return await self.wattmeter.readWattmeterRegister(reg,length)
         
-        if(receiveData[7] == 16):
-            reg = int((receiveData[8]<<8) | receiveData[9])
-            numb = int((receiveData[10]<<8) | receiveData[11])
+        if(fce == 16):
             values = []
-            
-            for i in range(0,numb):
+            for i in range(0,length):
                 values.append(int(receiveData[13+(2*i)] | receiveData[14+(2*i)]))
-                
-            data = await self.wattmeter.writeWattmeterRegister(reg,values)
-            sendData = bytearray(receiveData[:8])
-            if((data != "Error") and (data !="Null")):
-                sendData += data
-            sendData += bytearray([0])
-            sendData += bytearray([numb])
+            return await self.wattmeter.writeWattmeterRegister(reg,values)
 
-        return sendData
     
-    async def proccessEspData(self,receiveData):
-        length = 0
-        data = bytearray()
-        FCE = receiveData[7]
-    
+    async def proccessEspData(self,fce,length,reg,ID=1):
+        espData = self.config.getConfig()
+        ESP_REGISTER_LEN =  len(espData)
+        START_REGISTER = 1000
         #modbus function 0x03
-        if(FCE == 3):
-            reg = int((receiveData[8]<<8) | receiveData[9])
-            length = int((receiveData[10]<<8) | receiveData[11])
-            sendData = bytearray(receiveData[:8])
-            sendData += bytearray([length * 2])
-            espData = self.config.getConfig()
-            ESP_REGISTER_LEN =  len(espData)
-            START_REGISTER = 1000
-        
+        if(fce == 3):
             if(reg> (ESP_REGISTER_LEN + START_REGISTER)):
                 raise Exception("Error, bad number of reading register")
             if((reg+length)>(ESP_REGISTER_LEN + START_REGISTER)):
@@ -173,15 +155,9 @@ class tcpModbus():
                         data += bytearray([(hodnota) & 0xff])
                 else:
                     break
-            sendData += data
+            return data
                     
-        if(FCE == 16):
-            reg = int((receiveData[8]<<8) | receiveData[9])
-            length = int((receiveData[10]<<8) | receiveData[11])
-            
-            espData = self.config.getConfig()
-            ESP_REGISTER_LEN =  len(espData)
-            START_REGISTER = 1000
+        if(fce == 16):
             if(reg> (ESP_REGISTER_LEN + START_REGISTER)):
                 raise Exception("Error, bad number of reading register")
             if((reg+length)>(ESP_REGISTER_LEN + START_REGISTER)):
@@ -204,40 +180,16 @@ class tcpModbus():
                     cnt = cnt + 1
                 else:
                     break
+            return bytearray(reg)
 
-            sendData = bytearray(receiveData[:10])
-            sendData += bytearray([0])
-            sendData += bytearray([length])
+    async def proccessEvseData(self,fce,length,reg,ID=1):
 
-        return sendData
-              
-    async def proccessEvseData(self,receiveData):
-        data = bytearray()
-        length = 0
-        ID = receiveData[6]
         #modbus function 0x03
-        if(receiveData[7] == 3):
-            reg = int((receiveData[8]<<8) | receiveData[9])
-            length = int((receiveData[10]<<8) | receiveData[11])
-            data = await self.evse.readEvseRegister(reg,length,ID)
-            sendData = bytearray(receiveData[:8])
-            sendData += bytearray([length * 2])
-            if((data != "Error") and (data !="Null")):
-                sendData += data
-            
+        if(fce == 3):
+            return await self.evse.readEvseRegister(reg,length,ID)
         
-        if(receiveData[7] == 16):
-            reg = int((receiveData[8]<<8) | receiveData[9])
-            numb = int((receiveData[10]<<8) | receiveData[11])
+        if(fce == 16):
             values = []
-            for i in range(0,numb):
+            for i in range(0,length):
                 values.append(int(receiveData[13+(2*i)] | receiveData[14+(2*i)]))
-
-            data = await self.evse.writeEvseRegister(reg,values,ID)
-            sendData = bytearray(receiveData[:8])
-            if((data != "Error") and (data !="Null")):
-                sendData += data
-            sendData += bytearray([0])
-            sendData += bytearray([numb])
-
-        return sendData
+            return await self.evse.writeEvseRegister(reg,values,ID)
