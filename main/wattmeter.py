@@ -13,26 +13,26 @@ class Wattmeter:
         self.MONTHLY_CONSUMPTION = 'monthly_consumption.dat'
         self.DAILY_CONSUMPTION = 'daily_consumption.dat'
         self.timeInit = False
+        self.timeOfset = False
         self.lastMinute =  0
         self.lastHour = 0
         self.lastDay =  0
         self.test = 0
         self.startUpTime = 0
+        self.dataLayer.data['ID'] =__config__.Config().getConfig()['ID'] 
 
     async def wattmeterHandler(self):
         #Read data from wattmeter
-        if(self.timeInit == False):
+        if((self.timeOfset == False)and (self.timeInit == True)):
             self.startUpTime = time.time()
             self.lastMinute =  int(time.localtime()[4])
             self.lastDay =  int(time.localtime()[2])
             self.dataLayer.data['DailyEnergy'] = self.fileHandler.readData(self.DAILY_CONSUMPTION)
-            config = __config__.Config()
-            self.dataLayer.data['ID'] =config.getConfig()['ID'] 
-            self.timeInit = True
-        
+            self.timeOfset = True
+            
         self.dataLayer.data['RUN_TIME'] = time.time() - self.startUpTime
         curentYear = str(time.localtime()[0])[-2:] 
-        self.dataLayer.data['WATTMETER_TIME'] = self.dataLayer.data['WATTMETER_TIME'] = ("{0:02}.{1:02}.{2}  {3:02}:{4:02}:{5:02}".format(time.localtime()[2],time.localtime()[1],curentYear,time.localtime()[3],time.localtime()[4],time.localtime()[5]))
+        self.dataLayer.data['WATTMETER_TIME'] = ("{0:02}.{1:02}.{2}  {3:02}:{4:02}:{5:02}".format(time.localtime()[2],time.localtime()[1],curentYear,time.localtime()[3],time.localtime()[4],time.localtime()[5]))
         #read U,I,P
         status = await self.__readWattmeter_data(1000,12)
         status = await self.__readWattmeter_data(2502,3)
@@ -50,7 +50,7 @@ class Wattmeter:
         
         self.controlRelay()
         #Check if time-sync puls must be send
-        if(self.lastMinute is not int(time.localtime()[4])):
+        if((self.lastMinute is not int(time.localtime()[4]))and(self.timeInit == True)):
             
             if(len(self.dataLayer.data["P_minuten"])<61):
                 self.dataLayer.data["P_minuten"].append(self.dataLayer.data["Emin_Positive"]*6)#self.dataLayer.data["P1"])
@@ -62,20 +62,21 @@ class Wattmeter:
             status = await self.wattmeterInterface.writeWattmeterRegister(100,[1])
             self.lastMinute = int(time.localtime()[4]) 
             
-        if(self.lastHour is not int(time.localtime()[3])):
-            status = await self.wattmeterInterface.writeWattmeterRegister(101,[1])
-            self.lastHour = int(time.localtime()[3])
-            if(len(self.dataLayer.data["E_hour"])<73):
-                self.dataLayer.data["E_hour"].append(self.lastHour)
-                self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Positive"])
-                self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Negative"])
-            else:
-                self.dataLayer.data["E_hour"] = self.dataLayer.data["E_hour"][3:]
-                self.dataLayer.data["E_hour"].append(self.lastHour)
-                self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Positive"])
-                self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Negative"])
+        if(self.timeInit == True):
+            if(self.lastHour is not int(time.localtime()[3])):
+                status = await self.wattmeterInterface.writeWattmeterRegister(101,[1])
+                self.lastHour = int(time.localtime()[3])
+                if(len(self.dataLayer.data["E_hour"])<73):
+                    self.dataLayer.data["E_hour"].append(self.lastHour)
+                    self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Positive"])
+                    self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Negative"])
+                else:
+                    self.dataLayer.data["E_hour"] = self.dataLayer.data["E_hour"][3:]
+                    self.dataLayer.data["E_hour"].append(self.lastHour)
+                    self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Positive"])
+                    self.dataLayer.data["E_hour"].append(self.dataLayer.data["Ehour_Negative"])
             
-            self.dataLayer.data["E_hour"][0] = len(self.dataLayer.data["E_hour"])
+                self.dataLayer.data["E_hour"][0] = len(self.dataLayer.data["E_hour"])
             
         else:  
             if(len(self.dataLayer.data["E_hour"])<73):
@@ -86,7 +87,7 @@ class Wattmeter:
                 self.dataLayer.data["E_hour"][72]= self.dataLayer.data["Ehour_Negative"]
         
             
-        if(self.lastDay is not int(time.localtime()[2])):
+        if((self.lastDay is not int(time.localtime()[2]))and(self.timeInit == True)):
             curentYear = str(time.localtime()[0])[-2:] 
             data = {("{0:02}/{1:02}/{2}".format(time.localtime()[1],self.lastDay ,curentYear)) : [self.dataLayer.data["E_currentDay_positive"], self.dataLayer.data["E_currentDay_negative"]]}
             status = await self.wattmeterInterface.writeWattmeterRegister(102,[1])

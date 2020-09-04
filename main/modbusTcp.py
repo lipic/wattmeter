@@ -16,7 +16,6 @@ class Server:
         print("Tcp Modbus client listen on port:{} and addr: {}".format(port,addr))
         s_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM,socket.IPPROTO_TCP)  # server socket
         s_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 10)
-        #s_sock.setsockopt(level=socket.IPPROTO_TCP, value=400)
         s_sock.bind(addr) 
         s_sock.listen(5)
         self.socks = [s_sock]  # List of current sockets for .close()
@@ -92,7 +91,7 @@ class tcpModbus():
         
             if(ID == 101):
                 UD = await self.proccessEspData(FCE,LEN,REG)    
-    
+            
             sendData = bytearray(receiveData[:8])
             sendData[4]=0
             if(FCE == 3):
@@ -112,6 +111,7 @@ class tcpModbus():
                 sendData += bytearray([LEN])
             return sendData
         except Exception as e:
+            print("ModbusTCp ",e)
             return b''
     async def proccessWattmeterData(self,fce,length,reg,ID=1):
         #modbus function 0x03
@@ -142,6 +142,7 @@ class tcpModbus():
                 START_REGISTER = START_REGISTER + 1
                 
             cnt = 0
+            data = bytearray()
             for i in range(reg,(reg+length)):
                 if(cnt<length):
                     cnt = cnt + 1

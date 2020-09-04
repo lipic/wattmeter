@@ -1,7 +1,7 @@
 #version 1.0
 
 import wifiManager
-from machine import Pin
+from machine import Pin,freq
  
 def download_and_install_update_if_available():
     import bootloader
@@ -39,9 +39,9 @@ def boot():
                 download_and_install_update_if_available()
             Pin(23, Pin.OUT).off() # set pin high on creation
             Pin(22, Pin.OUT).off() # set pin high on creation
-        else:
+        else: 
             print("Can not check updates, because you are not connected to the Internet")
-    
+      
     except Exception as e:
         print("Error {0}".format(e))
     print("Setting main application")
@@ -53,6 +53,8 @@ def boot():
     handler.mainTaskHandlerRun()
 
 if __name__ == "__main__":
+    freq(240000000)
+    print("Machine freq: {} Mhz".format(freq()/1000000))
     boot()
  
  

@@ -39,7 +39,7 @@ class Evse():
                     else: 
                         state = await self.evseInterface.writeEvseRegister(1000,[0],i+1)
             except Exception as e:
-                print("evseHandler error: {}".format(e))
+                raise Exception("evseHandler error: {}".format(e))
         return "Read: {}; Write: {}".format(status,state)
           
         
@@ -62,7 +62,7 @@ class Evse():
                 return "Timed out waiting for result."
                  
         except Exception as e:
-            return "Exception: {} ".format(e)
+            raise Exception("__readEvse_data error: {}".format(e))
 
     def balancEvseCurrent(self,ID):
         I1_P = 0
