@@ -17,6 +17,7 @@ class Config:
         self.config['in,EVSE-NUMBER']='0'                          #Reg 1005
         self.config['sw,ENABLE BALANCING']='0'     #Reg 1006
         self.config['sw,WHEN HDO: RELAY ON']='0'    #Reg 1006
+        self.config['sw,TESTING SOFTWARE']='0'    #Reg 1006
         self.config['ID'] = '0'
         self.SETTING_PROFILES = 'setting.dat'
         self.handle_configure('txt,ACTUAL SW VERSION',self.boot.get_version(""))

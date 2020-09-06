@@ -2,10 +2,17 @@
 
 import wifiManager
 from machine import Pin,freq
- 
-def download_and_install_update_if_available():
+from main import __config__
+
+def download_and_install_update_if_available(tst):
     import bootloader
-    boot = bootloader.Bootloader('https://github.com/lipic/wattmeter',"")
+    boot = None
+    currentVersion = ''
+    if(tst==0):
+        boot = bootloader.Bootloader('https://github.com/lipic/wattmeter',"")
+    else:
+        boot = bootloader.Bootloader('https://github.com/lipic/wattmeter_tst',"",tst=True)
+        
     currentVersion = boot.get_version("")
     githubVersion = boot.get_latest_version()
     print("Current version is {}".format(currentVersion))
@@ -24,7 +31,6 @@ def boot():
     Pin(22, Pin.OUT).off() # set pin high on creation
     Pin(21, Pin.OUT).on()  # set pin high on creation
 
-    from main import __config__
     config = __config__.Config()
     config = config.getConfig()
     wifiClient = wifiManager.WifiManager("Wattmeter-{}".format(config['ID']),"watt{}".format(config['ID']))
@@ -36,19 +42,17 @@ def boot():
             Pin(22, Pin.OUT).on() # set pin high on creation
             if(config['sw,AUTOMATIC UPDATE'] == '1'):
                 print("Try check for updates")
-                download_and_install_update_if_available()
+                download_and_install_update_if_available(int(config['sw,TESTING SOFTWARE']))
             Pin(23, Pin.OUT).off() # set pin high on creation
             Pin(22, Pin.OUT).off() # set pin high on creation
-        else: 
+        else:
             print("Can not check updates, because you are not connected to the Internet")
-      
+    
     except Exception as e:
         print("Error {0}".format(e))
-    print("Setting main application")
     from main import taskHandler
     handler = taskHandler.TaskHandler(wifiClient)
     print("Starting main application")
-    
     Pin(21, Pin.OUT).off() # set pin high on creation
     handler.mainTaskHandlerRun()
 

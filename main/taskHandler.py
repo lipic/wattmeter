@@ -4,16 +4,20 @@ import evseComInterface
 from ntptime import settime
 from asyn import Lock,NamedTask
 from gc import mem_free, collect
-from machine import WDT, RTC
+from machine import Pin,WDT, RTC
 from main import webServerApp
 import wifiManager 
 from main import wattmeter
 from main import evse
 from main import __config__ 
 from main import modbusTcp
-from main import gpioHandler
+from main import errorHandler
 
-                    
+EVSE_ERR = 1
+WATTMETER_ERR = 2
+WEBSERVER_CANCELATION_ERR = 4
+WIFI_HANDLER_ERR = 8
+TIME_SYNC_ERR = 16
 
 class TaskHandler:
     def __init__(self,wifi):
@@ -22,19 +26,17 @@ class TaskHandler:
         self.wattmeter = wattmeter.Wattmeter(wattInterface) #Create instance of Wattmeter
         self.evse = evse.Evse(self.wattmeter,evseInterface)
         self.webServerApp = webServerApp.WebServerApp(wifi,self.wattmeter, self.evse) #Create instance of Webserver App
-        self.ledAPI = gpioHandler.GpioHandler({'LED_RUN':{'config':{'pin':23},'action':{'Ontime':10,'Offtime':20,'timeCnt':0,'Delta':0,'DeltaCnt':0,'repeat':0,'repeatCnt':0}},
-                                                                                   'LED_ERR':{'config':{'pin':21},'action':{'Ontime':0,'Offtime':0,'timeCnt':0,'Delta':0,'DeltaCnt':0,'repeat':0,'repeatCnt':0}},
-                                                                                   'LED_WIFI':{'config':{'pin':22},'action':{'Ontime':0,'Offtime':0,'timeCnt':0,'Delta':0,'DeltaCnt':0,'repeat':0,'repeatCnt':0}}})
-        self.wifiManager = wifi #Get insatnce of wifimanager from boots
         self.uModBusTCP = modbusTcp.Server(wattInterface,evseInterface)
         self.settingAfterNewConnection = False
         self.wdt = WDT(timeout=60000)
         self.setting = __config__.Config()
-        self.Webcnt = 1
+        self.wifiManager = wifi
+        self.ledErrorHandler = errorHandler.ErrorHandler()
+        self.ledRun  = Pin(23, Pin.OUT) # set pin high on creation
+        self.ledWifi = Pin(22, Pin.OUT) # set pin high on creation
      
      #Handler for time
     async def timeHandler(self,delay_secs):
-        asyncio.set_debug(1)
         while True:
             if(self.wifiManager.isConnected() == True):
                 setting = self.setting.getConfig()
@@ -47,8 +49,10 @@ class TaskHandler:
                     (year, month, mday, hour, minute, second, weekday, yearday)=utime.localtime(tampon2)
                     rtc.datetime((year, month, mday, 0, hour, minute, second, 0))
                     self.wattmeter.timeInit = True
+                    self.ledErrorHandler.removeError(TIME_SYNC_ERR)
                 except Exception as e:
-                    print(e)          
+                    self.ledErrorHandler.addError(TIME_SYNC_ERR)
+                    print("Error during time setting: {}".format(e))        
             await asyncio.sleep(delay_secs)
             
     #Handler for time
@@ -63,7 +67,7 @@ class TaskHandler:
             before = mem_free()
             collect()
             after = mem_free()
-            print("Memory beofre: {} & after: {}".format(before,after))
+         #   print("Memory beofre: {} & after: {}".format(before,after))
             await asyncio.sleep(delay_secs)
                     
     #Handler for wifi.    
@@ -72,8 +76,8 @@ class TaskHandler:
         while True:
             try:
                 if(self.wifiManager.isConnected() == True):
+                    self.ledWifi.on()
                     if(self.settingAfterNewConnection == False):
-                        self.ledAPI.callback(task='LED_WIFI',type='action',process='Ontime',value=10)
                         self.settingAfterNewConnection = True
                         ip = self.wifiManager.getIp()
                         if((NamedTask.is_running('app2')) == False):
@@ -82,9 +86,11 @@ class TaskHandler:
                         else:
                             print("Webserver is running")
                 else:
-                    self.ledAPI.callback(task='LED_WIFI',type='action',process='Ontime',value=5)
-                    self.ledAPI.callback(task='LED_WIFI',type='action',process='Offtime',value=10)
-                        
+                    if(self.ledWifi.value()): 
+                        self.ledWifi.off()
+                    else:
+                        self.ledWifi.on()    
+                
                     if (len(self.wifiManager.read_profiles())!= 0):
                         try:
                             if(((NamedTask.is_running('app2')) == True)):
@@ -94,7 +100,9 @@ class TaskHandler:
                                     print('app2 will be cancelled when next scheduled')
                                 else:
                                     print('app2 was not cancellable.')                              
+                            self.ledErrorHandler.removeError(WEBSERVER_CANCELATION_ERR)
                         except Exception as e:
+                            self.ledErrorHandler.addError(WEBSERVER_CANCELATION_ERR)
                             print("Error during cancelation: {}".format(e))
                             
                         if(tryOfConnections > 30):
@@ -103,8 +111,9 @@ class TaskHandler:
                             if result:
                                 self.settingAfterNewConnection = False
                         tryOfConnections = tryOfConnections + 1
-
+                self.ledErrorHandler.removeError(WIFI_HANDLER_ERR)
             except Exception as e:
+                self.ledErrorHandler.addError(WIFI_HANDLER_ERR)
                 print("wifiHandler exception : {}".format(e))
    
             await asyncio.sleep(delay_secs)   
@@ -115,14 +124,9 @@ class TaskHandler:
             await asyncio.sleep(delay_secs)
             try:
                 status = await self.wattmeter.wattmeterHandler()
-                if(self.ledAPI.getStatus(task='LED_ERR',type='action',process='repeat')==2):
-                    self.ledAPI.callback(task='LED_ERR',type='action',process='Ontime',value=0)
-                    self.ledAPI.callback(task='LED_ERR',type='action',process='Offtime',value=0)
+                self.ledErrorHandler.removeError(WATTMETER_ERR)
             except Exception as e:
-                self.ledAPI.callback(task='LED_ERR',type='action',process='Ontime',value=2)
-                self.ledAPI.callback(task='LED_ERR',type='action',process='Offtime',value=4)
-                self.ledAPI.callback(task='LED_ERR',type='action',process='repeat',value=2)
-                self.ledAPI.callback(task='LED_ERR',type='action',process='Delta',value=30)
+                self.ledErrorHandler.addError(WATTMETER_ERR)
                 #self.log.write("{} -> {}".format(type(self.wattmeter),e))
 
             
@@ -131,32 +135,32 @@ class TaskHandler:
        while True:
             try:
                 status = await self.evse.evseHandler()
-                if(self.ledAPI.getStatus(task='LED_ERR',type='action',process='repeat')==0):
-                    self.ledAPI.callback(task='LED_ERR',type='action',process='Ontime',value=0)
-                    self.ledAPI.callback(task='LED_ERR',type='action',process='Offtime',value=0)
+                self.ledErrorHandler.removeError(EVSE_ERR)
             except Exception as e:
-                self.ledAPI.callback(task='LED_ERR',type='action',process='Ontime',value=2)
-                self.ledAPI.callback(task='LED_ERR',type='action',process='Offtime',value=4)
-                self.ledAPI.callback(task='LED_ERR',type='action',process='repeat',value=0)
-                self.ledAPI.callback(task='LED_ERR',type='action',process='Delta',value=30)
+                self.ledErrorHandler.addError(EVSE_ERR)
                 #self.log.write("{} -> {}".format(type(self.evse),e))
 
             await asyncio.sleep(delay_secs)
              
-    async def modbusTcpHandler(self,delay_secs):
+    async def ledHandler(self,delay_secs):
         while True:
-            await self.uModBusTCP.run()
+            if(self.ledRun.value()):
+                self.ledRun.off()
+            else:
+                self.ledRun.on()
             await asyncio.sleep(delay_secs)
- 
+            
     def mainTaskHandlerRun(self):
         loop = asyncio.get_event_loop()
+        loop.create_task(self.wifiHandler(2))
         loop.create_task(self.timeHandler(600))
         loop.create_task(self.memoryHandler(1))
         loop.create_task(self.wdgHandler(1))
+        loop.create_task(self.ledHandler(1))
         loop.create_task(self.wifiHandler(2))
         loop.create_task(self.uModBusTCP.run(loop))
         loop.create_task(self.wattmeterHandler(1))
         loop.create_task(self.evseHandler(1))
-        loop.create_task(self.ledAPI.ledHandlerObj())
+        loop.create_task(self.ledErrorHandler.ledErrorHandler())
         loop.create_task(NamedTask('app1',self.webServerApp.webServerRun,1,'192.168.4.1','app1')())
         loop.run_forever()
