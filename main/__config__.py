@@ -21,7 +21,7 @@ class Config:
         self.config['ID'] = '0'
         self.SETTING_PROFILES = 'setting.dat'
         self.handle_configure('txt,ACTUAL SW VERSION',self.boot.get_version(""))
-
+ 
     # Update self.config from setting.dat and return dict(config)
     def getConfig(self):
         setting = {}
