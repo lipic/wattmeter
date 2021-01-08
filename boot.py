@@ -4,6 +4,8 @@ import wifiManager
 from machine import Pin,freq
 from main import __config__
 
+
+
 def download_and_install_update_if_available(tst):
     import bootloader
     boot = None
@@ -54,6 +56,11 @@ def boot():
     handler = taskHandler.TaskHandler(wifiClient)
     print("Starting main application")
     Pin(21, Pin.OUT).off() # set pin high on creation
+    if(int(config['sw,TESTING SOFTWARE'])):
+        print("Start WEBREPL")
+        import webrepl
+        webrepl.start()
+    
     handler.mainTaskHandlerRun()
 
 if __name__ == "__main__":
@@ -62,3 +69,5 @@ if __name__ == "__main__":
     boot()
  
  
+import webrepl
+webrepl.start()

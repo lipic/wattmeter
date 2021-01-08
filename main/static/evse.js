@@ -1,9 +1,1 @@
-class evse{constructor(numEvse){this.numEvse=numEvse;}
-createEvseAPI(){for(var i=1;i<=this.numEvse;i++){($('<div id="evseTxt" class="container-fluid text-white pt-2 text-center">'+
-' <h4>EVSE: '+i+' </span> <span class="dot" ></h4>'+
-'</div>'+
-'<table class="table  table-dark rounded" >'+
-'<thead> <tr style="background-color: #282828;"> <th>Name</th> <th colspan="2">Status/Value</th> </tr> </thead> '+
-'<tbody> <tr> <td>Actual configured amps value :</td> <td><span id="ACTUAL_CONFIG_CURRENT'+i+'">0</span></td></tr>'+
-'<tr> <td>Actual amps value output:</td> <td><span id="ACTUAL_OUTPUT_CURRENT'+i+'">0</span></td> </tr>'+
-'<tr> <td>Vehicle state:</td> <td><span id="EV_STATE'+i+'">0</span></td> </tr> </tbody>  </table>').appendTo("#evseContainer"));}}}
+class evse{constructor(a){this.numEvse=a}createEvseGauge(){for(var a=1;a<=this.numEvse;a++)$('<div class="container-sm mt-1 text-center" style="height:250px;"><span  class="dim">EVSE '+a+'</span><div class="text-center"><span class="unit" style="font-size: 20px;">EV STATE: </span><span class="value" style="font-size: 20px;" id="EV_STATE'+a+'">-,-</span><br><div class="charging"><div class="top"></div><div class="charge'+(1+4*(a-1))+'"></div><div class="charge'+(2+4*(a-1))+'"></div><div class="charge'+(3+4*(a-1))+'"></div><div class="charge'+(4+4*(a-1))+'"></div></div></div><span class="dim" style="position:relative;margin:auto; top:70px;" id="ACTUAL_OUTPUT_CURRENT'+a+'">-,-</span><br><span class="value" style="font-size: 20px; position:relative;margin:auto;" id="ACTUAL_CONFIG_CURRENT'+a+'">-,-</span></div><style>.charge'+(1+4*(a-1))+",.charge"+(2+4*(a-1))+",.charge"+(3+4*(a-1))+",.charge"+(4+4*(a-1))+"{width:60px;height:130px;background-color:green;position:relative;}.charge"+(1+4*(a-1))+"{bottom:45px;left:5px;animation:charge-1 3s infinite;}.charge"+(2+4*(a-1))+"{bottom:175px;left:70px;animation:charge-2 3s infinite;}.charge"+(3+4*(a-1))+"{bottom:305px;left:135px;animation:charge-3 3s infinite;}.charge"+(4+4*(a-1))+"{bottom:435px;left:200px;animation:charge-4 3s infinite;}</style>").appendTo("#evseGauge")}}
