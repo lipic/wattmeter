@@ -1,4 +1,4 @@
-# wattmeter_tst
+# WATTMETER RELEASE
 
 ##version 1.000
 **FIRST STABLE VERSION**
