@@ -25,6 +25,7 @@ class Wattmeter:
         self.dataLayer.data['ID'] =self.setting.config['ID'] 
 
         self.tst = 0
+        self.err = 0
 
     async def wattmeterHandler(self):
         #Read data from wattmeter
@@ -57,8 +58,9 @@ class Wattmeter:
         #Total energy 
         status = await self.__readWattmeter_data(200,1)
         self.controlRelay()
+
         #Check if time-sync puls must be send
-        if (self.lastMinute is not int(time.localtime()[4]))and(self.timeInit == True):
+        if (self.lastMinute != int(time.localtime()[4]))and(self.timeInit == True):
             
             if len(self.dataLayer.data["Pm"])<61:
                 self.dataLayer.data["Pm"].append(self.dataLayer.data['Em']*6)#self.dataLayer.data["P1"])
@@ -69,10 +71,13 @@ class Wattmeter:
             self.dataLayer.data["Pm"][0] = len(self.dataLayer.data["Pm"])
             async with self.wattmeterInterface as w:
                 await w.writeWattmeterRegister(100,[1])
+
             self.lastMinute = int(time.localtime()[4]) 
 
         if self.timeInit:
-            if self.lastHour is not int(time.localtime()[3]):
+            if self.lastHour != int(time.localtime()[3]):
+                status = await self.__readWattmeter_data(100,1)
+                
                 async with self.wattmeterInterface as w:
                     await w.writeWattmeterRegister(101,[1])
                 self.lastHour = int(time.localtime()[3])
@@ -100,7 +105,7 @@ class Wattmeter:
                     self.dataLayer.data["Es"][95]= self.dataLayer.data['En']
                     self.dataLayer.data["Es"][96]=  self.dataLayer.data['A']
         
-        if (self.lastDay is not int(time.localtime()[2]))and self.timeInit and self.timeOfset:
+        if (self.lastDay != int(time.localtime()[2]))and self.timeInit and self.timeOfset:
 
             day = {("{0:02}/{1:02}/{2}".format(self.lastMonth,self.lastDay ,str(self.lastYear)[-2:] )) : [self.dataLayer.data["E1dP"] + self.dataLayer.data["E2dP"]+self.dataLayer.data["E3dP"], self.dataLayer.data["E1dN"] + self.dataLayer.data["E2dN"]+self.dataLayer.data["E3dN"]]}
             async with self.wattmeterInterface as w:
@@ -111,14 +116,16 @@ class Wattmeter:
             self.lastDay = int(time.localtime()[2])
             self.fileHandler.writeData(self.DAILY_CONSUMPTION, day)
             self.dataLayer.data["D"] =  self.fileHandler.readData(self.DAILY_CONSUMPTION,31)
-            #print("Daily energy: {}".format(self.dataLayer.data["DailyEnergy"]))
             self.dataLayer.data["M"] = self.fileHandler.getMonthlyEnergy(self.DAILY_CONSUMPTION)
 
     async def __readWattmeter_data(self,reg,length):
-        async with self.wattmeterInterface as w:
-                receiveData =  await w.readWattmeterRegister(reg,length)
        
+        self.tst += 1
         try:
+            #print("stability : {}".format(self.tst/(self.tst+self.err)*100))
+            async with self.wattmeterInterface as w:
+                receiveData =  await w.readWattmeterRegister(reg,length)
+                
             if (receiveData != "Null") and (reg == 1000):
                 self.dataLayer.data['I1'] =     int(((receiveData[0]) << 8) | (receiveData[1]))
                 self.dataLayer.data['I2'] =     int(((receiveData[2]) << 8) | (receiveData[3]))
@@ -198,6 +205,8 @@ class Wattmeter:
                 return "Timed out waiting for result."
             
         except Exception as e:
+            self.err += 1
+            #int(e, reg)
             return "Exception: {}. UART is probably not connected.".format(e)
         
     def negotiationRelay(self):

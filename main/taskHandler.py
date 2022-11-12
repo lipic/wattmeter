@@ -94,7 +94,7 @@ class TaskHandler:
                     if self.apTimeout > 0:
                         self.apTimeout -= 1
                     elif((int(self.setting.config['sw,Wi-Fi AP']) == 0) and  self.apTimeout == 0):
-                        self.wifiManager.turnOffAp()
+                        self.wifiManager.turnOfAp()
                         self.ledWifiHandler.removeState(AP)
                     elif (int(self.setting.config['sw,Wi-Fi AP']) == 1):
                         self.wifiManager.turnONAp()

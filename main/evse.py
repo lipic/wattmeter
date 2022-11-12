@@ -203,7 +203,8 @@ class Evse():
         
         if self.__requestCurrent > sum:
             self.__requestCurrent = sum
-            
+
+        #print("Request current: {}A".format(self.__requestCurrent))
         if self.__requestCurrent < 0 :
             self.__requestCurrent = 0
         return  self.__requestCurrent
@@ -227,6 +228,7 @@ class Evse():
 
         length = connectedEvse
         contibutinCurrent = [i for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE'])]
+        #print("POM:{}A, LEN:{}".format(pom,length))        
         for i in range(self.dataLayer.data['NUMBER_OF_EVSE'],0,-1):
             if self.dataLayer.data["EV_STATE"][i-1] >= 2:
                 if pom<6:
