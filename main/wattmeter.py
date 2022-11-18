@@ -106,7 +106,7 @@ class Wattmeter:
                     self.dataLayer.data["Es"][96]=  self.dataLayer.data['A']
         
         if (self.lastDay != int(time.localtime()[2]))and self.timeInit and self.timeOfset:
-
+            status = await self.__readWattmeter_data(100,1)
             day = {("{0:02}/{1:02}/{2}".format(self.lastMonth,self.lastDay ,str(self.lastYear)[-2:] )) : [self.dataLayer.data["E1dP"] + self.dataLayer.data["E2dP"]+self.dataLayer.data["E3dP"], self.dataLayer.data["E1dN"] + self.dataLayer.data["E2dN"]+self.dataLayer.data["E3dN"]]}
             async with self.wattmeterInterface as w:
                 await w.writeWattmeterRegister(102,[1])
