@@ -30,16 +30,21 @@ class Evse():
                 print("evseHandler with ID: {} error: {}".format((i+1),e))
                 #raise Exception("evseHandler with ID: {} error: {}".format((i+1),e))
         current = self.balancingEvseCurrent()
+        #print("Charge mode: {}".format(self.setting.config["chargeMode"]))
+        #print("Available current: {}A".format(current))
         currentContribution = self.currentEvse_Contribution(current)
         for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE']):
             try:
-                if((status[i] == 'SUCCESS_READ') == True):
+                if(status[i] == 'SUCCESS_READ'):
+                    
+                    #print("EVSE:{} with current: {}".format(i+1,current))
                     if(self.setting.config["sw,ENABLE CHARGING"] == '1'):
-                        if(self.setting.config["sw,WHEN AC IN: CHARGING"] == '1'):
+
+                        if(self.setting.config["sw,WHEN AC IN: CHARGING"] == '1') and self.setting.config["chargeMode"] == '0':
                             if self.wattmeter.dataLayer.data["A"] == 1:
                                 if (self.setting.config["sw,ENABLE BALANCING"] == '1'):
                                     current = next(currentContribution)
-                                    #print("EVSE:{} with current: {}".format(i+1,current))
+                                    
                                     async with self.evseInterface as e:
                                         await e.writeEvseRegister(1000,[current],i+1)
                                 else:
@@ -51,9 +56,7 @@ class Evse():
                                     await e.writeEvseRegister(1000,[0],i+1)
                         else:
                             if (self.setting.config["sw,ENABLE BALANCING"] == '1'):
-                                #if self.dataLayer.data['NUMBER_OF_EVSE'] > 1:
                                 current = next(currentContribution)
-                                #print("EVSE:{} with current: {}".format(i+1,current))
                                 async with self.evseInterface as e:
                                     await e.writeEvseRegister(1000,[current],i+1)
                             else:
@@ -147,10 +150,10 @@ class Evse():
         if (1 == self.wattmeter.dataLayer.data["A"]) and (1 == int(self.setting.config['sw,WHEN AC IN: CHARGING'])):
             HDO = True
 
-        if self.setting.config["btn,PHOTOVOLTAIC"] == '1' and HDO==False:
+        if self.setting.config["btn,PHOTOVOLTAIC"] == '1' and HDO==False and self.setting.config["chargeMode"] == '0':
             delta = int(self.setting.config["in,PV-GRID-ASSIST-A"]) - int(round(I1/100.0))
 
-        elif self.setting.config["btn,PHOTOVOLTAIC"] == '2'  and HDO==False:
+        elif self.setting.config["btn,PHOTOVOLTAIC"] == '2'  and HDO==False and self.setting.config["chargeMode"] == '0':
             delta = int(self.setting.config["in,PV-GRID-ASSIST-A"]) - avgCurrent
             
         else:
@@ -227,8 +230,7 @@ class Evse():
             pom = current/connectedEvse
 
         length = connectedEvse
-        contibutinCurrent = [i for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE'])]
-        #print("POM:{}A, LEN:{}".format(pom,length))        
+        contibutinCurrent = [i for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE'])]     
         for i in range(self.dataLayer.data['NUMBER_OF_EVSE'],0,-1):
             if self.dataLayer.data["EV_STATE"][i-1] >= 2:
                 if pom<6:

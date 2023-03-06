@@ -130,9 +130,7 @@ class WebServerApp:
                 
         else:
             yield from picoweb.start_response(resp, "application/json")
-            #b = mem_free()
             yield from resp.awrite(self.wattmeter.dataLayer.__str__())
-            #print("Mem free before:{}; after:{}; rozdil:{} ".format(b,mem_free(),b-mem_free()))
 
 
     def updateEvse(self,req,resp):

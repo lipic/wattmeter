@@ -27,6 +27,7 @@ class Config:
         self.config['sw,MODBUS-TCP'] = '0'          
         self.config['ERRORS'] = '0'                                            #Reg 1010
         self.config['ID'] = '0'                                            #Reg 1010
+        self.config['chargeMode'] = '0'
         self.config['inp,EVSE1']='6'                                     #Reg 1011
         self.config['inp,EVSE2']='6'                                      #Reg 1011
         self.config['inp,EVSE3']='6'
