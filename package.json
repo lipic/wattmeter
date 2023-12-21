@@ -1,0 +1,15 @@
+{
+  "urls": [
+    ["__config__.py", "github:lipic/wattmeter/main/__config__.py"],
+    ["evse.py", "github:lipic/wattmeter/main/evse.py"],
+    ["taskHandler.py", "github:lipic/wattmeter/main/taskHandler.py"],
+    ["wattmeter.py", "github:lipic/wattmeter/main/wattmeter.py"],
+    ["webServerApp.py", "github:lipic/wattmeter/main/webServerApp.py"],
+    ["template/main_html.py", "github:lipic/wattmeter/main/template/main_html.py"],
+    ["template/datatable_html.py", "github:lipic/wattmeter/main/template/datatable_html.py"],
+    ["template/energyChart_html.py", "github:lipic/wattmeter/main/template/energyChart_html.py"],
+    ["template/overview_html.py", "github:lipic/wattmeter/main/template/overview_html.py"],
+    ["template/powerChart_html.py", "github:lipic/wattmeter/main/template/powerChart_html.py"],
+    ["template/settings_html.py", "github:lipic/wattmeter/main/template/settings_html.py"]
+  ]
+}
