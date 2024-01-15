@@ -1,0 +1,96 @@
+{
+    "HREGS": {
+        "TYPE_HREGS": {
+            "register": 11,
+            "len": 1
+        },
+        "HW_VERSION_HREGS": {
+            "register": 770,
+            "len": 1
+        },
+        "FW_VERSION_HREGS": {
+            "register": 772,
+            "len": 1
+        },
+        "PHASE_CONFIG_HREGS": {
+            "register": 4098,
+            "len": 1
+        },
+        "SERIAL_HREGS": {
+            "register": 20480,
+            "len": 7
+        },
+        "APPLICATION_HREGS": {
+            "register": 40960,
+            "len": 1
+        },
+        "LOCK_SELECTOR_HREGS": {
+            "register": 41216,
+            "len": 1
+        },
+        "ENERGY_FORWARD_HREGS": {
+            "register": 52,
+            "len": 1
+        },
+        "ENERGY_REVERSE_HREGS": {
+            "register": 78,
+            "len": 1
+        },
+        "U1_HREGS": {
+            "register": 0,
+            "len": 2
+        },
+        "U2_HREGS": {
+            "register": 2,
+            "len": 2
+        },
+        "U3_HREGS": {
+            "register": 4,
+            "len": 2
+        },
+        "I1_HREGS": {
+            "register": 12,
+            "len": 2
+        },
+        "I2_HREGS": {
+            "register": 14,
+            "len": 2
+        },
+        "I3_HREGS": {
+            "register": 16,
+            "len": 2
+        },
+        "P_HREGS": {
+            "register": 40,
+            "len": 2
+        },
+        "P1_HREGS": {
+            "register": 18,
+            "len": 2
+        },
+        "P2_HREGS": {
+            "register": 20,
+            "len": 2
+        },
+        "P3_HREGS": {
+            "register": 22,
+            "len": 2
+        },
+        "FREQUENCY_HREGS": {
+            "register": 51,
+            "len": 1
+        },
+        "E1_HREGS": {
+            "register": 64,
+            "len": 2
+        },
+        "E2_HREGS": {
+            "register": 66,
+            "len": 2
+        },
+        "E3_HREGS": {
+            "register": 68,
+            "len": 2
+        }
+    }
+}

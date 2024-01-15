@@ -1,272 +1,272 @@
 import json
-import uasyncio as asyncio
-import time
-import math
+from gc import collect
+import ulogging
+collect()
+
 
 class Evse():
- 
-    
-    def __init__(self, wattmeter,evse, __config__):
-        self.evseInterface = evse
-        self.dataLayer = DataLayer()
+
+    def __init__(self, wattmeter, evse, __config__):
+        self.evse_interface = evse
+        self.data_layer = DataLayer()
         self.setting = __config__
         self.wattmeter = wattmeter
-        self.regulationLock1 = False
-        self.lock1Counter = 0
-        self.__regulationDelay = 0
-        self.__cntCurrent = 0
-        self.__requestCurrent = 0
-    
-    async def evseHandler(self):
-        #first read data from evse
-        current = 0
+        self.regulation_lock = False
+        self.lock_counter = 0
+        self.__regulation_delay = 0
+        self.__cnt_current = 0
+        self.__request_current = 0
+        self.logger = ulogging.getLogger("Evse")
+
+        if int(self.setting.config['sw,TESTING SOFTWARE']) == 1:
+            self.logger.setLevel(ulogging.DEBUG)
+        else:
+            self.logger.setLevel(ulogging.INFO)
+
+    async def evse_handler(self):
         state = ""
         status = []
-        self.dataLayer.data['NUMBER_OF_EVSE'] = int(self.setting.config["in,EVSE-NUMBER"])
-        for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE']):
+        self.data_layer.data['NUMBER_OF_EVSE'] = int(self.setting.config["in,EVSE-NUMBER"])
+        for i in range(0, self.data_layer.data['NUMBER_OF_EVSE']):
             try:
-                status.append(await self.__readEvse_data(1000,3,ID=(i+1)))
+                status.append(await self.__read_evse_data(1000, 3, _id=(i + 1)))
             except Exception as e:
-                print("evseHandler with ID: {} error: {}".format((i+1),e))
-                #raise Exception("evseHandler with ID: {} error: {}".format((i+1),e))
+                self.logger.info("evse_handler with ID: {} has error: {}".format((i + 1), e))
         current = self.balancingEvseCurrent()
-        #print("Charge mode: {}".format(self.setting.config["chargeMode"]))
-        #print("Available current: {}A".format(current))
-        currentContribution = self.currentEvse_Contribution(current)
-        for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE']):
+        current_contribution = self.current_evse_contribution(current)
+        for i in range(0, self.data_layer.data['NUMBER_OF_EVSE']):
             try:
-                if(status[i] == 'SUCCESS_READ'):
-                    
-                    #print("EVSE:{} with current: {}".format(i+1,current))
-                    if(self.setting.config["sw,ENABLE CHARGING"] == '1'):
+                if status[i] == 'SUCCESS_READ':
 
-                        if(self.setting.config["sw,WHEN AC IN: CHARGING"] == '1') and self.setting.config["chargeMode"] == '0':
-                            if self.wattmeter.dataLayer.data["A"] == 1:
-                                if (self.setting.config["sw,ENABLE BALANCING"] == '1'):
-                                    current = next(currentContribution)
-                                    
-                                    async with self.evseInterface as e:
-                                        await e.writeEvseRegister(1000,[current],i+1)
+                    self.logger.debug("EVSE:{} with current: {}".format(i + 1, current))
+                    if self.setting.config["sw,ENABLE CHARGING"] == '1':
+                        if (self.setting.config["sw,WHEN AC IN: CHARGING"] == '1') and self.setting.config["chargeMode"] == '0':
+                            if self.wattmeter.data_layer.data["A"] == 1:
+                                if self.setting.config["sw,ENABLE BALANCING"] == '1':
+                                    current = next(current_contribution)
+                                    async with self.evse_interface as e:
+                                        await e.writeEvseRegister(1000, [current], i + 1)
                                 else:
-                                    current = int(self.setting.config["inp,EVSE{}".format(i+1)])
-                                    async with self.evseInterface as e:
-                                        await e.writeEvseRegister(1000,[current],i+1)
+                                    current = int(self.setting.config["inp,EVSE{}".format(i + 1)])
+                                    async with self.evse_interface as e:
+                                        await e.writeEvseRegister(1000, [current], i + 1)
                             else:
-                                async with self.evseInterface as e:
-                                    await e.writeEvseRegister(1000,[0],i+1)
+                                async with self.evse_interface as e:
+                                    await e.writeEvseRegister(1000, [0], i + 1)
                         else:
-                            if (self.setting.config["sw,ENABLE BALANCING"] == '1'):
-                                current = next(currentContribution)
-                                async with self.evseInterface as e:
-                                    await e.writeEvseRegister(1000,[current],i+1)
+                            if self.setting.config["sw,ENABLE BALANCING"] == '1':
+                                current = next(current_contribution)
+                                async with self.evse_interface as e:
+                                    await e.writeEvseRegister(1000, [current], i + 1)
                             else:
-                                current = int(self.setting.config["inp,EVSE{}".format(i+1)])
-                                async with self.evseInterface as e:
-                                    await e.writeEvseRegister(1000,[current],i+1)
-                    else: 
-                        async with self.evseInterface as e:
-                            await e.writeEvseRegister(1000,[0],i+1)
+                                current = int(self.setting.config["inp,EVSE{}".format(i + 1)])
+                                async with self.evse_interface as e:
+                                    await e.writeEvseRegister(1000, [current], i + 1)
+                    else:
+                        async with self.evse_interface as e:
+                            await e.writeEvseRegister(1000, [0], i + 1)
             except Exception as e:
-                raise Exception("evseHandler error: {}".format(e))
-        return "Read: {}; Write: {}".format(status,state)
-          
-        
-    async def __readEvse_data(self,reg,length,ID):
+                raise Exception("evse_handler error: {}".format(e))
+        return "Read: {}; Write: {}".format(status, state)
+
+    async def __read_evse_data(self, reg, length, _id):
         try:
-            async with self.evseInterface as e:
-                receiveData =  await e.readEvseRegister(reg,length,ID)
-                
-            if reg == 1000 and (receiveData != "Null") and (receiveData):
-                if len(self.dataLayer.data["ACTUAL_CONFIG_CURRENT"])<ID:
-                    self.dataLayer.data["ACTUAL_CONFIG_CURRENT"].append(int(((receiveData[0]) << 8)  | receiveData[1]))
-                    self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"].append(int(((receiveData[2]) << 8)  | receiveData[3]))
-                    self.dataLayer.data["EV_STATE"].append(int(((receiveData[4]) << 8)  | receiveData[5]))
-                    self.dataLayer.data["EV_COMM_ERR"].append(0)
+            async with self.evse_interface as e:
+                receive_data = await e.readEvseRegister(reg, length, _id)
+
+            if reg == 1000 and (receive_data != "Null") and receive_data:
+                if len(self.data_layer.data["ACTUAL_CONFIG_CURRENT"]) < _id:
+                    self.data_layer.data["ACTUAL_CONFIG_CURRENT"].append(int(((receive_data[0]) << 8) | receive_data[1]))
+                    self.data_layer.data["ACTUAL_OUTPUT_CURRENT"].append(int(((receive_data[2]) << 8) | receive_data[3]))
+                    self.data_layer.data["EV_STATE"].append(int(((receive_data[4]) << 8) | receive_data[5]))
+                    self.data_layer.data["EV_COMM_ERR"].append(0)
                 else:
-                    self.dataLayer.data["ACTUAL_CONFIG_CURRENT"][ID-1] = int(((receiveData[0]) << 8)  | receiveData[1])
-                    self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"][ID-1] = int(((receiveData[2]) << 8)  | receiveData[3])
-                    self.dataLayer.data["EV_STATE"][ID-1] = int(((receiveData[4]) << 8)  | receiveData[5])
-                    self.dataLayer.data["EV_COMM_ERR"][ID-1] = 0
+                    self.data_layer.data["ACTUAL_CONFIG_CURRENT"][_id - 1] = int(
+                        ((receive_data[0]) << 8) | receive_data[1])
+                    self.data_layer.data["ACTUAL_OUTPUT_CURRENT"][_id - 1] = int(
+                        ((receive_data[2]) << 8) | receive_data[3])
+                    self.data_layer.data["EV_STATE"][_id - 1] = int(((receive_data[4]) << 8) | receive_data[5])
+                    self.data_layer.data["EV_COMM_ERR"][_id - 1] = 0
                 return 'SUCCESS_READ'
-                        
-            else: 
+
+            else:
                 return "Timed out waiting for result."
-                 
+
         except Exception as e:
             if reg == 1000:
-                if len(self.dataLayer.data["EV_COMM_ERR"])<ID:
-                    self.dataLayer.data["EV_COMM_ERR"].append(0)
-                    self.dataLayer.data["ACTUAL_CONFIG_CURRENT"].append(0)
-                    self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"].append(0)
-                    self.dataLayer.data["EV_STATE"].append(0)
+                if len(self.data_layer.data["EV_COMM_ERR"]) < _id:
+                    self.data_layer.data["EV_COMM_ERR"].append(0)
+                    self.data_layer.data["ACTUAL_CONFIG_CURRENT"].append(0)
+                    self.data_layer.data["ACTUAL_OUTPUT_CURRENT"].append(0)
+                    self.data_layer.data["EV_STATE"].append(0)
                 else:
-                    self.dataLayer.data["EV_COMM_ERR"][ID-1] += 1
-                    if(self.dataLayer.data["EV_COMM_ERR"][ID-1] > 30): 
-                        self.dataLayer.data["ACTUAL_CONFIG_CURRENT"][ID-1] = 0
-                        self.dataLayer.data["ACTUAL_OUTPUT_CURRENT"][ID-1] = 0
-                        self.dataLayer.data["EV_STATE"][ID-1] = 0
-                        self.dataLayer.data["EV_COMM_ERR"][ID-1] = 31
-            
+                    self.data_layer.data["EV_COMM_ERR"][_id - 1] += 1
+                    if self.data_layer.data["EV_COMM_ERR"][_id - 1] > 30:
+                        self.data_layer.data["ACTUAL_CONFIG_CURRENT"][_id - 1] = 0
+                        self.data_layer.data["ACTUAL_OUTPUT_CURRENT"][_id - 1] = 0
+                        self.data_layer.data["EV_STATE"][_id - 1] = 0
+                        self.data_layer.data["EV_COMM_ERR"][_id - 1] = 31
+
             raise Exception("__readEvse_data error: {}".format(e))
 
     def balancingEvseCurrent(self):
-        I1 = 0
-        I2 = 0
-        I3 = 0
-        maxCurrent = 0
-        sumCurrent = 0
-        avgCurrent = 0
+        i1 = 0
+        i2 = 0
+        i3 = 0
+        max_current = 0
         delta = 0
-        
-        
-        if self.wattmeter.dataLayer.data["I1"] > 32767:
-            I1 = self.wattmeter.dataLayer.data["I1"] - 65535
+
+        if self.wattmeter.data_layer.data["I1"] > 32767:
+            i1 = self.wattmeter.data_layer.data["I1"] - 65535
         else:
-            I1 = self.wattmeter.dataLayer.data["I1"]
+            i1 = self.wattmeter.data_layer.data["I1"]
 
-        if self.wattmeter.dataLayer.data["I2"] > 32767:
-            I2 = self.wattmeter.dataLayer.data["I2"] - 65535
+        if self.wattmeter.data_layer.data["I2"] > 32767:
+            i2 = self.wattmeter.data_layer.data["I2"] - 65535
         else:
-            I2 = self.wattmeter.dataLayer.data["I2"]
-            
-        if self.wattmeter.dataLayer.data["I3"] > 32767:
-            I3 = self.wattmeter.dataLayer.data["I3"] - 65535
+            i2 = self.wattmeter.data_layer.data["I2"]
+
+        if self.wattmeter.data_layer.data["I3"] > 32767:
+            i3 = self.wattmeter.data_layer.data["I3"] - 65535
         else:
-            I3 = self.wattmeter.dataLayer.data["I3"]
+            i3 = self.wattmeter.data_layer.data["I3"]
 
-        if (I1 > I2)and(I1 > I3):
-            maxCurrent = int(round(I1/100.0))
+        if (i1 > i2) and (i1 > i3):
+            max_current = int(round(i1 / 100.0))
 
-        if (I2 > I1)and(I2 > I3):
-            maxCurrent = int(round(I2/100.0))
-            
-        if (I3 > I1)and(I3 > I2):
-            maxCurrent = int(round(I3/100.0))
-            
-        sumCurrent = I1 + I2 + I3
-        avgCurrent = int(round(sumCurrent / 300))
+        if (i2 > i1) and (i2 > i3):
+            max_current = int(round(i2 / 100.0))
 
-        HDO = False
-        if (1 == self.wattmeter.dataLayer.data["A"]) and (1 == int(self.setting.config['sw,WHEN AC IN: CHARGING'])):
-            HDO = True
+        if (i3 > i1) and (i3 > i2):
+            max_current = int(round(i3 / 100.0))
 
-        if self.setting.config["btn,PHOTOVOLTAIC"] == '1' and HDO==False and self.setting.config["chargeMode"] == '0':
-            delta = int(self.setting.config["in,PV-GRID-ASSIST-A"]) - int(round(I1/100.0))
+        sum_current = i1 + i2 + i3
+        avg_current = int(round(sum_current / 300))
 
-        elif self.setting.config["btn,PHOTOVOLTAIC"] == '2'  and HDO==False and self.setting.config["chargeMode"] == '0':
-            delta = int(self.setting.config["in,PV-GRID-ASSIST-A"]) - avgCurrent
-            
+        hdo = False
+        if (1 == self.wattmeter.data_layer.data["A"]) and (1 == int(self.setting.config['sw,WHEN AC IN: CHARGING'])):
+            hdo = True
+
+        if (self.setting.config["btn,PHOTOVOLTAIC"] == '1') and (hdo == False) and (
+                self.setting.config["chargeMode"] == '0'):
+            delta = int(self.setting.config["in,PV-GRID-ASSIST-A"]) - int(round(i1 / 100.0))
+
+        elif (self.setting.config["btn,PHOTOVOLTAIC"] == '2') and (hdo == False) and (
+                self.setting.config["chargeMode"] == '0'):
+            delta = int(self.setting.config["in,PV-GRID-ASSIST-A"]) - avg_current
+
         else:
-            delta = int(self.setting.config["in,MAX-CURRENT-FROM-GRID-A"]) - maxCurrent
-            
-        if maxCurrent > int(self.setting.config["in,MAX-CURRENT-FROM-GRID-A"]):
-            delta = int(self.setting.config["in,MAX-CURRENT-FROM-GRID-A"]) - maxCurrent
+            delta = int(self.setting.config["in,MAX-CURRENT-FROM-GRID-A"]) - max_current
 
-        self.__cntCurrent = self.__cntCurrent+1
-        #Dle normy je zmena proudu EV nasledujici po zmene pracovni cyklu PWM maximalne 5s
+        if max_current > int(self.setting.config["in,MAX-CURRENT-FROM-GRID-A"]):
+            delta = int(self.setting.config["in,MAX-CURRENT-FROM-GRID-A"]) - max_current
+
+        self.__cnt_current = self.__cnt_current + 1
+        # Dle normy je zmena proudu EV nasledujici po zmene pracovni cyklu PWM maximalne 5s
         breaker = int(self.setting.config["in,MAX-CURRENT-FROM-GRID-A"])
-        if (breaker*0.5 + delta)< 0:
-            self.__requestCurrent = 0
-            self.__regulationDelay = 1
+        if (breaker * 0.5 + delta) < 0:
+            self.__request_current = 0
+            self.__regulation_delay = 1
 
-        elif self.__cntCurrent >= 2:
+        elif self.__cnt_current >= 2:
             if delta < 0:
-                self.__requestCurrent = self.__requestCurrent + delta
-                self.regulationLock1 = True
-                self.lock1Counter = 1
+                self.__request_current = self.__request_current + delta
+                self.regulation_lock = True
+                self.lock_counter = 1
 
-            elif self.__regulationDelay > 0:
-                self.__requestCurrent  = 0
-                        
-            elif not self.regulationLock1:
-                if (delta)>=6 and self.checkIfEVisConnected():
-                    self.__requestCurrent = self.__requestCurrent + 1
-                elif self.checkIfEVisCharging():
-                    self.__requestCurrent = self.__requestCurrent + 1
+            elif self.__regulation_delay > 0:
+                self.__request_current = 0
+
+            elif not self.regulation_lock:
+                if delta >= 6 and self.check_if_ev_is_connected():
+                    self.__request_current = self.__request_current + 1
+                elif self.check_if_ev_is_charging():
+                    self.__request_current = self.__request_current + 1
                 else:
                     pass
 
-            self.__cntCurrent = 0
-            
-       # print("self.regulationLock1",self.regulationLock1)
-        if self.lock1Counter>=30:
-            self.lock1Counter = 0
-            self.regulationLock1 = False
-                
-        if (self.regulationLock1 == True) or (self.lock1Counter > 0):
-            self.lock1Counter = self.lock1Counter + 1
-            
-        if self.__regulationDelay>0:
-            self.__regulationDelay = self.__regulationDelay +1
-        if self.__regulationDelay>60:
-            self.__regulationDelay = 0
+            self.__cnt_current = 0
+
+        # print("self.regulationLock1",self.regulationLock1)
+        if self.lock_counter >= 30:
+            self.lock_counter = 0
+            self.regulation_lock = False
+
+        if (self.regulation_lock == True) or (self.lock_counter > 0):
+            self.lock_counter = self.lock_counter + 1
+
+        if self.__regulation_delay > 0:
+            self.__regulation_delay = self.__regulation_delay + 1
+        if self.__regulation_delay > 60:
+            self.__regulation_delay = 0
         sum = 0
-        for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE']):
-            sum += int(self.setting.config["inp,EVSE{}".format(i+1)])
-        
-        if self.__requestCurrent > sum:
-            self.__requestCurrent = sum
+        for i in range(0, self.data_layer.data['NUMBER_OF_EVSE']):
+            sum += int(self.setting.config["inp,EVSE{}".format(i + 1)])
 
-        #print("Request current: {}A".format(self.__requestCurrent))
-        if self.__requestCurrent < 0 :
-            self.__requestCurrent = 0
-        return  self.__requestCurrent
+        if self.__request_current > sum:
+            self.__request_current = sum
 
-    def currentEvse_Contribution(self,current):
-        activeEvse = 0
-        connectedEvse = 0
+        # print("Request current: {}A".format(self.__requestCurrent))
+        if self.__request_current < 0:
+            self.__request_current = 0
+        return self.__request_current
 
-        for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE']):
-            if self.dataLayer.data["EV_STATE"][i] == 3:
-                activeEvse += 1
-            if self.dataLayer.data["EV_STATE"][i] >= 2: #pripojen nebo nabiji
-                connectedEvse+=1
+    def current_evse_contribution(self, current):
+        active_evse = 0
+        connected_evse = 0
 
-        if activeEvse == 0:
-            activeEvse = 1
+        for i in range(0, self.data_layer.data['NUMBER_OF_EVSE']):
+            if self.data_layer.data["EV_STATE"][i] == 3:
+                active_evse += 1
+            if self.data_layer.data["EV_STATE"][i] >= 2:  # pripojen nebo nabiji
+                connected_evse += 1
+
+        if active_evse == 0:
+            active_evse = 1
 
         pom = 0
-        if connectedEvse != 0:
-            pom = current/connectedEvse
+        if connected_evse != 0:
+            pom = current / connected_evse
 
-        length = connectedEvse
-        contibutinCurrent = [i for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE'])]     
-        for i in range(self.dataLayer.data['NUMBER_OF_EVSE'],0,-1):
-            if self.dataLayer.data["EV_STATE"][i-1] >= 2:
-                if pom<6:
+        length = connected_evse
+        contibutin_current = [i for i in range(0, self.data_layer.data['NUMBER_OF_EVSE'])]
+        for i in range(self.data_layer.data['NUMBER_OF_EVSE'], 0, -1):
+            if self.data_layer.data["EV_STATE"][i - 1] >= 2:
+                if pom < 6:
                     length -= 1
-                    contibutinCurrent[i-1]=0
+                    contibutin_current[i - 1] = 0
                     if length != 0:
-                        pom = current/length
+                        pom = current / length
                 else:
-                    contibutinCurrent[i-1]=int(pom)
+                    contibutin_current[i - 1] = int(pom)
 
             else:
-                contibutinCurrent[i-1] = 0 
+                contibutin_current[i - 1] = 0
 
         i = 0
-        while i<self.dataLayer.data['NUMBER_OF_EVSE']:
-            if contibutinCurrent[i] > int(self.setting.config["inp,EVSE{}".format(i+1)]):
-                contibutinCurrent[i] = int(self.setting.config["inp,EVSE{}".format(i+1)])
-            yield contibutinCurrent[i]
+        while i < self.data_layer.data['NUMBER_OF_EVSE']:
+            if contibutin_current[i] > int(self.setting.config["inp,EVSE{}".format(i + 1)]):
+                contibutin_current[i] = int(self.setting.config["inp,EVSE{}".format(i + 1)])
+            yield contibutin_current[i]
             i += 1
 
-    def checkIfEVisConnected(self):
-        for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE']):
-            if self.dataLayer.data["EV_STATE"][i] == 2: #pripojen nebo nabiji
+    def check_if_ev_is_connected(self):
+        for i in range(0, self.data_layer.data['NUMBER_OF_EVSE']):
+            if self.data_layer.data["EV_STATE"][i] == 2:
                 return True
         return False
 
-    def checkIfEVisCharging(self):
-        for i in range(0,self.dataLayer.data['NUMBER_OF_EVSE']):
-            if self.dataLayer.data["EV_STATE"][i] == 3: #pripojen nebo nabiji
+    def check_if_ev_is_charging(self):
+        for i in range(0, self.data_layer.data['NUMBER_OF_EVSE']):
+            if self.data_layer.data["EV_STATE"][i] == 3:
                 return True
         return False
-        
+
+
 class DataLayer:
     def __str__(self):
         return json.dumps(self.data)
-        
+
     def __init__(self):
         self.data = {}
         self.data["ACTUAL_CONFIG_CURRENT"] = []

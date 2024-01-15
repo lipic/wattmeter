@@ -1,6 +1,9 @@
 import bootloader
 from collections import OrderedDict
 import os
+from gc import collect
+collect()
+
 
 class Config: 
     
@@ -8,41 +11,43 @@ class Config:
         #all variables saved in flash
         self.boot = bootloader.Bootloader('https://github.com/lipic/wattmeter',"")
         self.config = OrderedDict()
-        self.config['bt,RESET WATTMETER'] = '0'       #Reg 1000
-        self.config['sw,AUTOMATIC UPDATE'] = '1'   #Reg 1001
-        self.config['txt,ACTUAL SW VERSION']='0'    #Reg 1002
-        self.config['sw,ENABLE CHARGING']='1'        #Reg 1003
-        self.config['in,MAX-CURRENT-FROM-GRID-A']='25'                             #Reg 1004 
-        self.config['in,TIME-ZONE']='2'                         #Reg 1005
-        self.config['in,EVSE-NUMBER']='1' 
-        self.config['in,PV-GRID-ASSIST-A']='0'                   #Reg 1006
-        self.config['btn,PHOTOVOLTAIC'] = '0'       #Reg 1000
-        self.config['sw,ENABLE BALANCING']='1'     #Reg 1007
-        self.config['sw,WHEN AC IN: RELAY ON']='0' #Reg 1008
-        self.config['sw,WHEN OVERFLOW: RELAY ON']='0' #Reg 1008
-        self.config['sw,WHEN AC IN: CHARGING']='0' #Reg 1008
-        self.config['sw,AC IN ACTIVE: HIGH']='0'
-        self.config['sw,TESTING SOFTWARE']='0'      #Reg 1009sw,AC IN ACTIVE: HIGH
+        self.config['bt,RESET WATTMETER'] = '0'
+        self.config['sw,AUTOMATIC UPDATE'] = '1'
+        self.config['txt,ACTUAL SW VERSION'] = '0'
+        self.config['sw,ENABLE CHARGING'] = '1'
+        self.config['in,MAX-CURRENT-FROM-GRID-A'] = '25'
+        self.config['in,TIME-ZONE'] = '2'
+        self.config['in,EVSE-NUMBER'] = '1'
+        self.config['in,PV-GRID-ASSIST-A'] = '0'
+        self.config['in,MAX-P-KW'] = '40'
+        self.config['in,MAX-E15-KWH'] = '10'
+        self.config['btn,PHOTOVOLTAIC'] = '0'
+        self.config['sw,ENABLE BALANCING'] = '1'
+        self.config['sw,WHEN AC IN: RELAY ON'] = '0'
+        self.config['sw,WHEN OVERFLOW: RELAY ON'] = '0'
+        self.config['sw,WHEN AC IN: CHARGING'] = '0'
+        self.config['sw,AC IN ACTIVE: HIGH'] = '0'
+        self.config['sw,TESTING SOFTWARE'] = '0'
         self.config['sw,Wi-Fi AP'] = '1'          
-        self.config['sw,MODBUS-TCP'] = '0'          
-        self.config['ERRORS'] = '0'                                            #Reg 1010
-        self.config['ID'] = '0'                                            #Reg 1010
+        self.config['sw,MODBUS-TCP'] = '0'
+        self.config['sw,P-E15-GUARD'] = '0'
+        self.config['ERRORS'] = '0'
+        self.config['ID'] = '0'
         self.config['chargeMode'] = '0'
-        self.config['inp,EVSE1']='6'                                     #Reg 1011
-        self.config['inp,EVSE2']='6'                                      #Reg 1011
-        self.config['inp,EVSE3']='6'
-        self.config['inp,EVSE4']='6'
-        self.config['inp,EVSE5']='6'
-        self.config['inp,EVSE6']='6'
-        self.config['inp,EVSE7']='6'
-        self.config['inp,EVSE8']='6'
-        self.config['inp,EVSE9']='6'
-        self.config['inp,EVSE10']='6'
+        self.config['inp,EVSE1'] = '6'
+        self.config['inp,EVSE2'] = '6'
+        self.config['inp,EVSE3'] = '6'
+        self.config['inp,EVSE4'] = '6'
+        self.config['inp,EVSE5'] = '6'
+        self.config['inp,EVSE6'] = '6'
+        self.config['inp,EVSE7'] = '6'
+        self.config['inp,EVSE8'] = '6'
+        self.config['inp,EVSE9'] = '6'
+        self.config['inp,EVSE10'] = '6'
         self.SETTING_PROFILES = 'setting.dat'
-        self.handle_configure('txt,ACTUAL SW VERSION',self.boot.get_version(""))
+        self.handle_configure('txt,ACTUAL SW VERSION', self.boot.get_version(""))
 
- 
-    # Update self.config from setting.dat and return dict(config)
+
     def getConfig(self):
         setting = {}
         try:
