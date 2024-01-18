@@ -119,7 +119,7 @@ class TaskHandler:
     async def interface_handler(self):
         while True:
             try:
-                #await self.evse.evse_handler()
+                await self.evse.evse_handler()
                 self.ledErrorHandler.removeState(EVSE_ERR)
                 self.errors &= ~EVSE_ERR
             except Exception as e:
