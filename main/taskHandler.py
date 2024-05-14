@@ -26,6 +26,11 @@ class TaskHandler:
     def __init__(self, wifi):
         self.setting = __config__.Config()
         self.setting.getConfig()
+        self.wifiManager = wifi
+        if self.setting.config['DHCP'] == '0':
+            print("== Setting static IP ==")
+            self.set_static_ip()
+
         wattInterface = wattmeterComInterface.Interface(9600, lock=Lock(200))
         evseInterface = evseComInterface.Interface(9600, lock=Lock(200))
         self.wattmeter = wattmeter.Wattmeter(wattInterface, self.setting)  # Create instance of Wattmeter
@@ -40,7 +45,6 @@ class TaskHandler:
         collect()
         self.settingAfterNewConnection = False
         self.wdt = WDT(timeout=60000)
-        self.wifiManager = wifi
         self.ledErrorHandler = ledHandler.ledHandler(21, 1, 2, 40)
         self.ledWifiHandler = ledHandler.ledHandler(22, 1, 2, 20)  # set pin high on creation
         self.ledRun = Pin(23, Pin.OUT)  # set pin high on creation
@@ -48,6 +52,16 @@ class TaskHandler:
         self.tryOfConnections = 0
         self.wifiManager.turnONAp()  # povolit Access point
         self.apTimeout = 600
+
+    def set_static_ip(self) -> None:
+        ssid: str = self.wifiManager.wlan_sta.config('essid')
+        pwd: str = ""
+        profiles = self.wifiManager.read_profiles()
+        if ssid in profiles:
+            pwd = profiles[ssid]
+        self.wifiManager.disconnect()
+        self.wifiManager.wlan_sta.ifconfig((self.setting.config['STATIC_IP'], self.setting.config['MASK'], self.setting.config['GATEWAY'], self.setting.config['DNS']))
+        self.wifiManager.wlan_sta.connect(ssid, pwd)
 
     async def ledWifi(self):
         while True:

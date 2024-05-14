@@ -43,6 +43,11 @@ class Config:
         self.config['inp,EVSE8'] = '6'
         self.config['inp,EVSE9'] = '6'
         self.config['inp,EVSE10'] = '6'
+        self.config['DHCP'] = '1'
+        self.config['STATIC_IP'] = '192.168.0.130'
+        self.config['DNS'] = '100.100.100.100'
+        self.config['MASK'] = '255.255.255.0'
+        self.config['GATEWAY'] = '192.168.0.1'
         self.SETTING_PROFILES = 'setting.dat'
         self.handle_configure('txt,ACTUAL SW VERSION', self.boot.get_version(""))
 
