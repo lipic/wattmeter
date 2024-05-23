@@ -54,8 +54,8 @@ class TaskHandler:
         self.apTimeout = 600
 
     def set_static_ip(self) -> None:
-        ssid: str = self.wifiManager.wlan_sta.config('essid')
-        pwd: str = ""
+        ssidv= self.wifiManager.wlan_sta.config('essid')
+        pwd = ""
         profiles = self.wifiManager.read_profiles()
         if ssid in profiles:
             pwd = profiles[ssid]
