@@ -142,6 +142,9 @@ class Evse():
 
         sum_current = i1 + i2 + i3
         avg_current = int(round(sum_current / 300))
+        grid_assist = int(self.setting.config["in,PV-GRID-ASSIST-A"])
+        if grid_assist == 0:
+            grid_assist = -1
 
         hdo = False
         if (1 == self.wattmeter.data_layer.data["A"]) and (1 == int(self.setting.config['sw,WHEN AC IN: CHARGING'])):
@@ -149,11 +152,11 @@ class Evse():
 
         if (self.setting.config["btn,PHOTOVOLTAIC"] == '1') and (hdo == False) and (
                 self.setting.config["chargeMode"] == '0'):
-            delta = int(self.setting.config["in,PV-GRID-ASSIST-A"]) - int(round(i1 / 100.0))
+            delta = grid_assist - int(round(i1 / 100.0))
 
         elif (self.setting.config["btn,PHOTOVOLTAIC"] == '2') and (hdo == False) and (
                 self.setting.config["chargeMode"] == '0'):
-            delta = int(self.setting.config["in,PV-GRID-ASSIST-A"]) - avg_current
+            delta = grid_assist - avg_current
 
         else:
             delta = int(self.setting.config["in,MAX-CURRENT-FROM-GRID-A"]) - max_current
@@ -168,23 +171,30 @@ class Evse():
             self.__request_current = 0
             self.__regulation_delay = 1
 
-        elif self.__cnt_current >= 2:
-            if delta < 0:
-                self.__request_current = self.__request_current + delta
+        if delta < 0 and self.__cnt_current % 2 == 0:
+            if '0' == self.setting.config["btn,PHOTOVOLTAIC"]:
                 self.regulation_lock = True
                 self.lock_counter = 1
+                self.__request_current = self.__request_current + delta
+            else:
+                self.__request_current = self.__request_current - 1
+                if self.__request_current < 6:
+                    self.regulation_lock = True
+                    self.lock_counter = 1
+            self.__cnt_current = 0
 
-            elif self.__regulation_delay > 0:
-                self.__request_current = 0
+        elif self.__regulation_delay > 0:
+            self.__request_current = 0
+            self.__cnt_current = 0
 
-            elif not self.regulation_lock:
-                if delta >= 6 and self.check_if_ev_is_connected():
-                    self.__request_current = self.__request_current + 1
-                elif self.check_if_ev_is_charging():
-                    self.__request_current = self.__request_current + 1
-                else:
-                    pass
+        elif not self.regulation_lock and self.__cnt_current % 3 == 0:
+            if delta >= 6 and self.check_if_ev_is_connected():
+                 self.__request_current = self.__request_current + 1
+            elif self.check_if_ev_is_charging():
+                self.__request_current = self.__request_current + 1
+            self.__cnt_current = 0
 
+        if self.__cnt_current >= 3:
             self.__cnt_current = 0
 
         # print("self.regulationLock1",self.regulationLock1)
@@ -197,8 +207,11 @@ class Evse():
 
         if self.__regulation_delay > 0:
             self.__regulation_delay = self.__regulation_delay + 1
-        if self.__regulation_delay > 60:
+        if self.__regulation_delay > 60 and self.setting.config["btn,PHOTOVOLTAIC"] == '0':
             self.__regulation_delay = 0
+        elif self.__regulation_delay > 10:
+            self.__regulation_delay = 0
+
         sum = 0
         for i in range(0, self.data_layer.data['NUMBER_OF_EVSE']):
             sum += int(self.setting.config["inp,EVSE{}".format(i + 1)])

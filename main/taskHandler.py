@@ -54,7 +54,7 @@ class TaskHandler:
         self.apTimeout = 600
 
     def set_static_ip(self) -> None:
-        ssidv= self.wifiManager.wlan_sta.config('essid')
+        ssid = self.wifiManager.wlan_sta.config('essid')
         pwd = ""
         profiles = self.wifiManager.read_profiles()
         if ssid in profiles:
@@ -133,15 +133,6 @@ class TaskHandler:
     async def interface_handler(self):
         while True:
             try:
-                await self.evse.evse_handler()
-                self.ledErrorHandler.removeState(EVSE_ERR)
-                self.errors &= ~EVSE_ERR
-            except Exception as e:
-                self.ledErrorHandler.addState(EVSE_ERR)
-                self.errors |= EVSE_ERR
-                print("EVSE error: {}".format(e))
-            collect()
-            try:
                 await self.wattmeter.wattmeter_handler()
                 self.ledErrorHandler.removeState(WATTMETER_ERR)
                 self.errors &= ~WATTMETER_ERR
@@ -149,6 +140,15 @@ class TaskHandler:
                 self.ledErrorHandler.addState(WATTMETER_ERR)
                 self.errors |= WATTMETER_ERR
                 print("WATTMETER error: {}".format(e))
+            try:
+                await self.evse.evse_handler()
+                self.ledErrorHandler.removeState(EVSE_ERR)
+                self.errors &= ~EVSE_ERR
+            except Exception as e:
+                self.ledErrorHandler.addState(EVSE_ERR)
+                self.errors |= EVSE_ERR
+                print("EVSE error: {}".format(e))
+
             collect()
             await asyncio.sleep(1.5)
 
