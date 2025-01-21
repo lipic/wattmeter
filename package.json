@@ -1,17 +1,17 @@
 {
   "urls": [
-    ["__config__.py", "github:lipic/wattmeter_tst/main/__config__.py"],
-    ["evse.py", "github:lipic/wattmeter_tst/main/evse.py"],
-    ["modbus_tcp.py", "github:lipic/wattmeter_tst/main/modbus_tcp.py"],
-    ["registers.json", "github:lipic/wattmeter_tst/main/registers.json"],
-    ["taskHandler.py", "github:lipic/wattmeter_tst/main/taskHandler.py"],
-    ["wattmeter.py", "github:lipic/wattmeter_tst/main/wattmeter.py"],
-    ["webServerApp.py", "github:lipic/wattmeter_tst/main/webServerApp.py"],
-    ["template/main_html.py", "github:lipic/wattmeter_tst/main/template/main_html.py"],
-    ["template/datatable_html.py", "github:lipic/wattmeter_tst/main/template/datatable_html.py"],
-    ["template/energyChart_html.py", "github:lipic/wattmeter_tst/main/template/energyChart_html.py"],
-    ["template/overview_html.py", "github:lipic/wattmeter_tst/main/template/overview_html.py"],
-    ["template/powerChart_html.py", "github:lipic/wattmeter_tst/main/template/powerChart_html.py"],
-    ["template/settings_html.py", "github:lipic/wattmeter_tst/main/template/settings_html.py"]
+    ["__config__.py", "github:lipic/wattmeter/main/__config__.py"],
+    ["evse.py", "github:lipic/wattmeter/main/evse.py"],
+    ["modbus_tcp.py", "github:lipic/wattmeter/main/modbus_tcp.py"],
+    ["registers.json", "github:lipic/wattmeter/main/registers.json"],
+    ["taskHandler.py", "github:lipic/wattmeter/main/taskHandler.py"],
+    ["wattmeter.py", "github:lipic/wattmeter/main/wattmeter.py"],
+    ["webServerApp.py", "github:lipic/wattmeter/main/webServerApp.py"],
+    ["template/main_html.py", "github:lipic/wattmeter/main/template/main_html.py"],
+    ["template/datatable_html.py", "github:lipic/wattmeter/main/template/datatable_html.py"],
+    ["template/energyChart_html.py", "github:lipic/wattmeter/main/template/energyChart_html.py"],
+    ["template/overview_html.py", "github:lipic/wattmeter/main/template/overview_html.py"],
+    ["template/powerChart_html.py", "github:lipic/wattmeter/main/template/powerChart_html.py"],
+    ["template/settings_html.py", "github:lipic/wattmeter/main/template/settings_html.py"]
   ]
 }
