@@ -27,6 +27,7 @@ class TaskHandler:
         self.setting = __config__.Config()
         self.setting.getConfig()
         self.wifiManager = wifi
+        self.static_ip_is_set = False
         if self.setting.config['DHCP'] == '0':
             print("== Setting static IP ==")
             self.set_static_ip()
@@ -54,14 +55,18 @@ class TaskHandler:
         self.apTimeout = 600
 
     def set_static_ip(self) -> None:
-        ssid = self.wifiManager.wlan_sta.config('essid')
-        pwd = ""
-        profiles = self.wifiManager.read_profiles()
-        if ssid in profiles:
-            pwd = profiles[ssid]
-        self.wifiManager.disconnect()
-        self.wifiManager.wlan_sta.ifconfig((self.setting.config['STATIC_IP'], self.setting.config['MASK'], self.setting.config['GATEWAY'], self.setting.config['DNS']))
-        self.wifiManager.wlan_sta.connect(ssid, pwd)
+        try:
+            ssid = self.wifiManager.wlan_sta.config('essid')
+            pwd = ""
+            profiles = self.wifiManager.read_profiles()
+            if ssid in profiles:
+                pwd = profiles[ssid]
+            self.wifiManager.disconnect()
+            self.wifiManager.wlan_sta.ifconfig((self.setting.config['STATIC_IP'], self.setting.config['MASK'], self.setting.config['GATEWAY'], self.setting.config['DNS']))
+            self.wifiManager.wlan_sta.connect(ssid, pwd)
+            self.static_ip_is_set = True
+        except Exception as e:
+            print(e)
 
     async def ledWifi(self):
         while True:
@@ -88,6 +93,13 @@ class TaskHandler:
                     self.wattmeter.time_init = True
                     self.ledErrorHandler.removeState(TIME_SYNC_ERR)
                     self.errors &= ~TIME_SYNC_ERR
+
+                    if self.setting.config['DHCP'] == '0' and not self.static_ip_is_set:
+                        if self.wifiManager.isConnected():
+                            print("== Setting static IP ==")
+                            self.set_static_ip()
+
+
                 except Exception as e:
                     self.ledErrorHandler.addState(TIME_SYNC_ERR)
                     self.errors |= TIME_SYNC_ERR
@@ -101,6 +113,13 @@ class TaskHandler:
             try:
                 self.ledWifiHandler.addState(AP)
                 if self.wifiManager.isConnected():
+                    if self.setting.config['DHCP'] == '1':
+                        print("Setting DHCP wifi parameters")
+                        self.setting.config['STATIC_IP'] = self.wifiManager.wlan_sta.ifconfig()[0]
+                        self.setting.config['MASK'] = self.wifiManager.wlan_sta.ifconfig()[1]
+                        self.setting.config['GATEWAY'] = self.wifiManager.wlan_sta.ifconfig()[2]
+                        self.setting.config['DNS'] = self.wifiManager.wlan_sta.ifconfig()[3]
+
                     if self.apTimeout > 0:
                         self.apTimeout -= 1
                     elif (int(self.setting.config['sw,Wi-Fi AP']) == 0) and self.apTimeout == 0:

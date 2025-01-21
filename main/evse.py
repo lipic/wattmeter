@@ -187,7 +187,7 @@ class Evse():
             self.__request_current = 0
             self.__cnt_current = 0
 
-        elif not self.regulation_lock and self.__cnt_current % 3 == 0:
+        elif not self.regulation_lock and self.__cnt_current % 3 == 0 and delta >= 0:
             if delta >= 6 and self.check_if_ev_is_connected():
                  self.__request_current = self.__request_current + 1
             elif self.check_if_ev_is_charging():
@@ -197,7 +197,6 @@ class Evse():
         if self.__cnt_current >= 3:
             self.__cnt_current = 0
 
-        # print("self.regulationLock1",self.regulationLock1)
         if self.lock_counter >= 30:
             self.lock_counter = 0
             self.regulation_lock = False
