@@ -29,9 +29,9 @@ class TaskHandler:
         self.wifiManager = wifi
         self.static_ip_is_set = False
         if self.setting.config['DHCP'] == '0':
-            print("== Setting static IP ==")
-            self.set_static_ip()
-
+            if self.wifiManager.isConnected():
+                print("== Setting static IP ==")
+                self.set_static_ip()
         wattInterface = wattmeterComInterface.Interface(9600, lock=Lock(200))
         evseInterface = evseComInterface.Interface(9600, lock=Lock(200))
         self.wattmeter = wattmeter.Wattmeter(wattInterface, self.setting)  # Create instance of Wattmeter
@@ -65,6 +65,14 @@ class TaskHandler:
             self.wifiManager.wlan_sta.ifconfig((self.setting.config['STATIC_IP'], self.setting.config['MASK'], self.setting.config['GATEWAY'], self.setting.config['DNS']))
             self.wifiManager.wlan_sta.connect(ssid, pwd)
             self.static_ip_is_set = True
+            current_config = self.wifiManager.wlan_sta.ifconfig()
+            print("Current Network Configuration")
+            print("-----------------------------")
+            print(f"IP Address   : {current_config[0]}")
+            print(f"Subnet Mask  : {current_config[1]}")
+            print(f"Gateway      : {current_config[2]}")
+            print(f"DNS Server   : {current_config[3]}")
+            print("-----------------------------")
         except Exception as e:
             print(e)
 
@@ -94,12 +102,6 @@ class TaskHandler:
                     self.ledErrorHandler.removeState(TIME_SYNC_ERR)
                     self.errors &= ~TIME_SYNC_ERR
 
-                    if self.setting.config['DHCP'] == '0' and not self.static_ip_is_set:
-                        if self.wifiManager.isConnected():
-                            print("== Setting static IP ==")
-                            self.set_static_ip()
-
-
                 except Exception as e:
                     self.ledErrorHandler.addState(TIME_SYNC_ERR)
                     self.errors |= TIME_SYNC_ERR
@@ -113,12 +115,14 @@ class TaskHandler:
             try:
                 self.ledWifiHandler.addState(AP)
                 if self.wifiManager.isConnected():
-                    if self.setting.config['DHCP'] == '1':
-                        print("Setting DHCP wifi parameters")
-                        self.setting.config['STATIC_IP'] = self.wifiManager.wlan_sta.ifconfig()[0]
-                        self.setting.config['MASK'] = self.wifiManager.wlan_sta.ifconfig()[1]
-                        self.setting.config['GATEWAY'] = self.wifiManager.wlan_sta.ifconfig()[2]
-                        self.setting.config['DNS'] = self.wifiManager.wlan_sta.ifconfig()[3]
+                    if self.setting.config['DHCP'] == '0' and not self.static_ip_is_set:
+                        self.logger.info("Re-applying static IP on reconnect")
+                        self.set_static_ip()
+                    elif self.setting.config['DHCP'] == '1':
+                        self.setting.handle_configure('STATIC_IP', self.wifi_manager.wlan_sta.ifconfig()[0])
+                        self.setting.handle_configure('MASK', self.wifi_manager.wlan_sta.ifconfig()[1])
+                        self.setting.handle_configure('GATEWAY', self.wifi_manager.wlan_sta.ifconfig()[2])
+                        self.setting.handle_configure('DNS', self.wifi_manager.wlan_sta.ifconfig()[3])
 
                     if self.apTimeout > 0:
                         self.apTimeout -= 1
@@ -127,11 +131,11 @@ class TaskHandler:
                         self.ledWifiHandler.removeState(AP)
                     elif int(self.setting.config['sw,Wi-Fi AP']) == 1:
                         self.wifiManager.turnONAp()
-
                     self.ledWifiHandler.addState(WIFI)
                     if not self.settingAfterNewConnection:
                         self.settingAfterNewConnection = True
                 else:
+                    self.static_ip_is_set = False
                     self.ledWifiHandler.removeState(WIFI)
                     if len(self.wifiManager.read_profiles()) != 0:
                         if self.tryOfConnections > 30:
