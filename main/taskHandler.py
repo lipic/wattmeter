@@ -2,7 +2,7 @@ import uasyncio as asyncio
 import ledHandler
 import wattmeterComInterface
 import evseComInterface
-from ntptime import settime
+import ntptime
 from asyn import Lock
 from gc import mem_free, collect
 from machine import Pin, WDT, RTC
@@ -47,11 +47,11 @@ class TaskHandler:
         self.settingAfterNewConnection = False
         self.wdt = WDT(timeout=60000)
         self.ledErrorHandler = ledHandler.ledHandler(21, 1, 2, 40)
-        self.ledWifiHandler = ledHandler.ledHandler(22, 1, 2, 20)  # set pin high on creation
-        self.ledRun = Pin(23, Pin.OUT)  # set pin high on creation
+        self.ledWifiHandler = ledHandler.ledHandler(22, 1, 2, 20)
+        self.ledRun = Pin(23, Pin.OUT)
         self.errors = 0
         self.tryOfConnections = 0
-        self.wifiManager.turnONAp()  # povolit Access point
+        self.wifiManager.turnONAp()
         self.apTimeout = 600
 
     def set_static_ip(self) -> None:
@@ -68,10 +68,10 @@ class TaskHandler:
             current_config = self.wifiManager.wlan_sta.ifconfig()
             print("Current Network Configuration")
             print("-----------------------------")
-            print(f"IP Address   : {current_config[0]}")
-            print(f"Subnet Mask  : {current_config[1]}")
-            print(f"Gateway      : {current_config[2]}")
-            print(f"DNS Server   : {current_config[3]}")
+            print("IP Address   : {}".format(current_config[0]))
+            print("Subnet Mask  : {}".format(current_config[1]))
+            print("Gateway      : {}".format(current_config[2]))
+            print("DNS Server   : {}".format(current_config[3]))
             print("-----------------------------")
         except Exception as e:
             print(e)
@@ -91,16 +91,22 @@ class TaskHandler:
             if self.wifiManager.isConnected() and self.wattmeter.time_init == False:
                 try:
                     print("Setting time")
-                    settime()
+                    ntptime.host = "129.6.15.28"
+                    ntptime.settime()
                     rtc = RTC()
                     import utime
                     tampon1 = utime.time()
-                    tampon2 = tampon1 + int(self.setting.config["in,TIME-ZONE"]) * 3600
-                    (year, month, mday, hour, minute, second, weekday, yearday) = utime.localtime(tampon2)
-                    rtc.datetime((year, month, mday, 0, hour, minute, second, 0))
-                    self.wattmeter.time_init = True
-                    self.ledErrorHandler.removeState(TIME_SYNC_ERR)
-                    self.errors &= ~TIME_SYNC_ERR
+                    timezone_offset = int(self.setting.config["in,TIME-ZONE"])
+                    tampon2 = tampon1 + timezone_offset * 3600
+                    local_time = utime.localtime(tampon2)
+                    if len(local_time) == 8:
+                        (year, month, mday, hour, minute, second, weekday, yearday) = local_time
+                        rtc.datetime((year, month, mday, 0, hour, minute, second, 0))
+                        self.wattmeter.time_init = True
+                        self.ledErrorHandler.removeState(TIME_SYNC_ERR)
+                        self.errors &= ~TIME_SYNC_ERR
+                    else:
+                        print("Invalid localtime tuple length")
 
                 except Exception as e:
                     self.ledErrorHandler.addState(TIME_SYNC_ERR)
@@ -116,13 +122,13 @@ class TaskHandler:
                 self.ledWifiHandler.addState(AP)
                 if self.wifiManager.isConnected():
                     if self.setting.config['DHCP'] == '0' and not self.static_ip_is_set:
-                        self.logger.info("Re-applying static IP on reconnect")
+                        print("Re-applying static IP on reconnect")
                         self.set_static_ip()
                     elif self.setting.config['DHCP'] == '1':
-                        self.setting.handle_configure('STATIC_IP', self.wifi_manager.wlan_sta.ifconfig()[0])
-                        self.setting.handle_configure('MASK', self.wifi_manager.wlan_sta.ifconfig()[1])
-                        self.setting.handle_configure('GATEWAY', self.wifi_manager.wlan_sta.ifconfig()[2])
-                        self.setting.handle_configure('DNS', self.wifi_manager.wlan_sta.ifconfig()[3])
+                        self.setting.handle_configure('STATIC_IP', self.wifiManager.wlan_sta.ifconfig()[0])
+                        self.setting.handle_configure('MASK', self.wifiManager.wlan_sta.ifconfig()[1])
+                        self.setting.handle_configure('GATEWAY', self.wifiManager.wlan_sta.ifconfig()[2])
+                        self.setting.handle_configure('DNS', self.wifiManager.wlan_sta.ifconfig()[3])
 
                     if self.apTimeout > 0:
                         self.apTimeout -= 1
