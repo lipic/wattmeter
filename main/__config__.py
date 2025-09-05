@@ -48,6 +48,7 @@ class Config:
         self.config['DNS'] = '100.100.100.100'
         self.config['MASK'] = '255.255.255.0'
         self.config['GATEWAY'] = '192.168.0.1'
+        self.config['in,AC-IN-MAX-CURRENT-FROM-GRID-A'] = '25'
         self.SETTING_PROFILES = 'setting.dat'
         self.handle_configure('txt,ACTUAL SW VERSION', self.boot.get_version(""))
 

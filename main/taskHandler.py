@@ -30,7 +30,6 @@ class TaskHandler:
         self.static_ip_is_set = False
         if self.setting.config['DHCP'] == '0':
             if self.wifiManager.isConnected():
-                print("== Setting static IP ==")
                 self.set_static_ip()
         wattInterface = wattmeterComInterface.Interface(9600, lock=Lock(200))
         evseInterface = evseComInterface.Interface(9600, lock=Lock(200))

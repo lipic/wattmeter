@@ -33,6 +33,9 @@ class Evse():
             except Exception as e:
                 self.logger.info("evse_handler with ID: {} has error: {}".format((i + 1), e))
         current = self.balancingEvseCurrent()
+        hdo_max_current = int(self.config['in,AC-IN-MAX-CURRENT-FROM-GRID-A'])
+        if hdo_max_current > current:
+            hdo_max_current = current
         current_contribution = self.current_evse_contribution(current)
         for i in range(0, self.data_layer.data['NUMBER_OF_EVSE']):
             try:
@@ -42,14 +45,8 @@ class Evse():
                     if self.setting.config["sw,ENABLE CHARGING"] == '1':
                         if (self.setting.config["sw,WHEN AC IN: CHARGING"] == '1') and self.setting.config["chargeMode"] == '0':
                             if self.wattmeter.data_layer.data["A"] == 1:
-                                if self.setting.config["sw,ENABLE BALANCING"] == '1':
-                                    current = next(current_contribution)
-                                    async with self.evse_interface as e:
-                                        await e.writeEvseRegister(1000, [current], i + 1)
-                                else:
-                                    current = int(self.setting.config["inp,EVSE{}".format(i + 1)])
-                                    async with self.evse_interface as e:
-                                        await e.writeEvseRegister(1000, [current], i + 1)
+                                async with self.evse_interface as e:
+                                    await e.writeEvseRegister(1000, [hdo_max_current], i + 1)
                             else:
                                 async with self.evse_interface as e:
                                     await e.writeEvseRegister(1000, [0], i + 1)
