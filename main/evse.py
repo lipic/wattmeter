@@ -33,7 +33,7 @@ class Evse():
             except Exception as e:
                 self.logger.info("evse_handler with ID: {} has error: {}".format((i + 1), e))
         current = self.balancingEvseCurrent()
-        hdo_max_current = int(self.config['in,AC-IN-MAX-CURRENT-FROM-GRID-A'])
+        hdo_max_current = int(self.setting.config['in,AC-IN-MAX-CURRENT-FROM-GRID-A'])
         if hdo_max_current > current:
             hdo_max_current = current
         current_contribution = self.current_evse_contribution(current)
