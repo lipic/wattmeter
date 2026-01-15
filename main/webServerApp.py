@@ -127,7 +127,7 @@ class WebServerApp:
 
         else:
             yield from picoweb.start_response(resp, "application/json")
-            yield from resp.awrite(self.wattmeter.data_layer.__str__())
+            yield from resp.awrite(self.wattmeter.data_layer.get_data(charge_mode=int(self.setting['chargeMode'])))
 
     def update_evse(self, req, resp):
         yield from picoweb.start_response(resp, "application/json")
@@ -145,12 +145,18 @@ class WebServerApp:
                 i = json.loads(req.qs)
             except:
                 pass
-            datalayer = await self.wifi_manager.handle_configure(i["ssid"], i["password"])
-            self.ip_address = self.wifi_manager.getIp()
-            datalayer = {"process": datalayer, "ip": self.ip_address}
 
-            yield from picoweb.start_response(resp, "application/json")
-            yield from resp.awrite(json.dumps(datalayer))
+            if i["ssid"] == "no_wifi":
+                with open('wifi.dat', 'w') as f:
+                    f.write('')
+                reset()
+            else:
+                datalayer = await self.wifi_manager.handle_configure(i["ssid"], i["password"])
+                self.ip_address = self.wifi_manager.getIp()
+                datalayer = {"process": datalayer, "ip": self.ip_address}
+
+                yield from picoweb.start_response(resp, "application/json")
+                yield from resp.awrite(json.dumps(datalayer))
 
         else:
             client = self.wifi_manager.getSSID()
@@ -159,6 +165,7 @@ class WebServerApp:
                 if client[i] > -86 and len(i) > 0:
                     datalayer[i] = client[i]
             datalayer["connectSSID"] = self.wifi_manager.getCurrentConnectSSID()
+            datalayer["no_wifi"] = 0
             yield from picoweb.start_response(resp, "application/json")
             yield from resp.awrite(json.dumps(datalayer))
 
