@@ -306,9 +306,6 @@ class Wattmeter:
 
 
 class DataLayer:
-    def get_data(self, charge_mode = 0):
-        self.data["chargeMode"] = charge_mode
-        return json.dumps(self.data)
 
     def __init__(self):
         self.data = {}
@@ -361,6 +358,9 @@ class DataLayer:
         self.data['BREAKER'] = 0
         self.data["chargeMode"] = 0
 
+    def get_data(self, charge_mode = 0):
+        self.data["chargeMode"] = charge_mode
+        return json.dumps(self.data)
 
 class FileHandler:
 

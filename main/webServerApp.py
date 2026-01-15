@@ -127,7 +127,8 @@ class WebServerApp:
 
         else:
             yield from picoweb.start_response(resp, "application/json")
-            yield from resp.awrite(self.wattmeter.data_layer.get_data(charge_mode=int(self.setting.config['chargeMode'])))
+            # self.setting.config['chargeMode']
+            yield from resp.awrite(self.wattmeter.data_layer.get_data())
 
     def update_evse(self, req, resp):
         yield from picoweb.start_response(resp, "application/json")
