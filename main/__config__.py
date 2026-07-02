@@ -71,13 +71,16 @@ class Config:
                         self.config[i] = setting[i]
             setting = {}
         
-        for i in self.config: 
+        setting_changed = False
+        for i in self.config:
             if i in setting:
                 if self.config[i] != setting[i]:
-                    self.config[i] = setting[i]   
+                    self.config[i] = setting[i]
             else:
                 setting[i] = self.config[i]
-                self.write_setting(setting)
+                setting_changed = True
+        if setting_changed:
+            self.write_setting(setting)
         
         if self.config['ID'] == '0':
             id = bytearray(os.urandom(4))
@@ -98,16 +101,17 @@ class Config:
                     setting = self.read_setting()
                 except OSError:
                     setting = {}
-                
+
                 if setting[variable] != value:
                     setting[variable] = value
                     self.write_setting(setting)
                     self.getConfig()
-                    return True
+                return True
             else:
                 return False
         except Exception as e:
-            print(e)
+            print("handle_configure error: {}".format(e))
+            return False
             
     def handleDifferentRequests(self,variable,value):
         if variable == 'bt,RESET WATTMETER':

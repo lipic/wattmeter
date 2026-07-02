@@ -239,9 +239,9 @@ class Wattmeter:
         if self.e15_p_lock is False:
             max_p = int(self.setting.config['in,MAX-P-KW'])*1000
             max_e15 = int(int(self.setting.config['in,MAX-E15-KWH']) * 100)
-            p1 = self.data_layer.data['P1'] - 65535 if self.data_layer.data['P1'] > 32767 else self.data_layer.data['P1']
-            p2 = self.data_layer.data['P2'] - 65535 if self.data_layer.data['P2'] > 32767 else self.data_layer.data['P2']
-            p3 = self.data_layer.data['P3'] - 65535 if self.data_layer.data['P3'] > 32767 else self.data_layer.data['P3']
+            p1 = self.data_layer.data['P1'] - 65536 if self.data_layer.data['P1'] > 32767 else self.data_layer.data['P1']
+            p2 = self.data_layer.data['P2'] - 65536 if self.data_layer.data['P2'] > 32767 else self.data_layer.data['P2']
+            p3 = self.data_layer.data['P3'] - 65536 if self.data_layer.data['P3'] > 32767 else self.data_layer.data['P3']
             sum_p = sum([p1, p2, p3])
 
             e15 = self.minute_energy
@@ -285,12 +285,12 @@ class Wattmeter:
             i2_n = 0
             i3_n = 0
             if self.data_layer.data["I1"] > 32767:
-                i1_n = (self.data_layer.data["I1"] - 65535) / 100
+                i1_n = (self.data_layer.data["I1"] - 65536) / 100
             if self.data_layer.data["I2"] > 32767:
-                i2_n = (self.data_layer.data["I2"] - 65535) / 100
+                i2_n = (self.data_layer.data["I2"] - 65536) / 100
             if self.data_layer.data["I3"] > 32767:
-                i3_n = (self.data_layer.data["I3"] - 65535) / 100
-            if (i1_n > 0) or (i2_n > 0) or (i3_n > 0):
+                i3_n = (self.data_layer.data["I3"] - 65536) / 100
+            if (i1_n < 0) or (i2_n < 0) or (i3_n < 0):
                 self.relay.on()
             else:
                 self.relay.off()

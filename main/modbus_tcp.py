@@ -80,17 +80,17 @@ class ModbusTCPServer:
         self.client.set_hreg(0, [self.data['U2']*10, 0])
         self.client.set_hreg(2, [self.data['U2']*10, 0])
         self.client.set_hreg(4, [self.data['U3']*10, 0])
-        i1: int = self.data['I1'] if self.data['I1'] < 32769 else self.data['I1'] - 65535
+        i1: int = self.data['I1'] if self.data['I1'] < 32768 else self.data['I1'] - 65536
         self.client.set_hreg(12, [i1*10 & 0xFFFF, (i1*10 >> 16) & 0xFFFF])
-        i2: int = self.data['I2'] if self.data['I2'] < 32769 else self.data['I2'] - 65535
+        i2: int = self.data['I2'] if self.data['I2'] < 32768 else self.data['I2'] - 65536
         self.client.set_hreg(14, [i2*10 & 0xFFFF, (i2*10 >> 16) & 0xFFFF])
-        i3: int = self.data['I3'] if self.data['I3'] < 32769 else self.data['I3'] - 65535
+        i3: int = self.data['I3'] if self.data['I3'] < 32768 else self.data['I3'] - 65536
         self.client.set_hreg(16, [i3*10 & 0xFFFF, (i3*10 >> 16) & 0xFFFF])
-        p1: int = self.data['P1'] if self.data['P1'] < 32769 else self.data['P1'] - 65535
+        p1: int = self.data['P1'] if self.data['P1'] < 32768 else self.data['P1'] - 65536
         self.client.set_hreg(18, [p1*10 & 0xFFFF, (p1*10 >> 16) & 0xFFFF])
-        p2: int = self.data['P2'] if self.data['P2'] < 32769 else self.data['P2'] - 65535
+        p2: int = self.data['P2'] if self.data['P2'] < 32768 else self.data['P2'] - 65536
         self.client.set_hreg(20, [p2*10 & 0xFFFF, (p2*10 >> 16) & 0xFFFF])
-        p3: int = self.data['P3'] if self.data['P3'] < 32769 else self.data['P3'] - 65535
+        p3: int = self.data['P3'] if self.data['P3'] < 32768 else self.data['P3'] - 65536
         self.client.set_hreg(22, [p3*10 & 0xFFFF, (p3*10 >> 16) & 0xFFFF])
         p_sum = (p1 + p2 + p3)*10
         self.client.set_hreg(40, [p_sum & 0xFFFF, (p_sum >> 16) & 0xFFFF])
