@@ -6,6 +6,11 @@ from gc import collect
 import uasyncio as asyncio
 collect()
 
+REQUEST_TIMEOUT_S = 30
+_ASYNCIO_V3 = hasattr(asyncio, "Loop") and hasattr(asyncio, "wait_for")
+_LOG_WEB = "web:"
+
+
 class WebServerApp:
     def __init__(self, wlan, wattmeter, evse, watt_io, evse_io, setting):
         self.watt_io = watt_io
@@ -32,6 +37,31 @@ class WebServerApp:
             ("/modbusRW", self.modbus_rw)
         ]
         self.app = picoweb.WebApp(None, self.ROUTES)
+        self._install_request_timeout()
+
+    def _install_request_timeout(self):
+        if hasattr(self.app, "_handle_conn"):
+            print(_LOG_WEB, 'timeout fw')
+            return
+        if not _ASYNCIO_V3:
+            print(_LOG_WEB, 'timeout skip')
+            return
+
+        original = self.app._handle
+
+        def guarded(reader, writer):
+            try:
+                yield from asyncio.wait_for(original(reader, writer), REQUEST_TIMEOUT_S)
+            except Exception as e:
+                print(_LOG_WEB, 'drop', e)
+            finally:
+                try:
+                    yield from writer.aclose()
+                except Exception:
+                    pass
+
+        self.app._handle = guarded
+        print(_LOG_WEB, 'timeout', REQUEST_TIMEOUT_S)
 
     def main(self, req, resp):
         collect()
@@ -197,7 +227,13 @@ class WebServerApp:
         yield from self.app.render_template(resp, "datatable.html", (req,))
 
     def get_esp_id(self, req, resp):
-        datalayer = {"ID": " Wattmeter: {}".format(self.setting.getConfig()['ID']), "IP": self.wifi_manager.getIp()}
+        ip = "192.168.4.1"
+        try:
+            if self.wifi_manager.wlan_sta.isconnected():
+                ip = self.wifi_manager.wlan_sta.ifconfig()[0]
+        except Exception:
+            pass
+        datalayer = {"ID": " Wattmeter: {}".format(self.setting.config['ID']), "IP": ip}
         yield from picoweb.start_response(resp, "application/json")
         yield from resp.awrite(json.dumps(datalayer))
 
@@ -215,5 +251,5 @@ class WebServerApp:
             while True:
                 await asyncio.sleep(100)
         except Exception as e:
-            print("WEBSERVER ERROR: {}. I will reset MCU".format(e))
+            print(_LOG_WEB, 'err', e)
             reset()

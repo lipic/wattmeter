@@ -85,7 +85,6 @@ class Wattmeter:
             if self.last_minute % 15 == 0:
                 self.e15_p_lock = False
                 self.minute_energy.clear()
-                self.logger.debug("reset e15_p_lock and clear minute_energy={}".format(self.minute_energy))
 
             self.minute_energy.append(int(self.data_layer.data['Em']/10))
 

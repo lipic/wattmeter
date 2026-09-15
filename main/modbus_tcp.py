@@ -15,6 +15,12 @@ class ModbusTCPServer:
         self.ip = ip
         self.debug = debug
         self.server = None
+        self.client = None
+        self.logger = ulogging.getLogger(__name__)
+        if debug:
+            self.logger.setLevel(ulogging.DEBUG)
+        else:
+            self.logger.setLevel(ulogging.INFO)
 
         self.init_modbus_tcp()
 
@@ -33,25 +39,17 @@ class ModbusTCPServer:
         self.serial_number: list = list()
         for i in range(0, 6, 2):
             self.serial_number.append("0x{}{}".format(serial_raw[i], serial_raw[i+1]))
-        self.logger = ulogging.getLogger(__name__)
-        if debug:
-            self.logger.setLevel(ulogging.DEBUG)
-        else:
-            self.logger.setLevel(ulogging.INFO)
 
     def init_modbus_tcp(self):
         try:
-            self.client = ModbusTCP()
-            is_bound = self.client.get_bound_status()
-            if not is_bound:
+            if self.client is None:
+                self.client = ModbusTCP()
+            if not self.client.get_bound_status():
                 self.client.bind(local_ip=self.ip, local_port=self.port)
-        except OSError as e:
-            import errno
-            if e.args[0] == errno.EADDRINUSE:
-                from machine import reset
-                reset()
-            else:
-                self.logger.error(e)
+            return True
+        except Exception as e:
+            self.logger.error("modbus bind: {}".format(e))
+            return False
 
     async def run(self) -> None:
         self.set_static_registers()
